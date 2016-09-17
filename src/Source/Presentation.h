@@ -344,10 +344,10 @@ public:
 		GenerateRaysMesh(100, m_rays);
 		m_rays.SetupVerticesBuffer(device);
 
-		ImportozameshenieBJD("../Kommunalks_yx2.obj", m_Kommunalks);
+		ImportozameshenieBJD("../Kommunalks_yx2.bjd", m_Kommunalks);
 		m_Kommunalks.SetupVerticesBuffer(device);
 
-		ImportozameshenieBJD("../Prizbma.obj", firstPrism.mesh);
+		ImportozameshenieBJD("../Prizbma.bjd", firstPrism.mesh);
 		firstPrism.mesh.SetupVerticesBuffer(device);
 	}
 
