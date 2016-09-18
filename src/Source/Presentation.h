@@ -173,8 +173,8 @@ public:
 		m_PrismMesh.SetupVerticesBuffer(device);
 
 		m_Prisms = {
-			{ &m_PrismMesh, { 0.0f, 1.2f, 0.75f }, F_PI / 3 },
-			{ &m_PrismMesh, { 0.0f, 0.6f, 2.0f }, F_PI / 3, F_PI / 2 },
+			{ &m_PrismMesh, { 0.0f, 1.2f, 0.75f }, F_PI / 3, 0.05f },
+			{ &m_PrismMesh, { 0.0f, 0.7f, 2.0f }, F_PI / 2.5f, -F_PI / 2 },
 		};
 
 		for (auto& firstPrism : m_Prisms)
@@ -285,41 +285,7 @@ public:
 		}
 		m_Device->SetTransform(D3DTS_WORLD, to_d3d(glm::mat4()));
 
-<<<<<<< HEAD
-		{
-			glm::vec4 vector1 = firstPrism.Trans * glm::vec4(-0.2f, 0.2, 0.0f, 1.0);
-			glm::vec4 vector2 = firstPrism.Trans * glm::vec4(0.2f, 0.2, 0.0f, 1.0);
-			glm::vec4 vector3 = firstPrism.Trans * glm::vec4(-0.2f, -0.2, 0.4f, 1.0);
-			glm::vec3 currentNormal =
-				glm::normalize(glm::cross(glm::vec3(vector3 - vector1), glm::vec3(vector2 - vector1)));
-			planes.push_back({glm::vec3(vector1), currentNormal, glassAir});
-		}
-
-		planes.push_back({{0.0f, 0.0f, 3.0f}, {0.0f, 0.0f, 1.0f}});
-
-		//////////////////////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////
-
-		// m_rays.m_Vertices.push_back(LineMeshVertex({ 0.0f, 0.0f, 0.0f }, D3DCOLOR_RGBA(0xFF, 0, 0, 0XFF))); // x
-		// m_rays.m_Vertices.push_back(LineMeshVertex({1000.0f, 0.0f, 0.0f}, D3DCOLOR_RGBA(0xFF, 0, 0, 0XFF)));
-		// m_rays.m_Vertices.push_back(LineMeshVertex({0.0, 0.0, 0.0}, D3DCOLOR_RGBA(0, 0xFF, 0, 0XFF))); // y
-		// m_rays.m_Vertices.push_back(LineMeshVertex({0.0, 1000.0, 0.0}, D3DCOLOR_RGBA(0, 0xFF, 0, 0XFF)));
-		// m_rays.m_Vertices.push_back(LineMeshVertex({0.0, 0.0, 0.0}, D3DCOLOR_RGBA(0, 0, 0xFF, 0XFF))); // 2
-		// m_rays.m_Vertices.push_back(LineMeshVertex({0.0, 0.0, 1000.0}, D3DCOLOR_RGBA(0, 0, 0xFF, 0XFF)));
-		GenerateRaysMesh(100, m_rays);
-		m_rays.SetupVerticesBuffer(device);
-
-		ImportozameshenieBJD("Kommunalks_yx2.bjd", m_Kommunalks);
-		m_Kommunalks.SetupVerticesBuffer(device);
-
-		ImportozameshenieBJD("Prizbma.bjd", firstPrism.mesh);
-		firstPrism.mesh.SetupVerticesBuffer(device);
-=======
 		EndRender();
->>>>>>> origin/master
 	}
 
 }; // class Presentation

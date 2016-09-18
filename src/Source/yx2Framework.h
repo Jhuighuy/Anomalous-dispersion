@@ -14,9 +14,6 @@
 #include <Windows.h>
 #include <assert.h>
 #include <d3d9.h>
-#include <wtypes.h>
-#include <locale.h>
-
 
 #pragma warning(push, 0)
 #include <glm/glm.hpp>
@@ -26,9 +23,6 @@
 #pragma warning(pop)
 
 #define YX2_API
-
-#define STANDART_DESKTOP_WIDTH 1920
-#define STANDART_DESKTOP_HEIGHT 1080
 
 namespace yx2
 {
@@ -44,42 +38,16 @@ namespace yx2
 
 	namespace framework
 	{
-		void GetDesktopResolution(int& horizontal, int& vertical)
-		{
-			RECT desktop;
-			// Get a handle to the desktop window
-			const HWND hDesktop = GetDesktopWindow();
-			// Get the size of screen to the variable desktop
-			GetWindowRect(hDesktop, &desktop);
-			// The top left corner will have coordinates (0,0)
-			// and the bottom right corner will have coordinates
-			// (horizontal, vertical)
-			horizontal = desktop.right;
-			vertical = desktop.bottom;
-		}
-
-
 		struct Rect
 		{
 		public:
-			int  x;
-			int  y;
-			unsigned  w;
-			unsigned  h;
+			int const x;
+			int const y;
+			unsigned const w;
+			unsigned const h;
 
 			Rect() : x(0), y(0), w(0), h(0) {}
-			//Rect(int const x, int const y, unsigned const w, unsigned const h) : x(x), y(y), w(w), h(h) {}
-
-			Rect(int const x1, int const y1, unsigned const w1, unsigned const h1)
-			{
-				int horizontal, vertical;
-				GetDesktopResolution(horizontal, vertical);
-				x = round(x1 * horizontal / STANDART_DESKTOP_WIDTH);
-				y = round(y1 * vertical / STANDART_DESKTOP_HEIGHT);
-				w = round(w1 * horizontal / STANDART_DESKTOP_WIDTH);
-				h = round(h1 * vertical / STANDART_DESKTOP_HEIGHT);
-
-			}
+			Rect(int const x, int const y, unsigned const w, unsigned const h) : x(x), y(y), w(w), h(h) {}
 		}; // struct Rect
 
 		enum class LabelFlags : DWORD
