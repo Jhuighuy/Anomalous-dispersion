@@ -1,6 +1,7 @@
 #pragma once
 #define _USE_MATH_DEFINES 1
 #define GLM_FORCE_LEFT_HANDED 1
+#include <math.h>
 #include <d3d9.h>
 #include <vector>
 #pragma warning(push, 0)
@@ -11,7 +12,6 @@
 #pragma warning(pop)
 #include "ObjLoader.h"
 #include <array>
-#include <d3dx9math.h>
 
 #define PRESENTATION_API
 #define F_PI float(M_PI)
@@ -279,8 +279,8 @@ public:
 		device->LightEnable(0, TRUE);
 
 		D3DMATERIAL9 material = {};
-		material.Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f); // set diffuse color to white
-		material.Ambient = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+		material.Diffuse = { 1.0f, 1.0f, 1.0f, 1.0f }; // set diffuse color to white
+		material.Ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
 		device->SetMaterial(&material);
 
 		/*	planes = {

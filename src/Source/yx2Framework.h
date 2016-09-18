@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 
+#include <d3d9.h>
 #include <assert.h>
 #include <Windows.h>
 
@@ -24,16 +25,14 @@
 namespace yx2
 {
 	using glm::vec2;
-	using glm::vec3;
-	using glm::vec4;
 
-	struct non_copyable
+	struct NonCopyable
 	{
-		non_copyable() = default;
-		non_copyable(non_copyable&&) = delete;
-		non_copyable(non_copyable const&) = delete;
-		non_copyable& operator= (non_copyable&) = delete;
-		non_copyable& operator= (non_copyable const&) = delete;
+		NonCopyable() = default;
+		NonCopyable(NonCopyable&&) = delete;
+		NonCopyable(NonCopyable const&) = delete;
+		NonCopyable& operator= (NonCopyable&) = delete;
+		NonCopyable& operator= (NonCopyable const&) = delete;
 	};	// struct non_copyable
 
 	template<typename T>
@@ -63,17 +62,16 @@ namespace yx2
 		 * \todo Implement Goog-like architecture.
 		 * \see https://www.facepunch.com/threads/1108886-Goop-OOP-WinAPI-GUI-Wrapper
 		 */
-		struct widget : public non_copyable
+		struct widget : public NonCopyable
 		{
 		private:
 			HWND m_WidgetHandle;
 
 		protected:
 			YX2_API widget(LPCWSTR const className, LPCWSTR const widgetName, DWORD const style, rect const& rect, HMENU const menu)
-				: m_WidgetHandle(CreateWindowExW(0, className, widgetName, style, rect.x, rect.y, rect.w, rect.h, ))
+				: m_WidgetHandle(CreateWindowExW(0, className, widgetName, style, rect.x, rect.y, rect.w, rect.h, nullptr, nullptr, nullptr, nullptr))
 			{
 			}
-
 
 		public:
 			// ----------------------------------------------------------------
@@ -129,6 +127,13 @@ namespace yx2
 		struct window
 		{
 		};	// struct window
+
+		struct D3DWidget : widget
+		{
+		public:
+			LPDIRECT3DDEVICE9 m_device;
+
+		};	// struct d3d_widget 
 
 	}	// namespace framework
 }	// namespace yx2
