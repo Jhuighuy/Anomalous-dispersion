@@ -42,7 +42,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 
-		presentation.Update();
+		presentation->Update();
 	}
 
 	return 0;

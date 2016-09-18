@@ -62,7 +62,7 @@ std::array<double, 100> GlassAirComputation()
 	for (auto i = rayNumber - 1; i >= 0; --i)
 	{
 		array[i] = 1 / currentCoefficient;
-		currentCoefficient += /*0.3 **/ (1.540f - 1.510f) / rayNumber;
+		currentCoefficient += /*0.3 **/ (1.550f - 1.510f) / rayNumber;
 	}
 	return array;
 }
@@ -88,34 +88,32 @@ class Presentation final : public yx2::engine::Runtime
 		std::array<double, 100> RefractiveIndex;
 	}; // struct Plane
 
-	//class PrismRenderer final : public yx2::engine::TriangleMeshRenderer
-	//{
-	//};	// class PrismRenderer
-
 	struct Prism
 	{
-		Mesh* mesh;
 		Vector3 Point;
-		float angle;
+		float Angle;
 		float zRotation;
+		float yRotation;
 		glm::mat4 Trans;
-	};
+	};	// struct Prism
 
 private:
-	yx2::engine::OrbitalCamera m_Camera;
+	float m_CameraZoom = 1.0f;
+	float m_CameraRotationYaw = -YX2_PI / 2.0f;
+	float m_CameraRotationPitch = 0.0f;
+	POINT m_PrevMousePosition = {};
 
-	/**
-	 * \brief A vertex of the mesh.
-	 */
 	LineMesh m_rays;
 	Mesh m_Kommunalks;
 
 	Mesh m_PrismMesh;
 	std::vector<Prism> m_Prisms;
 
+	std::vector<Plane> planes;
 	POINT m_prevMousePosition = {};
 
 private:
+
 	/**
 	 * \brief Converts a light wave length to the RGBA representation.
 	 * \param[in] waveLength Light wave length in nanometers.
@@ -132,7 +130,6 @@ private:
 public:
 	PRESENTATION_API explicit Presentation(HWND const hwnd, IDirect3DDevice9* const device) 
 		: Runtime(hwnd, device)
-		, m_Camera(this) 
 	{
 	//	D3DLIGHT9 light = {};
 	//	light.Type = D3DLIGHT_POINT;
@@ -173,14 +170,14 @@ public:
 		m_PrismMesh.SetupVerticesBuffer(device);
 
 		m_Prisms = {
-			{ &m_PrismMesh, { 0.0f, 1.2f, 0.75f }, F_PI / 3, 0.05f },
-			{ &m_PrismMesh, { 0.0f, 0.7f, 2.0f }, F_PI / 2.5f, -F_PI / 2 },
+			{ { 0.0f, 1.2f, 0.75f }, F_PI / 3,  },
+			{ { 0.0f, 0.9f, 2.0f }, F_PI / 3, -F_PI / 2, -F_PI/12 },
 		};
 
 		for (auto& firstPrism : m_Prisms)
 		{
-			firstPrism.Trans = glm::translate(firstPrism.Point) * glm::yawPitchRoll(0.0f, 0.0f, firstPrism.zRotation) *
-				glm::scale(glm::vec3(1.0f, 1.0f, tanf(firstPrism.angle / 2)));
+			firstPrism.Trans = glm::translate(firstPrism.Point) * glm::yawPitchRoll(firstPrism.yRotation, 0.0f, firstPrism.zRotation) *
+				glm::scale(glm::vec3(1.0f, 1.0f, tanf(firstPrism.Angle / 2)));
 
 			{
 				glm::vec4 vector1 = firstPrism.Trans * glm::vec4(-0.2f, 0.2, 0.0f, 1.0);
@@ -229,14 +226,13 @@ public:
 		return glm::rotate(direction, angleAfter, glm::cross(direction, plane.Normal));
 	}
 
-	std::vector<Plane> planes;
 	PRESENTATION_API void GenerateRaysMesh(unsigned partitioning, LineMesh& mesh)
 	{
 		// double refractiveIndex1;
 		for (auto i = 0u; i < partitioning; ++i)
 		{
 			/// @todo Move initial values outside somewhere.
-			Vector3 coord = {0.0f, 1.0f, 0.0f};
+			Vector3 coord = {0.0f, 0.8f, 0.0f};
 			Vector3 direction = m_Prisms[0].Point - coord;
 
 			auto static const violetWaveLength = 380.0;
@@ -264,15 +260,42 @@ public:
 	// Scene rendering.
 	// ***********************************************************************************************
 
-public:
-
 	PRESENTATION_API void Update()
 	{
-		BeginRender();
+		m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 40, 0xFF), 1.0f, 0);
+		m_Device->Clear(0, nullptr, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+		m_Device->BeginScene();
 
-		m_Camera.Update();
+		{
+			glm::vec4 static const cameraRotationCenter(0.0f, 1.24f, 1.5f, 1.0f);
+			glm::vec4 static const cameraCenterOffset(0.0f, 0.0f, -3.0f, 1.0f);
+			glm::vec4 static const cameraUp(0.0f, 1.0f, 0.0f, 1.0f);
 
-	//	m_Kommunalks.Render(m_Device);
+			if (GetAsyncKeyState(VK_LBUTTON) != 0)
+			{
+				// L button is pressed.
+				POINT mouseCurrentPosition = {};
+				GetCursorPos(&mouseCurrentPosition);
+
+				auto const deltaYaw = static_cast<float>(mouseCurrentPosition.y - m_PrevMousePosition.y) / g_Height;
+				auto const deltaPitch = static_cast<float>(mouseCurrentPosition.x - m_PrevMousePosition.x) / g_Width;
+
+				m_CameraRotationYaw += deltaPitch;
+				m_CameraRotationPitch = clampf(m_CameraRotationPitch + deltaYaw, -YX2_PI / 12.0f, YX2_PI / 3.0f);
+			}
+			GetCursorPos(&m_PrevMousePosition);
+
+			auto const cameraTranslation = glm::translate(glm::vec3(cameraRotationCenter));
+			auto const cameraRotation = glm::yawPitchRoll(m_CameraRotationYaw, m_CameraRotationPitch, 0.0f);
+
+			auto const eye = glm::vec3(cameraTranslation * cameraRotation * cameraCenterOffset);
+			auto const center = glm::vec3(cameraRotationCenter);
+			auto const up = glm::vec3(cameraRotation * cameraUp);
+			m_Device->SetTransform(D3DTS_VIEW, to_d3d(glm::lookAtLH(eye, center, up)));
+			m_Device->SetTransform(D3DTS_PROJECTION, to_d3d(glm::perspectiveFovLH<float>(YX2_PI / 4.0f, g_Width, g_Height, 0.01f, 100.0f)));
+		}
+
+		m_Kommunalks.Render(m_Device);
 
 	//	m_Device->SetRenderState(D3DRS_LIGHTING, FALSE);
 		m_rays.Render(m_Device);
@@ -281,11 +304,12 @@ public:
 		for (auto& prism : m_Prisms)
 		{
 			m_Device->SetTransform(D3DTS_WORLD, to_d3d(prism.Trans));
-			prism.mesh->Render(m_Device);
+			m_PrismMesh.Render(m_Device);
 		}
 		m_Device->SetTransform(D3DTS_WORLD, to_d3d(glm::mat4()));
 
-		EndRender();
+		m_Device->EndScene();
+		m_Device->Present(nullptr, nullptr, nullptr, nullptr);
 	}
 
 }; // class Presentation

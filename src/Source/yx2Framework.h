@@ -23,6 +23,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
+#include <map>
 #pragma warning(pop)
 
 #define YX2_API
@@ -149,39 +150,7 @@ namespace yx2
 		class Window : public WindowWidget
 		{
 		private:
-			// ----------------------------------------------------------------
-			// Events distatching.
-			// ----------------------------------------------------------------
-			struct WindowEventDispatcher
-			{
-				virtual ~WindowEventDispatcher() {}
-				virtual LRESULT Dispatch(HWND const hWnd, UINT const message, WPARAM const wParam,
-										 LPARAM const lParam) const = 0;
-			}; // struct WindowEventDispatcher
-
-			YX2_API static auto& GetRegisteredDispatchers()
-			{
-				std::vector<WindowEventDispatcher const*> static registeredDispatchers;
-				return registeredDispatchers;
-			}
-			YX2_API static WORD RegisterDispatcher(WindowEventDispatcher const* const dispatcher)
-			{
-				auto& registeredDispatchers = GetRegisteredDispatchers();
-				registeredDispatchers.push_back(dispatcher);
-				assert(registeredDispatchers.size() < MAXWORD);
-				return (WORD)registeredDispatchers.size() - 1;
-			}
-			template <typename TWindowEventDispatcher>
-			YX2_API static WORD RegisterDispatcher()
-			{
-				TWindowEventDispatcher static const dispatcher = {};
-				WORD static dispatcherID = RegisterDispatcher(&dispatcher);
-				return dispatcherID;
-			}
-			YX2_API static WindowEventDispatcher const* ResolveDispatcher(WORD const id)
-			{
-				return GetRegisteredDispatchers()[id];
-			}
+			std::map<WindowWidgetHash, WindowWidgetCallback> m_Callbacks;
 
 			// ----------------------------------------------------------------
 			// ----------------------------------------------------------------
@@ -193,12 +162,15 @@ namespace yx2
 				return self != nullptr ? self->SelfWindowProc(message, wParam, lParam)
 									   : DefWindowProcW(hWnd, message, wParam, lParam);
 			}
-			YX2_API LRESULT SelfWindowProc(UINT const message, WPARAM const wParam, LPARAM const lParam) const
+			YX2_API LRESULT SelfWindowProc(UINT const message, WPARAM const wParam, LPARAM const lParam) 
 			{
 				switch (message)
 				{
 					case WM_COMMAND:
 					{
+						auto const hash = static_cast<WindowWidgetHash>(LOWORD(wParam));
+						if (m_Callbacks.count(hash) != 0)
+							m_Callbacks[hash](0);
 						break;
 					}
 
@@ -351,6 +323,7 @@ namespace yx2
 				(void)callback;
 
 				auto const hash = Hash(text);
+				m_Callbacks[hash] = callback;
 				return WindowWidget(CreateWindowW(L"Button", text, WS_VISIBLE | WS_CHILD, rect.x, rect.y, rect.w,
 												  rect.h, m_hwnd, reinterpret_cast<HMENU>(hash), nullptr, nullptr));
 			}
