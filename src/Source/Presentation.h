@@ -13,6 +13,8 @@
 #include "ObjLoader.h"
 #include <array>
 
+#include "yx2Engine.h"
+
 #define PRESENTATION_API
 #define F_PI float(M_PI)
 
@@ -71,7 +73,7 @@ std::array<double, 100> glassAir = GlassAirComputation();
 /**
  * \brief
  */
-class Presentation final
+class Presentation final : public yx2::engine::Runtime
 {
 	auto static const g_Width = 1280;
 	auto static const g_Height = 720;
@@ -108,7 +110,6 @@ class Presentation final
 	glm::mat4x4 projection;
 
 	POINT m_prevMousePosition = {};
-	LPDIRECT3DDEVICE9 m_device;
 
 private:
 	/**
@@ -184,7 +185,7 @@ public:
 	 */
 	PRESENTATION_API void UpdateCamera()
 	{
-		m_device->SetTransform(D3DTS_PROJECTION,
+		m_Device->SetTransform(D3DTS_PROJECTION,
 							   to_d3d(glm::perspectiveFovLH<float>(F_PI / 4.0f, 1280, 720, 0.0f, 100.0f)));
 
 		/// @todo Move initial values outside somewhere.
@@ -211,37 +212,37 @@ public:
 		cameraCenterOffset = cameraTranslation * cameraRotation * cameraCenterOffset;
 		cameraUp = cameraRotation * cameraUp;
 
-		m_device->SetTransform(D3DTS_VIEW, to_d3d(glm::lookAtLH(glm::vec3(cameraCenterOffset),
+		m_Device->SetTransform(D3DTS_VIEW, to_d3d(glm::lookAtLH(glm::vec3(cameraCenterOffset),
 																glm::vec3(cameraRotationCenter), glm::vec3(cameraUp))));
 	}
 
 	PRESENTATION_API void Update()
 	{
-		m_device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0xFF), 1.0f, 0);
-		m_device->Clear(0, nullptr, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-		m_device->BeginScene();
+		m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0xFF), 1.0f, 0);
+		m_Device->Clear(0, nullptr, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+		m_Device->BeginScene();
 
 		UpdateCamera();
 
-		m_Kommunalks.Render(m_device);
+		m_Kommunalks.Render(m_Device);
 
-		m_device->SetTransform(D3DTS_WORLD, to_d3d(firstPrism.Trans));
-		firstPrism.mesh.Render(m_device);
-		m_device->SetTransform(D3DTS_WORLD, to_d3d(glm::mat4()));
+		m_Device->SetTransform(D3DTS_WORLD, to_d3d(firstPrism.Trans));
+		firstPrism.mesh.Render(m_Device);
+		m_Device->SetTransform(D3DTS_WORLD, to_d3d(glm::mat4()));
 
-		m_device->SetRenderState(D3DRS_LIGHTING, FALSE);
-		m_rays.Render(m_device);
-		m_device->SetRenderState(D3DRS_LIGHTING, TRUE);
+		m_Device->SetRenderState(D3DRS_LIGHTING, FALSE);
+		m_rays.Render(m_Device);
+		m_Device->SetRenderState(D3DRS_LIGHTING, TRUE);
 
-		m_device->EndScene();
-		m_device->Present(nullptr, nullptr, nullptr, nullptr);
+		m_Device->EndScene();
+		m_Device->Present(nullptr, nullptr, nullptr, nullptr);
 	}
 
 	// ***********************************************************************************************
 	// ***********************************************************************************************
 
 public:
-	explicit Presentation(LPDIRECT3DDEVICE9 const device) : m_device(device)
+	explicit Presentation(HWND const hwnd, IDirect3DDevice9* const device) : Runtime(hwnd, device)
 	{
 		device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
 		device->SetRenderState(D3DRS_ZENABLE, TRUE);

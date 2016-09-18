@@ -22,8 +22,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 	(void)hInstance, hPrevInstance, lpCmdLine, nCmdShow;
 
 	yx2::framework::Window mainWindow({100, 100, 1280, 720});
-	auto const device = mainWindow.Direct3D9({0, 0, 1280, 720});
-	Presentation presentation(device);
+	auto presentation = mainWindow.Direct3D9<Presentation>({0, 0, 1280, 720});
 
 	MSG msg;
 	while (GetMessage(&msg, nullptr, 0, 0))

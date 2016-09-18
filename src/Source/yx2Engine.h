@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Window.h"
 #include "yx2Framework.h"
 
 #include <type_traits>
@@ -49,6 +48,8 @@ namespace yx2
 
 		class Runtime : public framework::D3DWidget
 		{
+		public:
+			explicit Runtime(HWND const hwnd, IDirect3DDevice9* const device) : D3DWidget(hwnd, device) {}
 		}; // class Runtime
 
 		// ***********************************************************************************************
@@ -102,7 +103,7 @@ namespace yx2
 			 * \param[in] vertices Mesh vertices.
 			 */
 			YX2_API BasicMesh(Runtime const& runtime, Vertex const* const vertices, DWORD const verticesCount)
-				: m_Device(runtime.m_device), m_VertexBuffer(nullptr),
+				: m_Device(runtime.m_Device), m_VertexBuffer(nullptr),
 				  m_PrimitivesCount(verticesCount / VerticesPerPrimitive)
 			{
 				assert(vertices != nullptr);
@@ -173,7 +174,7 @@ namespace yx2
 			 * \param[in] mesh The mesh instance.
 			 */
 			YX2_API BasicMeshRenderer(Runtime const& runtime, Mesh const& mesh)
-				: m_Device(runtime.m_device), m_Mesh(mesh)
+				: m_Device(runtime.m_Device), m_Mesh(mesh)
 			{
 			}
 
@@ -227,7 +228,7 @@ namespace yx2
 			 * \brief Initializes a camera.
 			 * \param[in] runtime Engine runtime instance.
 			 */
-			YX2_API explicit Camera(Runtime const& runtime) : m_Device(runtime.m_device) { Update(); }
+			YX2_API explicit Camera(Runtime const& runtime) : m_Device(runtime.m_Device) { Update(); }
 
 			/** 
 			 * \brief Updates camera matrices.

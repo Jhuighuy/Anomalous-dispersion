@@ -106,7 +106,9 @@ namespace yx2
 
 		class D3DWidget : WindowWidget
 		{
-			explicit D3DWidget(HWND const hwnd) : WindowWidget(hwnd) {}
+		public:
+			IDirect3DDevice9* m_Device;
+			explicit D3DWidget(HWND const hwnd, IDirect3DDevice9* const device) : WindowWidget(hwnd), m_Device(device) {}
 		};
 
 		/**
@@ -326,7 +328,8 @@ namespace yx2
 			// Direct3D 9.
 			// ***********************************************************************************************
 
-			YX2_API LPDIRECT3DDEVICE9 /*WindowWidget*/ Direct3D9(Rect const& rect)
+			template<typename TD3DWidget = D3DWidget>
+			YX2_API TD3DWidget Direct3D9(Rect const& rect) const
 			{
 				auto const handle = m_hwnd;
 				/*CreateWindowW(L"Static", nullptr, WS_CHILD | WS_VISIBLE, rect.x, rect.y, rect.w,
@@ -347,7 +350,7 @@ namespace yx2
 
 				direct3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, handle, D3DCREATE_SOFTWARE_VERTEXPROCESSING,
 									   &presentParameters, &device);
-				return device;
+				return TD3DWidget(handle, device);
 			}
 
 		}; // class Window
