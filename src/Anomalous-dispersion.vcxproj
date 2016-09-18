@@ -96,6 +96,9 @@
     <ClInclude Include="Source\yx2Framework.h" />
     <ClInclude Include="Source\yx2Mesh.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\yx2Mesh.inl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

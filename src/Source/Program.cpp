@@ -4,6 +4,7 @@
 #include "yx2Framework.h"
 #include "Presentation.h"
 #include <string>
+#include <ctime>
 #pragma comment(lib, "d3d9.lib")
 
 namespace dxm = glm;
@@ -19,6 +20,7 @@ namespace dxm = glm;
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine,
 					 _In_ int nCmdShow)
 {
+	srand(time(nullptr));
 	(void)hInstance, hPrevInstance, lpCmdLine, nCmdShow;
 
 	yx2::framework::Window mainWindow({100, 100, 1280, 720});
@@ -30,7 +32,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 
-		presentation.Update();
+		presentation->Update();
 	}
 
 	return 0;
