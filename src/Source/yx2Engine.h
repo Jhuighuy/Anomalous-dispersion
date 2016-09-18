@@ -6,11 +6,17 @@
 #include <type_traits>
 #include <vector>
 
+#define _USE_MATH_DEFINES 1
+#define GLM_FORCE_LEFT_HANDED 1
+#include <math.h>
+
 #pragma warning(push, 0)
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
 #pragma warning(pop)
+
+#define YX2_PI float(M_PI)
 
 namespace yx2
 {
@@ -30,6 +36,11 @@ namespace yx2
 		YX2_API static D3DMATRIX const* ToD3D(mat4 const& matrix)
 		{
 			return reinterpret_cast<D3DMATRIX const*>(&matrix[0][0]);
+		}
+
+		YX2_API static float clampf(float value, float min, float max)
+		{
+			return value < min ? min : value > max ? max : value;
 		}
 
 		// ***********************************************************************************************
@@ -155,11 +166,20 @@ namespace yx2
 			bool IsOpacue = true;
 
 		public:
+
+			/**
+			 * \brief Initializes a mesh renderer.
+			 * \param[in] runtime Engine runtime instance.
+			 * \param[in] mesh The mesh instance.
+			 */
 			YX2_API BasicMeshRenderer(Runtime const& runtime, Mesh const& mesh)
 				: m_Device(runtime.m_device), m_Mesh(mesh)
 			{
 			}
 
+			/** 
+			 * \brief Performs rendering.
+			 */
 			YX2_API void Render() const
 			{
 				// Setting up the transformation matrix.
@@ -182,17 +202,99 @@ namespace yx2
 		// Camera management.
 		// ***********************************************************************************************
 
+		/** 
+		 * \brief A basic static camera.
+		 */
 		class Camera : public NonCopyable
 		{
+		protected:
+			auto static const g_Width = 1280;
+			auto static const g_Height = 720;
+
 		private:
 			IDirect3DDevice9* m_Device;
 			mat4 m_ViewMatrix;
 			mat4 m_ProjectionMatrix;
 
 		public:
-			YX2_API explicit Camera(Runtime const& runtime) : m_Device(runtime.m_device), {}
+			vec3 Eye = vec3(0.0f, 0.0f, -3.0f);
+			vec3 Center = vec3(0.0f, 0.0f, 0.0f);
+			vec3 Up = vec3(0.0f, 1.0f, 0.0f);
+
+		public:
+
+			/**
+			 * \brief Initializes a camera.
+			 * \param[in] runtime Engine runtime instance.
+			 */
+			YX2_API explicit Camera(Runtime const& runtime) : m_Device(runtime.m_device) { Update(); }
+
+			/** 
+			 * \brief Updates camera matrices.
+			 */
+			YX2_API void Update() const
+			{
+				m_Device->SetTransform(D3DTS_VIEW, ToD3D(glm::lookAtLH(Eye, Center, Up)));
+				m_Device->SetTransform(D3DTS_PROJECTION,
+									   ToD3D(glm::perspectiveFovLH<float>(YX2_PI / 4.0f, g_Width, g_Height, 0.01f, 100.0f)));
+			}
 
 		}; // class Camera
+
+		/** 
+		 * \brief A mouse-control orbital camera with zoom support.
+		 */
+		class OrbitalCamera final : public Camera
+		{
+		private:
+			float m_CameraRotationYaw = -YX2_PI / 2.0f;
+			float m_CameraRotationPitch = 0.0f;
+			POINT m_PrevMousePosition = {};
+
+		public:
+
+			/**
+			 * \brief Initializes an orbital camera.
+			 * \param[in] runtime Engine runtime instance.
+			 */
+			YX2_API explicit OrbitalCamera(Runtime const& runtime) : Camera(runtime) {}
+
+			/** 
+			 * \brief Updates camera matrices.
+			 */
+			YX2_API void Update()
+			{
+				/// @todo Move initial values outside somewhere.
+				vec4 cameraRotationCenter(0.0f, 1.24f, 1.5f, 1.0f);
+				vec4 cameraCenterOffset(0.0f, 0.0f, -3.0f, 1.0f);
+				vec4 cameraUp(0.0f, 1.0f, 0.0f, 1.0f);
+
+				if (GetAsyncKeyState(VK_LBUTTON) != 0)
+				{
+					// L button is pressed.
+					POINT mouseCurrentPosition = {};
+					GetCursorPos(&mouseCurrentPosition);
+
+					auto const deltaYaw = static_cast<float>(mouseCurrentPosition.y - m_PrevMousePosition.y) / g_Height;
+					auto const deltaPitch = static_cast<float>(mouseCurrentPosition.x - m_PrevMousePosition.x) / g_Width;
+
+					m_CameraRotationYaw += deltaPitch;
+					m_CameraRotationPitch = clampf(m_CameraRotationPitch + deltaYaw, -YX2_PI / 12.0f, YX2_PI / 3.0f);
+				}
+				GetCursorPos(&m_PrevMousePosition);
+
+				auto const cameraTranslation = glm::translate(glm::vec3(cameraRotationCenter));
+				auto const cameraRotation = glm::yawPitchRoll(m_CameraRotationYaw, m_CameraRotationPitch, 0.0f);
+				cameraCenterOffset = cameraTranslation * cameraRotation * cameraCenterOffset;
+				cameraUp = cameraRotation * cameraUp;
+
+				Eye = vec3(cameraCenterOffset);
+				Center = vec3(cameraRotationCenter);
+				Up = vec3(cameraUp);
+				Camera::Update();
+			}
+
+		};	// class OrbitalCamera
 
 	} // namespace engine
 } // namespace yx2

@@ -1,7 +1,7 @@
 #pragma warning(disable : 4577)
 #pragma warning(disable : 4505)
 
-#include "Window.h"
+#include "yx2Framework.h"
 #include "Presentation.h"
 #include <string>
 #pragma comment(lib, "d3d9.lib")
@@ -21,7 +21,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 {
 	(void)hInstance, hPrevInstance, lpCmdLine, nCmdShow;
 
-	UI::Window mainWindow({100, 100, 1280, 720});
+	yx2::framework::Window mainWindow({100, 100, 1280, 720});
 	auto const device = mainWindow.Direct3D9({0, 0, 1280, 720});
 	Presentation presentation(device);
 

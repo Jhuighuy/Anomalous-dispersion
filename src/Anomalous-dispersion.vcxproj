@@ -86,14 +86,12 @@
     <ClCompile Include="Source\ObjLoader.cpp" />
     <ClCompile Include="Source\Presentation.cpp" />
     <ClCompile Include="Source\Program.cpp" />
-    <ClCompile Include="Source\Source.cpp" />
     <ClCompile Include="Source\yx2Engine.cpp" />
     <ClCompile Include="Source\yx2Framework.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ObjLoader.h" />
     <ClInclude Include="Source\Presentation.h" />
-    <ClInclude Include="Source\Window.h" />
     <ClInclude Include="Source\yx2Engine.h" />
     <ClInclude Include="Source\yx2Framework.h" />
     <ClInclude Include="Source\yx2Mesh.h" />
