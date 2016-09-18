@@ -42,4 +42,9 @@
       <Filter>Source\yx2Engine</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\yx2Mesh.inl">
+      <Filter>Source\yx2Engine</Filter>
+    </None>
+  </ItemGroup>
 </Project>

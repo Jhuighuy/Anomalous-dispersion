@@ -11,13 +11,13 @@ DisableFormat                             : 'false'
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
 AccessModifierOffset                      : '-4'
 AlignTrailingComments                     : true
-AlignAfterOpenBracket                     : Align
+#AlignAfterOpenBracket                     : Align
 # AlignConsecutiveAssignments             : 'true'
 AlignTrailingComments                     : 'true'
 AllowAllParametersOfDeclarationOnNextLine : 'true'
 AlwaysBreakTemplateDeclarations           : 'true'
 BreakBeforeBraces                         : Allman
-ColumnLimit                               : '120'
+ColumnLimit                               : '125'
 IndentCaseLabels                          : 'true'
 IndentWidth                               : '4'
 MaxEmptyLinesToKeep                       : '1'
