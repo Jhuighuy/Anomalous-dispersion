@@ -3,10 +3,13 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
+#include <stdlib.h>
 #include "ObjLoader.h"
+#include <ctime>
 
 bool ImportozameshenieBJD(const char* path, Mesh& out_vertices)
 {
+
 	std::vector<glm::vec2> out_uvs;
 	std::vector<glm::vec3> out_normals;
 
@@ -86,6 +89,7 @@ bool ImportozameshenieBJD(const char* path, Mesh& out_vertices)
 		}
 	}
 
+
 	// For each vertex of each triangle
 	for (unsigned int i = 0; i < vertexIndices.size(); i++)
 	{
@@ -101,7 +105,8 @@ bool ImportozameshenieBJD(const char* path, Mesh& out_vertices)
 		glm::vec3 normal = temp_normals[normalIndex - 1];
 
 		// Put the attributes in buffers
-		out_vertices.m_Vertices.push_back({ vertex, normal, D3DCOLOR_ARGB(0xFF/3, 0xFF, 0xFF, 0xFF) });
+		auto const color = D3DCOLOR_ARGB(0xFF, 0xFF & rand(), 0xFF & rand(), 0xFF & rand());
+		out_vertices.m_Vertices.push_back({ vertex, normal, color });
 		out_uvs.push_back(uv);
 		out_normals.push_back(normal);
 	}

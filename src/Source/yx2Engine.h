@@ -23,7 +23,7 @@ namespace yx2
 	using glm::vec4;
 	using glm::mat4;
 
-	using color = D3DCOLOR;
+	using color32 = D3DCOLOR;
 	auto static const color_black = D3DCOLOR_RGBA(0x00, 0x00, 0x00, 0xFF);
 	auto static const color_white = D3DCOLOR_RGBA(0xFF, 0xFF, 0xFF, 0xFF);
 
@@ -49,155 +49,45 @@ namespace yx2
 		class Runtime : public framework::D3DWidget
 		{
 		public:
-			explicit Runtime(HWND const hwnd, IDirect3DDevice9* const device) : D3DWidget(hwnd, device) {}
+			YX2_API Runtime(HWND const hwnd, IDirect3DDevice9* const device) : D3DWidget(hwnd, device)
+			{
+				m_Device->SetRenderState(D3DRS_ZENABLE, TRUE);
+				m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+
+				m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+				m_Device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+				m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+				m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+
+				m_Device->SetRenderState(D3DRS_LIGHTING, FALSE);
+				m_Device->SetRenderState(D3DRS_AMBIENT, D3DCOLOR_XRGB(50, 50, 50));
+			}
+
+			YX2_API void BeginRender() const
+			{
+				m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 40, 0xFF), 1.0f, 0);
+				m_Device->Clear(0, nullptr, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+				m_Device->BeginScene();
+			}
+
+			YX2_API void EndRender() const
+			{
+				m_Device->EndScene();
+				m_Device->Present(nullptr, nullptr, nullptr, nullptr);
+			}
+
 		}; // class Runtime
 
-		// ***********************************************************************************************
-		// Meshes management.
-		// ***********************************************************************************************
-
-		namespace fvfs
+		class RuntimeReferencee : public NonCopyable
 		{
-			template <DWORD TFVF, D3DPRIMITIVETYPE TPrimitiveType>
-			struct _BasicVertex
-			{
-				static auto const FVF = TFVF;
-				static auto const PrimitiveType = TPrimitiveType;
-			}; // struct _BaseVertex
+		protected:
+			Runtime* const m_Runtime;
+			IDirect3DDevice9* const m_Device;
 
-			struct LineVertex final : public fvfs::_BasicVertex<D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DPT_LINELIST>
-			{
-			}; // struct LineVertex
-
-			struct TriangleVertex final
-				: public fvfs::_BasicVertex<D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE, D3DPT_TRIANGLELIST>
-			{
-			}; // struct TriangleVertex
-		}	  // namespace fvfs
-
-		using fvfs::LineVertex;
-		using fvfs::TriangleVertex;
-
-		/**
-		 * \brief Container for vertices.
-		 * \tparam TVertex Type of a vertex.
-		 */
-		template <typename TVertex>
-		class YX2_API BasicMesh final : public NonCopyable
-		{
-		public:
-			using Vertex = TVertex;
-			static auto const FVF = TVertex::FVF;
-			static auto const PrimitiveType = TVertex::PrimitiveType;
-			static auto const VerticesPerPrimitive = PrimitiveType == D3DPT_TRIANGLELIST ? 3 : 2;
-
-		private:
-			IDirect3DDevice9* m_Device = nullptr;
-			IDirect3DVertexBuffer9* m_VertexBuffer = nullptr;
-			DWORD m_PrimitivesCount = 0;
-
-		public:
-			/**
-			 * \brief Initializes a mesh.
-			 * \param[in] runtime Engine runtime instance.
-			 * \param[in] vertices Mesh vertices.
-			 */
-			YX2_API BasicMesh(Runtime const& runtime, Vertex const* const vertices, DWORD const verticesCount)
-				: m_Device(runtime.m_Device), m_VertexBuffer(nullptr),
-				  m_PrimitivesCount(verticesCount / VerticesPerPrimitive)
-			{
-				assert(vertices != nullptr);
-				assert(verticesCount != 0);
-				assert(verticesCount % VerticesPerPrimitive == 0);
-
-				void* bufferData = nullptr;
-				auto const bufferSize = verticesCount * sizeof(Vertex);
-				m_Device->CreateVertexBuffer(bufferSize, 0, FVF, D3DPOOL_MANAGED, &m_VertexBuffer, nullptr);
-				m_VertexBuffer->Lock(0, 0, &bufferData, 0);
-				::memcpy_s(bufferData, bufferSize, vertices, bufferSize);
-				m_VertexBuffer->Unlock();
-			}
-
-			/**
-			 * \brief Destroyes the mesh object.
-			 */
-			YX2_API ~BasicMesh()
-			{
-				m_VertexBuffer->Release();
-				m_VertexBuffer = nullptr;
-			}
-
-			/**
-			 * \returns Amount of the primitives in this mesh.
-			 */
-			YX2_API auto GetPrimitivesCount() const { return m_PrimitivesCount; }
-
-			/**
-			 * \returns Vertex buffer that contains this mesh.
-			 */
-			YX2_API auto GetVertexBuffer() const { return m_VertexBuffer; }
-
-		}; // class BasicMesh
-
-		using LineMesh = BasicMesh<LineVertex>;
-		using TriangleMesh = BasicMesh<TriangleVertex>;
-
-		/**
-		 * \brief Implements mesh rendering.
-		 * \tparam TMesh Type of a renderable mesh.
-		 */
-		template <typename TMesh>
-		class BasicMeshRenderer : public NonCopyable
-		{
-		public:
-			using Mesh = TMesh;
-			using Vertex = typename Mesh::Vertex;
-			static auto const FVF = Mesh::FVF;
-			static auto const PrimitiveType = Mesh::TPrimitiveType;
-
-		private:
-			IDirect3DDevice9* m_Device;
-			Mesh const& m_Mesh;
-
-		public:
-			vec3 Position = vec3(0.0f, 0.0f, 0.0f);
-			vec3 Rotation = vec3(0.0f, 0.0f, 0.0f);
-			vec3 Scale = vec3(1.0f, 1.0f, 1.0f);
-			bool IsLit = true;
-			bool IsOpacue = true;
-
-		public:
-
-			/**
-			 * \brief Initializes a mesh renderer.
-			 * \param[in] runtime Engine runtime instance.
-			 * \param[in] mesh The mesh instance.
-			 */
-			YX2_API BasicMeshRenderer(Runtime const& runtime, Mesh const& mesh)
-				: m_Device(runtime.m_Device), m_Mesh(mesh)
-			{
-			}
-
-			/** 
-			 * \brief Performs rendering.
-			 */
-			YX2_API void Render() const
-			{
-				// Setting up the transformation matrix.
-				auto const transformationMatrix = glm::translate(Position) *
-												  glm::yawPitchRoll(Rotation.x, Rotation.y, Rotation.z) *
-												  glm::scale(Scale);
-				m_Device->SetTransform(D3DTS_WORLD, ToD3D(transformationMatrix));
-
-				// And finally rendering.
-				m_Device->SetFVF(FVF);
-				m_Device->SetStreamSource(0, m_Mesh.m_VertexBuffer, 0, sizeof(Vertex));
-				m_Device->DrawPrimitive(PrimitiveType, 0, m_Mesh.m_PrimitivesCount);
-
-				m_Device->SetTransform(D3DTS_WORLD, ToD3D(mat4()));
-			}
-
-		}; // class BasicMeshRenderer
+			YX2_API explicit RuntimeReferencee(Runtime* const runtime)
+				: m_Runtime(runtime), m_Device(runtime->m_Device)
+			{}
+		};	// class RuntimeReferencee
 
 		// ***********************************************************************************************
 		// Camera management.
@@ -228,7 +118,7 @@ namespace yx2
 			 * \brief Initializes a camera.
 			 * \param[in] runtime Engine runtime instance.
 			 */
-			YX2_API explicit Camera(Runtime const& runtime) : m_Device(runtime.m_Device) { Update(); }
+			YX2_API explicit Camera(Runtime const* runtime) : m_Device(runtime->m_Device) { Update(); }
 
 			/** 
 			 * \brief Updates camera matrices.
@@ -258,7 +148,7 @@ namespace yx2
 			 * \brief Initializes an orbital camera.
 			 * \param[in] runtime Engine runtime instance.
 			 */
-			YX2_API explicit OrbitalCamera(Runtime const& runtime) : Camera(runtime) {}
+			YX2_API explicit OrbitalCamera(Runtime const* runtime) : Camera(runtime) { Update(); }
 
 			/** 
 			 * \brief Updates camera matrices.
