@@ -15,7 +15,7 @@
 #include <assert.h>
 #include <d3d9.h>
 #include <wtypes.h>
-#include <locale.h>
+#include <winuser.h>
 
 
 #pragma warning(push, 0)
@@ -28,8 +28,8 @@
 
 #define YX2_API
 
-#define STANDART_DESKTOP_WIDTH 1920
-#define STANDART_DESKTOP_HEIGHT 1080
+#define STANDART_DESKTOP_WIDTH 1680
+#define STANDART_DESKTOP_HEIGHT 1050
 
 namespace yx2
 {
@@ -45,7 +45,7 @@ namespace yx2
 
 	namespace framework
 	{
-		void GetDesktopResolution(int& horizontal, int& vertical)
+		inline void GetDesktopResolution(int& horizontal, int& vertical)
 		{
 			RECT desktop;
 			// Get a handle to the desktop window
@@ -134,6 +134,13 @@ namespace yx2
 			}
 			YX2_API void SetText(wchar_t const* const text) const { SetWindowTextW(m_hwnd, text); }
 
+		
+
+			YX2_API void Destroy() const
+			{
+				DestroyWindow(m_hwnd);
+			}
+
 		}; // class WindowWidget
 
 		class D3DWidget : WindowWidget
@@ -159,6 +166,8 @@ namespace yx2
 													  LPARAM const lParam)
 			{
 				auto const self = reinterpret_cast<Window*>(GetWindowLongW(hWnd, GWLP_USERDATA));
+				if (message == WM_CLOSE)
+					PostQuitMessage(0);
 				return self != nullptr ? self->SelfWindowProc(message, wParam, lParam)
 									   : DefWindowProcW(hWnd, message, wParam, lParam);
 			}
@@ -195,7 +204,7 @@ namespace yx2
 			YX2_API explicit Window(Rect const& rect, wchar_t const* const caption = nullptr,
 								   bool const fullscreen = false)
 			{
-				(void)fullscreen;
+				//(void)fullscreen;
 
 				WNDCLASSEX static windowClass;
 				if (windowClass.cbSize == 0)
@@ -204,16 +213,38 @@ namespace yx2
 					windowClass.style = CS_HREDRAW | CS_VREDRAW;
 					windowClass.lpfnWndProc = WindowProc;
 					windowClass.hInstance = GetModuleHandleW(nullptr);
-					//	windowClass.hbrBackground = GetSysColorBrush(COLOR_3DFACE);
+					windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1); //this allows to make button invisible after being destroyed
+					//windowClass.hbrBackground = GetSysColorBrush(COLOR_3DFACE);
 					windowClass.lpszClassName = L"WindowClass1";
 					RegisterClassEx(&windowClass);
 				}
+				
+				else
+				{
+					m_hwnd = CreateWindowEx(0, windowClass.lpszClassName, caption,
+						WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, rect.x, rect.y,
+						rect.w, rect.h, nullptr, nullptr, GetModuleHandleW(nullptr), nullptr);
+					SetWindowLongW(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+					ShowWindow(m_hwnd, SW_SHOW);
+				}
+				if(fullscreen)
+				{
+					auto hmon = MonitorFromWindow(m_hwnd,
+						MONITOR_DEFAULTTONEAREST);
+					MONITORINFO mi = { sizeof(mi) };
+					GetMonitorInfoW(hmon, &mi);
 
-				m_hwnd = CreateWindowEx(0, windowClass.lpszClassName, caption,
-										WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, rect.x, rect.y,
-										rect.w, rect.h, nullptr, nullptr, GetModuleHandleW(nullptr), nullptr);
-				SetWindowLongW(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-				ShowWindow(m_hwnd, SW_SHOW);
+					m_hwnd = CreateWindowEx(0, windowClass.lpszClassName, caption,
+						WS_POPUP | WS_VISIBLE |WS_OVERLAPPED,
+						mi.rcMonitor.left,
+						mi.rcMonitor.top,
+						mi.rcMonitor.right - mi.rcMonitor.left,
+						mi.rcMonitor.bottom - mi.rcMonitor.top,
+						m_hwnd, nullptr, GetModuleHandleW(nullptr), nullptr);
+					SetWindowLongW(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+					ShowWindow(m_hwnd, SW_SHOW);
+				} 
+
 			}
 
 		public:
@@ -276,7 +307,7 @@ namespace yx2
 												  rect.w, rect.h, m_hwnd, nullptr, nullptr, nullptr);
 				if (handle != nullptr)
 				{
-					auto const bitmap = LoadImageW(nullptr, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+					auto const bitmap = LoadImageW(nullptr, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
 					if (bitmap != nullptr)
 					{
 						SendMessageW(handle, STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP),
@@ -357,6 +388,11 @@ namespace yx2
 				return new TD3DWidget(handle, device);
 			}
 
+
+
+
+
+			
 		}; // class Window
 
 	} // namespace framework
