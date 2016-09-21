@@ -3,6 +3,7 @@
 #define GLM_FORCE_LEFT_HANDED 1
 #include <math.h>
 #include <d3d9.h>
+#include <d3dx9.h>
 #include <vector>
 #pragma warning(push, 0)
 #include <glm/glm.hpp>
@@ -77,6 +78,7 @@ class Presentation final : public yx2::engine::Runtime
 {
 	auto static const g_Width = 1280;
 	auto static const g_Height = 720;
+	IDirect3DTexture9 *g_texture = NULL;
 
 	/**
 	 * \brief A 3D plane, defined with normal and point on it.
@@ -99,7 +101,7 @@ class Presentation final : public yx2::engine::Runtime
 
 private:
 	float m_CameraZoom = 1.0f;
-	float m_CameraRotationYaw = -YX2_PI / 2.0f;
+	float m_CameraRotationYaw = 0;
 	float m_CameraRotationPitch = 0.0f;
 	POINT m_PrevMousePosition = {};
 
@@ -131,30 +133,28 @@ public:
 	PRESENTATION_API explicit Presentation(HWND const hwnd, IDirect3DDevice9* const device) 
 		: Runtime(hwnd, device)
 	{
-	//	D3DLIGHT9 light = {};
-	//	light.Type = D3DLIGHT_POINT;
-	//	light.Diffuse.r = 1.0f;
-	//	light.Diffuse.g = 1.0f;
-	//	light.Diffuse.b = 1.0f;
-	//	light.Ambient.r = 0.5f;
-	//	light.Ambient.g = 0.5f;
-	//	light.Ambient.b = 0.5f;
-	//	light.Specular.r = 1.0f;
-	//	light.Specular.g = 1.0f;
-	//	light.Specular.b = 1.0f;
-	//	light.Position.x = 0.5f;
-	//	light.Position.y = 2.3f;
-	//	light.Position.z = 1.5f;
-	//	light.Attenuation0 = 0.01f;
-	//	light.Range =3;
-	//	device->SetLight(0, &light);
-	//	device->LightEnable(0, TRUE);
+	//	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+	//	device->SetRenderState(D3DRS_LIGHTING, FALSE);
 
-	//	D3DMATERIAL9 material = {};
-	//	material.Diffuse = { 1.0f, 1.0f, 1.0f, 1.0f }; // set diffuse color to white
-	//	material.Ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
-	////	device->SetMaterial(&material);
+		D3DXCreateTextureFromFile(m_Device, L"../backed.png", &g_texture);
+		m_Device->SetTexture(0, g_texture);
+		m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+		m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+		m_Device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);   //Ignored
 
+		D3DLIGHT9 light = {};
+		light.Type = D3DLIGHT_POINT;    // make the light type 'directional light'
+		light.Diffuse = { 0.5f, 0.5f, 0.5f, 1.0f };    // set the light's color
+		light.Position = { 0.0f, 2.0f, 2.0f };
+		light.Range = 10;
+		light.Attenuation0 = 0.1;
+		device->SetLight(0, &light);
+		device->LightEnable(0, TRUE);
+
+		D3DMATERIAL9 material = {};
+		material.Diffuse = { 0.5f, 0.5f, 0.5f, 1.0f }; // set diffuse color to white
+		material.Ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
+		device->SetMaterial(&material);
 
 		//////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
@@ -163,7 +163,7 @@ public:
 		//////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
 
-		ImportozameshenieBJD("../Kommunalks_yx2.bjd", m_Kommunalks);
+		ImportozameshenieBJD("../room.obj", m_Kommunalks);
 		m_Kommunalks.SetupVerticesBuffer(device);
 
 		ImportozameshenieBJD("../Prizbma.bjd", m_PrismMesh);
@@ -267,8 +267,8 @@ public:
 		m_Device->BeginScene();
 
 		{
-			glm::vec4 static const cameraRotationCenter(0.0f, 1.24f, 1.5f, 1.0f);
-			glm::vec4 static const cameraCenterOffset(0.0f, 0.0f, -3.0f, 1.0f);
+			glm::vec4 static const cameraRotationCenter(0.0f, 1.24f, 2.0f, 1.0f);
+			glm::vec4 static const cameraCenterOffset(0.0f, 0.0f, -2.5f, 1.0f);
 			glm::vec4 static const cameraUp(0.0f, 1.0f, 0.0f, 1.0f);
 
 			if (GetAsyncKeyState(VK_LBUTTON) != 0)
@@ -292,12 +292,18 @@ public:
 			auto const center = glm::vec3(cameraRotationCenter);
 			auto const up = glm::vec3(cameraRotation * cameraUp);
 			m_Device->SetTransform(D3DTS_VIEW, to_d3d(glm::lookAtLH(eye, center, up)));
-			m_Device->SetTransform(D3DTS_PROJECTION, to_d3d(glm::perspectiveFovLH<float>(YX2_PI / 4.0f, g_Width, g_Height, 0.01f, 100.0f)));
+			m_Device->SetTransform(D3DTS_PROJECTION, to_d3d(glm::perspectiveFovLH<float>(YX2_PI / 3.0f, g_Width, g_Height, 0.01f, 100.0f)));
 		}
 
+		m_Device->SetTexture(0, g_texture);
+		m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+		m_Device->SetTransform(D3DTS_WORLD, to_d3d(glm::translate(glm::vec3(0,0,2))));
 		m_Kommunalks.Render(m_Device);
+		m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+		m_Device->SetTexture(0, nullptr);
 
 	//	m_Device->SetRenderState(D3DRS_LIGHTING, FALSE);
+		m_Device->SetTransform(D3DTS_WORLD, to_d3d(glm::mat4()));
 		m_rays.Render(m_Device);
 	//	m_Device->SetRenderState(D3DRS_LIGHTING, TRUE);
 

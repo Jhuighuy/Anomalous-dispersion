@@ -169,7 +169,7 @@ namespace yx2
 					case WM_COMMAND:
 					{
 						auto const hash = static_cast<WindowWidgetHash>(LOWORD(wParam));
-						if (m_Callbacks.count(hash) != 0)
+						if (m_Callbacks.count(hash) != 0 && m_Callbacks[hash] != nullptr)
 							m_Callbacks[hash](0);
 						break;
 					}

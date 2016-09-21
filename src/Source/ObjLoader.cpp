@@ -45,19 +45,20 @@ bool ImportozameshenieBJD(const char* path, Mesh& out_vertices)
 			fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
 			temp_vertices.push_back(vertex);
 		}
-		else if (strcmp(lineHeader, "vt") == 0)
-		{
-			glm::vec2 uv;
-			fscanf(file, "%f %f\n", &uv.x, &uv.y);
-			uv.y = -uv.y; // Invert V coordinate since we will only use DDS texture, which are inverted.
-						  // Remove if you want to use TGA or BMP loaders.
-			temp_uvs.push_back(uv);
-		}
 		else if (strcmp(lineHeader, "vn") == 0)
 		{
 			glm::vec3 normal;
 			fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
 			temp_normals.push_back(normal);
+		}
+		else if (strcmp(lineHeader, "vt") == 0)
+		{
+			char stupidBuffer[1000];
+			fgets(stupidBuffer, 1000, file);
+
+			double u, v, w;
+			auto a = sscanf(stupidBuffer, "%lf %lf %lf\n", &u, &v, &w);
+			temp_uvs.push_back(glm::vec2(u, 1-v));
 		}
 		else if (strcmp(lineHeader, "f") == 0)
 		{
@@ -90,6 +91,8 @@ bool ImportozameshenieBJD(const char* path, Mesh& out_vertices)
 	}
 
 
+	auto const color = D3DCOLOR_ARGB(0xFF, 0xFF / 8, 0xFF / 8, 0xFF / 8);
+//	auto const color = D3DCOLOR_ARGB(0xFF, 0xFF & rand(), 0xFF & rand(), 0xFF & rand());
 	// For each vertex of each triangle
 	for (unsigned int i = 0; i < vertexIndices.size(); i++)
 	{
@@ -105,8 +108,7 @@ bool ImportozameshenieBJD(const char* path, Mesh& out_vertices)
 		glm::vec3 normal = temp_normals[normalIndex - 1];
 
 		// Put the attributes in buffers
-		auto const color = D3DCOLOR_ARGB(0xFF, 0xFF & rand(), 0xFF & rand(), 0xFF & rand());
-		out_vertices.m_Vertices.push_back({ vertex, normal, color });
+		out_vertices.m_Vertices.push_back({ vertex, normal, color, uv });
 		out_uvs.push_back(uv);
 		out_normals.push_back(normal);
 	}

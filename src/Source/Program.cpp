@@ -5,7 +5,9 @@
 #include "Presentation.h"
 #include <string>
 #include <iostream>
+#include <ctime>
 #pragma comment(lib, "d3d9.lib")
+#pragma comment(lib, "d3dx9.lib")
 
 namespace dxm = glm;
 
@@ -26,12 +28,8 @@ namespace dxm = glm;
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine,
 	_In_ int nCmdShow)
 {
-
-
-
 	(void)hInstance, hPrevInstance, lpCmdLine, nCmdShow;
-
-	
+	srand(time(nullptr));
 
 	yx2::framework::Window mainWindow({ 100, 100, 1280, 720 });
 	mainWindow.TextEdit({ 300, 100, 700, 20 }, L"Московский Государственный Университет", yx2::framework::TextEditFlags::CenterAlignment);
@@ -48,7 +46,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 			presentation->Update();
 		}
 	});
-	mainWindow.Button({ 300, 400, 700, 40 }, L"Люблю Олега", nullptr);
+//	mainWindow.Button({ 300, 400, 700, 40 }, L"Люблю Олега", nullptr);
 	mainWindow.Button({ 300, 450, 700, 40 }, L"Выход", [](long)
 	{
 		exit(0);
