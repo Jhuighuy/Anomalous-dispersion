@@ -16,7 +16,7 @@ namespace Presentation1
 	{
 		dxm::vec3 Position = { 0.0f, 0.6f, 2.0f };
 		FLOAT Angle = DXM_PI / 3.0f;
-		FLOAT RotationY = -F_PI / 12.0f;
+		FLOAT RotationX = -F_PI / 12.0f;
 		FLOAT RotationZ = -F_PI / 3.0f;
 
 	private:
@@ -49,7 +49,7 @@ namespace Presentation1
 
 			m_PrismMesh.Position = Position;
 			m_PrismMesh.Scale = glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f));
-			m_PrismMesh.Rotation.y = RotationY;
+			m_PrismMesh.Rotation.x = RotationX;
 			m_PrismMesh.Rotation.z = RotationZ;
 			m_PrismMesh.Render();
 		}
@@ -99,7 +99,6 @@ namespace Presentation1
 			LoadOBJ("../../gfx/room.obj", m_RoomMesh);
 			LoadTexture(m_Device, L"../../gfx/baked.png", &m_RoomRenderer.Texture);
 			m_RoomRenderer.Position = {0.0f, 0.0f, 2.0f};
-		//	m_RoomRenderer.Rotation.x = DXM_PI / 2.0f;
 		
 			/* Setting up dynamic scene parameters. */
 			LoadOBJ("../../gfx/prism.obj", m_PrismMesh);
