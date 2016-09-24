@@ -22,14 +22,14 @@ struct LineMeshVertex : BaseVertex<D3DFVF_XYZ | D3DFVF_DIFFUSE>
 	LineMeshVertex(Vector3 const& p, Color const c) : Position(p), DiffuseColor(c) {}
 };	// struct LineVertex
 
-struct TriangleMeshVertex : BaseVertex<D3DFVF_XYZ | D3DFVF_NORMAL /*| D3DFVF_DIFFUSE*/ | D3DFVF_TEX1>
+struct TriangleMeshVertex : BaseVertex<D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1>
 {
 	Vector3 Position;
 	Vector3 Normal;
-//	Color   DiffuseColor;
+	Color   DiffuseColor;
 	glm::vec2 UV;
 
-	TriangleMeshVertex(Vector3 const& p, Vector3 const& n, Color const c, glm::vec2 const& uv) : Position(p), Normal(n), /*DiffuseColor(c),*/ UV(uv) {}
+	TriangleMeshVertex(Vector3 const& p, Vector3 const& n, Color const c, glm::vec2 const& uv) : Position(p), Normal(n), DiffuseColor(c), UV(uv) {}
 };	// struct Vertex
 
 template<typename PrimitiveVertex, D3DPRIMITIVETYPE primitiveType>
@@ -55,11 +55,11 @@ public:
 		m_PrimitivesCount = m_Vertices.size() / (primitiveType == D3DPT_TRIANGLELIST ? 3 : 2);
 	}
 
-	void Render(LPDIRECT3DDEVICE9 const device)
+	void Render(LPDIRECT3DDEVICE9 const device, UINT pc = 0)
 	{
 		device->SetFVF(PrimitiveVertex::FVF);
 		device->SetStreamSource(0, m_VerticesBuffer, 0, sizeof(PrimitiveVertex));
-		device->DrawPrimitive(primitiveType, 0, m_PrimitivesCount);
+		device->DrawPrimitive(primitiveType, 0, pc == 0 ? m_PrimitivesCount : pc);
 	}
 
 };	// struct BaseMesh

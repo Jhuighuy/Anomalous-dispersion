@@ -50,7 +50,7 @@ artifacts/
 *_i.h
 *.ilk
 *.meta
-*.obj
+#*.obj # - have to upload them.
 *.pch
 *.pdb
 *.pgc

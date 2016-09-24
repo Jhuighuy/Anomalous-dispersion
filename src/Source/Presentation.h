@@ -78,7 +78,8 @@ class Presentation final : public yx2::engine::Runtime
 {
 	auto static const g_Width = 1280;
 	auto static const g_Height = 720;
-	IDirect3DTexture9 *g_texture = NULL;
+	IDirect3DTexture9* m_Lightmap = nullptr;
+	IDirect3DTexture9* m_ColorMask = nullptr;
 
 	/**
 	 * \brief A 3D plane, defined with normal and point on it.
@@ -96,8 +97,12 @@ class Presentation final : public yx2::engine::Runtime
 		float Angle;
 		float zRotation;
 		float yRotation;
-		glm::mat4 Trans;
+		glm::mat4 Transformation;
 	};	// struct Prism
+
+	struct Screen
+	{
+	};	// struct Screen
 
 private:
 	float m_CameraZoom = 1.0f;
@@ -105,10 +110,17 @@ private:
 	float m_CameraRotationPitch = 0.0f;
 	POINT m_PrevMousePosition = {};
 
-	LineMesh m_rays;
-	Mesh m_Kommunalks;
-
+	LineMesh m_Rays;
 	Mesh m_PrismMesh;
+
+	Mesh m_ScreenImage;
+	Mesh m_Screen;
+
+	Mesh m_HolderFooter;
+	Mesh m_HolderLeg;
+	Mesh m_HolderGimbal;
+
+	Mesh m_Kommunalks;
 	std::vector<Prism> m_Prisms;
 
 	std::vector<Plane> planes;
@@ -136,25 +148,30 @@ public:
 	//	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 	//	device->SetRenderState(D3DRS_LIGHTING, FALSE);
 
-		D3DXCreateTextureFromFile(m_Device, L"../backed.png", &g_texture);
-		m_Device->SetTexture(0, g_texture);
+		m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+		m_Device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+		m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+		m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+
+	//	D3DXCreateTextureFromFile(m_Device, L"../backed.png", &m_Lightmap);
+		D3DXCreateTextureFromFile(m_Device, L"../color_mask.png", &m_ColorMask);
 		m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
 		m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 		m_Device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);   //Ignored
 
-		D3DLIGHT9 light = {};
-		light.Type = D3DLIGHT_POINT;    // make the light type 'directional light'
-		light.Diffuse = { 0.5f, 0.5f, 0.5f, 1.0f };    // set the light's color
-		light.Position = { 0.0f, 2.0f, 2.0f };
-		light.Range = 10;
-		light.Attenuation0 = 0.1;
-		device->SetLight(0, &light);
-		device->LightEnable(0, TRUE);
+		//D3DLIGHT9 light = {};
+		//light.Type = D3DLIGHT_POINT;    // make the light type 'directional light'
+		//light.Diffuse = { 0.5f, 0.5f, 0.5f, 1.0f };    // set the light's color
+		//light.Position = { 0.0f, 2.0f, 2.0f };
+		//light.Range = 10;
+		//light.Attenuation0 = 0.1;
+		//device->SetLight(0, &light);
+		//device->LightEnable(0, TRUE);
 
-		D3DMATERIAL9 material = {};
-		material.Diffuse = { 0.5f, 0.5f, 0.5f, 1.0f }; // set diffuse color to white
-		material.Ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
-		device->SetMaterial(&material);
+		//D3DMATERIAL9 material = {};
+		//material.Diffuse = { 0.5f, 0.5f, 0.5f, 1.0f }; // set diffuse color to white
+		//material.Ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
+		//device->SetMaterial(&material);
 
 		//////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
@@ -163,7 +180,7 @@ public:
 		//////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
 
-		ImportozameshenieBJD("../room.obj", m_Kommunalks);
+		ImportozameshenieBJD("../screen.obj", m_Kommunalks);
 		m_Kommunalks.SetupVerticesBuffer(device);
 
 		ImportozameshenieBJD("../Prizbma.bjd", m_PrismMesh);
@@ -176,22 +193,22 @@ public:
 
 		for (auto& firstPrism : m_Prisms)
 		{
-			firstPrism.Trans = glm::translate(firstPrism.Point) * glm::yawPitchRoll(firstPrism.yRotation, 0.0f, firstPrism.zRotation) *
+			firstPrism.Transformation = glm::translate(firstPrism.Point) * glm::yawPitchRoll(firstPrism.yRotation, 0.0f, firstPrism.zRotation) *
 				glm::scale(glm::vec3(1.0f, 1.0f, tanf(firstPrism.Angle / 2)));
 
 			{
-				glm::vec4 vector1 = firstPrism.Trans * glm::vec4(-0.2f, 0.2, 0.0f, 1.0);
-				glm::vec4 vector2 = firstPrism.Trans * glm::vec4(0.2f, 0.2, 0.0f, 1.0);
-				glm::vec4 vector3 = firstPrism.Trans * glm::vec4(0.2f, -0.2, -0.4f, 1.0);
+				glm::vec4 vector1 = firstPrism.Transformation * glm::vec4(-0.2f, 0.2, 0.0f, 1.0);
+				glm::vec4 vector2 = firstPrism.Transformation * glm::vec4(0.2f, 0.2, 0.0f, 1.0);
+				glm::vec4 vector3 = firstPrism.Transformation * glm::vec4(0.2f, -0.2, -0.4f, 1.0);
 				glm::vec3 currentNormal =
 					glm::normalize(glm::cross(glm::vec3(vector3 - vector1), glm::vec3(vector2 - vector1)));
 				planes.push_back({ glm::vec3(vector1), currentNormal, airGlass });
 			}
 
 			{
-				glm::vec4 vector1 = firstPrism.Trans * glm::vec4(-0.2f, 0.2, 0.0f, 1.0);
-				glm::vec4 vector2 = firstPrism.Trans * glm::vec4(0.2f, 0.2, 0.0f, 1.0);
-				glm::vec4 vector3 = firstPrism.Trans * glm::vec4(-0.2f, -0.2, 0.4f, 1.0);
+				glm::vec4 vector1 = firstPrism.Transformation * glm::vec4(-0.2f, 0.2, 0.0f, 1.0);
+				glm::vec4 vector2 = firstPrism.Transformation * glm::vec4(0.2f, 0.2, 0.0f, 1.0);
+				glm::vec4 vector3 = firstPrism.Transformation * glm::vec4(-0.2f, -0.2, 0.4f, 1.0);
 				glm::vec3 currentNormal =
 					glm::normalize(glm::cross(glm::vec3(vector3 - vector1), glm::vec3(vector2 - vector1)));
 				planes.push_back({ glm::vec3(vector1), currentNormal, glassAir });
@@ -206,8 +223,9 @@ public:
 		//////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
 
-		GenerateRaysMesh(100, m_rays);
-		m_rays.SetupVerticesBuffer(device);
+		GenerateRaysMesh(100);
+		m_Rays.SetupVerticesBuffer(device);
+		m_ScreenImage.SetupVerticesBuffer(device);
 	}
 
 	PRESENTATION_API static Vector3 Intersect(Plane const& plane, Vector3 const& coord, Vector3 const& direction)
@@ -220,13 +238,13 @@ public:
 	{
 		auto const angleBefore =
 			acosf(glm::dot(direction, plane.Normal) / glm::length(plane.Normal) / glm::length(direction));
-		auto const angleAfter = 
-			angleBefore - asinf(clampf(1 / static_cast<float>(plane.RefractiveIndex[waveNumber]) * sinf(angleBefore), -1.0f, 1.0f));
+		auto const angleAfter =
+			asinf(clampf(1.0f / static_cast<float>(plane.RefractiveIndex[waveNumber]) * sinf(angleBefore), -1.0f, 1.0f));
 
-		return glm::rotate(direction, angleAfter, glm::cross(direction, plane.Normal));
+		return glm::rotate(direction, angleBefore - angleAfter, glm::cross(direction, plane.Normal));
 	}
 
-	PRESENTATION_API void GenerateRaysMesh(unsigned partitioning, LineMesh& mesh)
+	PRESENTATION_API void GenerateRaysMesh(unsigned partitioning)
 	{
 		// double refractiveIndex1;
 		for (auto i = 0u; i < partitioning; ++i)
@@ -240,18 +258,35 @@ public:
 			auto const waveLength = violetWaveLength + i * (redWaveLength - violetWaveLength) / partitioning;
 			auto const rgb = ConvertWaveLengthToRGB(waveLength);
 
-			for (auto const& plane : planes)
+			for (auto j = 0u; j < planes.size(); ++j)
 			{
-				mesh.m_Vertices.push_back({coord, rgb});
+				auto& plane = planes[j];
+
+				m_Rays.m_Vertices.push_back({ coord, rgb });
 
 				// Computing the intercestion coordinates of the ray and refractive
 				// plane.
 				coord = Intersect(plane, coord, direction);
-				mesh.m_Vertices.push_back({coord, rgb});
+				m_Rays.m_Vertices.push_back({ coord, rgb });
 
 				// And finally refracting a direction.
 				direction = Refract(direction, plane, i);
 				direction = direction;
+
+				if (j == planes.size() - 1)
+				{
+					auto const scale = 0.03f;
+					glm::vec3 static const triangleVert[] = {
+						{  0.0f,  0.5f, 0.0f },
+						{  1.0f, -0.5f, 0.0f },
+						{ -1.0f, -0.5f, 0.0f },
+					};
+					glm::vec3 static const uvOffset = {0.5f, 0.5f, 0.0f};
+
+					m_ScreenImage.m_Vertices.push_back(TriangleMeshVertex(triangleVert[0] * scale + coord, { 0.0, 0.0, -1.0f }, rgb, triangleVert[0] + uvOffset));
+					m_ScreenImage.m_Vertices.push_back(TriangleMeshVertex(triangleVert[1] * scale + coord, { 0.0, 0.0, -1.0f }, rgb, triangleVert[1] + uvOffset));
+					m_ScreenImage.m_Vertices.push_back(TriangleMeshVertex(triangleVert[2] * scale + coord, { 0.0, 0.0, -1.0f}, rgb, triangleVert[2] + uvOffset));
+				}
 			}
 		}
 	}
@@ -295,7 +330,7 @@ public:
 			m_Device->SetTransform(D3DTS_PROJECTION, to_d3d(glm::perspectiveFovLH<float>(YX2_PI / 3.0f, g_Width, g_Height, 0.01f, 100.0f)));
 		}
 
-		m_Device->SetTexture(0, g_texture);
+		m_Device->SetTexture(0, m_Lightmap);
 		m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 		m_Device->SetTransform(D3DTS_WORLD, to_d3d(glm::translate(glm::vec3(0,0,2))));
 		m_Kommunalks.Render(m_Device);
@@ -304,12 +339,15 @@ public:
 
 	//	m_Device->SetRenderState(D3DRS_LIGHTING, FALSE);
 		m_Device->SetTransform(D3DTS_WORLD, to_d3d(glm::mat4()));
-		m_rays.Render(m_Device);
+		m_Rays.Render(m_Device);
+		m_Device->SetTexture(0, m_ColorMask);
+		m_ScreenImage.Render(m_Device, 1);
 	//	m_Device->SetRenderState(D3DRS_LIGHTING, TRUE);
 
+		m_Device->SetTexture(0, nullptr);
 		for (auto& prism : m_Prisms)
 		{
-			m_Device->SetTransform(D3DTS_WORLD, to_d3d(prism.Trans));
+			m_Device->SetTransform(D3DTS_WORLD, to_d3d(prism.Transformation));
 			m_PrismMesh.Render(m_Device);
 		}
 		m_Device->SetTransform(D3DTS_WORLD, to_d3d(glm::mat4()));

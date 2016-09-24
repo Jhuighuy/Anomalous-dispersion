@@ -28,7 +28,7 @@ bool ImportozameshenieBJD(const char* path, Mesh& out_vertices)
 		return false;
 	}
 
-	while (1)
+	for (auto line = 0u; ; ++line)
 	{
 
 		char lineHeader[128];
