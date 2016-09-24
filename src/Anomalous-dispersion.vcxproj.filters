@@ -41,6 +41,12 @@
     <ClInclude Include="Source\yx2Mesh.h">
       <Filter>Source\yx2Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Source\PresentationWidget.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PresentationEngine.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\yx2Mesh.inl">

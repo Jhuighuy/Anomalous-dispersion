@@ -15,7 +15,7 @@
 #include <glm/gtx/transform.hpp>
 #pragma warning(pop)
 
-#define YX2_PI float(M_PI)
+#define DXM_PI float(M_PI)
 
 namespace yx2
 {
@@ -127,7 +127,7 @@ namespace yx2
 			{
 				m_Device->SetTransform(D3DTS_VIEW, ToD3D(glm::lookAtLH(Eye, Center, Up)));
 				m_Device->SetTransform(D3DTS_PROJECTION,
-									   ToD3D(glm::perspectiveFovLH<float>(YX2_PI / 4.0f, g_Width, g_Height, 0.01f, 100.0f)));
+									   ToD3D(glm::perspectiveFovLH<float>(DXM_PI / 4.0f, g_Width, g_Height, 0.01f, 100.0f)));
 			}
 
 		}; // class Camera
@@ -138,7 +138,7 @@ namespace yx2
 		class OrbitalCamera final : public Camera
 		{
 		private:
-			float m_CameraRotationYaw = -YX2_PI / 2.0f;
+			float m_CameraRotationYaw = -DXM_PI / 2.0f;
 			float m_CameraRotationPitch = 0.0f;
 			POINT m_PrevMousePosition = {};
 
@@ -170,7 +170,7 @@ namespace yx2
 					auto const deltaPitch = static_cast<float>(mouseCurrentPosition.x - m_PrevMousePosition.x) / g_Width;
 
 					m_CameraRotationYaw += deltaPitch;
-					m_CameraRotationPitch = clampf(m_CameraRotationPitch + deltaYaw, -YX2_PI / 12.0f, YX2_PI / 3.0f);
+					m_CameraRotationPitch = clampf(m_CameraRotationPitch + deltaYaw, -DXM_PI / 12.0f, DXM_PI / 3.0f);
 				}
 				GetCursorPos(&m_PrevMousePosition);
 

@@ -3,6 +3,7 @@
 
 #include "yx2Framework.h"
 #include "Presentation.h"
+#include "PresentationWidget.h"
 #include <string>
 #include <iostream>
 #pragma comment(lib, "d3d9.lib")
@@ -19,11 +20,6 @@ namespace dxm = glm;
  * \param nCmdShow Unused WinAPI parameter.
  * \return Exit code.
  */
-
-
-
-
-
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine,
 	_In_ int nCmdShow)
 {
@@ -39,14 +35,14 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 	std::array<yx2::framework::WindowWidget, 10> windowWidgets;
 	windowWidgets[0] = mainWindow.TextEdit({ 500, 100, 700, 20 }, L"Московский Государственный Университет им. М.В. Ломоносова",
 													yx2::framework::TextEditFlags::CenterAlignment);
-	windowWidgets[1] = mainWindow.Image({ 10, 15, 100,100 }, L"../cmc1.bmp");
-	windowWidgets[2] = mainWindow.Image({ 1525, 15, 100, 100 }, L"../fizfak.bmp");
+	windowWidgets[1] = mainWindow.Image({ 10, 15, 100,100 }, L"../../gfx/cmc1.bmp");
+	windowWidgets[2] = mainWindow.Image({ 1525, 15, 100, 100 }, L"../../gfx/fizfak.bmp");
 	windowWidgets[3] = mainWindow.Button({500, 500,700,40 }, L"Начало", [&mainWindow, &windowWidgets](long)
 	{
 		for(auto i = 0; i < 10; ++i )
 			windowWidgets[i].Destroy();
 
-		auto presentation = mainWindow.Direct3D9<Presentation>({ 0, 0, 1280, 720 });
+		auto presentation = mainWindow.Direct3D9<Presentation1::PresentationWidget>({ 0, 0, 1280, 720 });
 
 		MSG msg;
 		while (GetMessage(&msg, nullptr, 0, 0))

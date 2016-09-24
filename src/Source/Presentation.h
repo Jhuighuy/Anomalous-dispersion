@@ -42,7 +42,7 @@ static D3DMATRIX const* to_d3d(glm::mat4x4 const& matrix) { return reinterpret_c
 // ***********************************************************************************************
 
 // True GOVNOKOD BELOW. WARNING!
-std::array<double, 100> AirGlassComputation()
+static std::array<double, 100> AirGlassComputation()
 {
 	std::array<double, 100> array;
 	double currentCoefficient = 1.510f;
@@ -55,7 +55,7 @@ std::array<double, 100> AirGlassComputation()
 	return array;
 }
 
-std::array<double, 100> GlassAirComputation()
+static std::array<double, 100> GlassAirComputation()
 {
 	std::array<double, 100> array;
 	double currentCoefficient = 1.510f;
@@ -68,8 +68,8 @@ std::array<double, 100> GlassAirComputation()
 	return array;
 }
 
-std::array<double, 100> airGlass = AirGlassComputation();
-std::array<double, 100> glassAir = GlassAirComputation();
+static std::array<double, 100> airGlass = AirGlassComputation();
+static std::array<double, 100> glassAir = GlassAirComputation();
 
 /**
  * \brief
@@ -81,6 +81,7 @@ class Presentation final : public yx2::engine::Runtime
 	IDirect3DTexture9* m_Lightmap = nullptr;
 	IDirect3DTexture9* m_ColorMask = nullptr;
 
+public:
 	/**
 	 * \brief A 3D plane, defined with normal and point on it.
 	 */
@@ -153,8 +154,8 @@ public:
 		m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 		m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 
-	//	D3DXCreateTextureFromFile(m_Device, L"../backed.png", &m_Lightmap);
-		D3DXCreateTextureFromFile(m_Device, L"../color_mask.png", &m_ColorMask);
+	//	D3DXCreateTextureFromFile(m_Device, L"../../gfx/backed.png", &m_Lightmap);
+		D3DXCreateTextureFromFile(m_Device, L"../../gfx/color_mask.png", &m_ColorMask);
 		m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
 		m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 		m_Device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);   //Ignored
@@ -180,10 +181,10 @@ public:
 		//////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
 
-		ImportozameshenieBJD("../screen.obj", m_Kommunalks);
+		ImportozameshenieBJD("../../gfx/screen.obj", m_Kommunalks);
 		m_Kommunalks.SetupVerticesBuffer(device);
 
-		ImportozameshenieBJD("../Prizbma.bjd", m_PrismMesh);
+		ImportozameshenieBJD("../../gfx/Prizbma.bjd", m_PrismMesh);
 		m_PrismMesh.SetupVerticesBuffer(device);
 
 		m_Prisms = {
@@ -316,7 +317,7 @@ public:
 				auto const deltaPitch = static_cast<float>(mouseCurrentPosition.x - m_PrevMousePosition.x) / g_Width;
 
 				m_CameraRotationYaw += deltaPitch;
-				m_CameraRotationPitch = clampf(m_CameraRotationPitch + deltaYaw, -YX2_PI / 12.0f, YX2_PI / 3.0f);
+				m_CameraRotationPitch = clampf(m_CameraRotationPitch + deltaYaw, -DXM_PI / 12.0f, DXM_PI / 3.0f);
 			}
 			GetCursorPos(&m_PrevMousePosition);
 
@@ -327,7 +328,7 @@ public:
 			auto const center = glm::vec3(cameraRotationCenter);
 			auto const up = glm::vec3(cameraRotation * cameraUp);
 			m_Device->SetTransform(D3DTS_VIEW, to_d3d(glm::lookAtLH(eye, center, up)));
-			m_Device->SetTransform(D3DTS_PROJECTION, to_d3d(glm::perspectiveFovLH<float>(YX2_PI / 3.0f, g_Width, g_Height, 0.01f, 100.0f)));
+			m_Device->SetTransform(D3DTS_PROJECTION, to_d3d(glm::perspectiveFovLH<float>(DXM_PI / 3.0f, g_Width, g_Height, 0.01f, 100.0f)));
 		}
 
 		m_Device->SetTexture(0, m_Lightmap);

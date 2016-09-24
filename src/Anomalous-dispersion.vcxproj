@@ -92,6 +92,8 @@
   <ItemGroup>
     <ClInclude Include="Source\ObjLoader.h" />
     <ClInclude Include="Source\Presentation.h" />
+    <ClInclude Include="Source\PresentationEngine.h" />
+    <ClInclude Include="Source\PresentationWidget.h" />
     <ClInclude Include="Source\yx2Engine.h" />
     <ClInclude Include="Source\yx2Framework.h" />
     <ClInclude Include="Source\yx2Mesh.h" />

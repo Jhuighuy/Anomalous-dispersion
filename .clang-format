@@ -17,7 +17,7 @@ AlignTrailingComments                     : 'true'
 AllowAllParametersOfDeclarationOnNextLine : 'true'
 AlwaysBreakTemplateDeclarations           : 'true'
 BreakBeforeBraces                         : Allman
-ColumnLimit                               : '125'
+ColumnLimit                               : '200'
 IndentCaseLabels                          : 'true'
 IndentWidth                               : '4'
 MaxEmptyLinesToKeep                       : '1'
