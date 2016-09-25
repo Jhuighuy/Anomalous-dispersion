@@ -35,6 +35,14 @@ namespace Presentation1
 			return value < min ? min : value > max ? max : value;
 		}
 	}	// namespace dxm
+	static bool operator>= (dxm::vec3 const& a, dxm::vec3 const& b)
+	{
+		return a.x >= b.x && a.y >= b.y && a.z >= b.z;
+	}
+	static bool operator<= (dxm::vec3 const& a, dxm::vec3 const& b)
+	{
+		return a.x <= b.x && a.y <= b.y && a.z <= b.z;
+	}
 
 	static void ThrowIfFailed(HRESULT const result)
 	{
@@ -56,12 +64,12 @@ namespace Presentation1
 		FLOAT const m_Width;
 		FLOAT const m_Height;
 		FLOAT m_CameraRotationYaw = 0.0f;	/// @todo Calibrate value here.
-		FLOAT m_CameraRotationPitch = 0.0f;
+		FLOAT m_CameraRotationPitch = DXM_PI / 2.0f;
 		POINT m_PrevMousePosition = {};
 		dxm::mat4 m_ProjectionMatrix;
 		dxm::mat4 m_ViewMatrix;
 	public:
-		dxm::vec3 const RotationCenter = { 0.0f, 0.7f, 2.0f };	/// @todo And here.
+		dxm::vec3 const RotationCenter = { 0.0f, 1.75f, 2.0f };	/// @todo And here.
 		dxm::vec3 const CenterOffset = { 0.0f, 0.0f, -1.8f };
 		dxm::vec3 const Up = { 0.0f, 1.0f, 0.0f };
 
@@ -274,7 +282,7 @@ namespace Presentation1
 	using LineMutableMesh = MutableMesh<LineVertex, D3DPT_LINELIST>;
 
 	/// @todo Load from raw data here.
-	bool LoadOBJ(const char* path, TriangleMutableMesh& mesh);
+	bool LoadOBJ(const char* path, TriangleMutableMesh& mesh, UINT const alpha = 0xFF);
 
 	/** \brief Describes a template mesh renderer. */
 	template<typename TMesh = TriangleMutableMesh, BOOL TIsTransparent = FALSE, BOOL TIsLit = FALSE>
@@ -365,4 +373,5 @@ namespace Presentation1
 		}
 		ThrowIfFailed(device->CreatePixelShader(static_cast<DWORD*>(pixelShaderCode->GetBufferPointer()), pixelShaderPtr));
 	}
+
 }	// namespace Presentation1

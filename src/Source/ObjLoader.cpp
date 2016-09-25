@@ -111,7 +111,7 @@ bool ImportozameshenieBJD(const char* path, Mesh& out_vertices)
 #include "PresentationWidget.h"
 namespace Presentation1
 {
-	bool LoadOBJ(const char* path, TriangleMutableMesh& mesh)
+	bool LoadOBJ(const char* path, TriangleMutableMesh& mesh, UINT const alpha)
 	{
 		printf("Loading OBJ file %s...\n", path);
 
@@ -191,11 +191,10 @@ namespace Presentation1
 		}
 
 
-		auto const color = D3DCOLOR_XRGB(0xFF, 0xFF / 8, 0xFF / 8);
+		auto const color = D3DCOLOR_ARGB(alpha, 0xFF/3, 0xFF, 0xFF);
 		// For each vertex of each triangle
 		for (unsigned int i = 0; i < vertexIndices.size(); i++)
 		{
-
 			// Get the indices of its attributes
 			unsigned int vertexIndex = vertexIndices[i];
 			unsigned int uvIndex = uvIndices[i];

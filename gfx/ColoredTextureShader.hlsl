@@ -8,8 +8,8 @@ texture Texture0;
 sampler Sampler0 = sampler_state
 {
 	Texture = <Texture0>;
-	MinFilter = Linear;
-	MagFilter = Linear;
+	MinFilter = Bilinear;
+	MagFilter = Bilinear;
 	AddressU = Clamp;
 	AddressV = Clamp;
 };	// sampler Sampler0

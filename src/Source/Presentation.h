@@ -127,7 +127,7 @@ private:
 	std::vector<Plane> planes;
 	POINT m_prevMousePosition = {};
 
-private:
+public:
 
 	/**
 	 * \brief Converts a light wave length to the RGBA representation.
@@ -447,5 +447,5 @@ PRESENTATION_API inline Color Presentation::ConvertWaveLengthToRGB(double const 
 	rgb[0] = red == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(red * factor, gamma)));
 	rgb[1] = green == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(green * factor, gamma)));
 	rgb[2] = blue == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(blue * factor, gamma)));
-	return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], 0xFF / 2);
+	return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], 0xFF / 8);
 }

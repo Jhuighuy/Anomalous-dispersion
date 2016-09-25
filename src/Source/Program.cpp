@@ -42,6 +42,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 		for(auto i = 0; i < 10; ++i )
 			windowWidgets[i].Destroy();
 
+		Sleep(4);
 		auto presentation = mainWindow.Direct3D9<Presentation1::PresentationWidget>({ 0, 0, 1280, 720 });
 
 		MSG msg;

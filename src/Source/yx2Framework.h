@@ -382,18 +382,13 @@ namespace yx2
 				presentParameters.BackBufferHeight = 720;
 				presentParameters.EnableAutoDepthStencil = TRUE;
 				presentParameters.AutoDepthStencilFormat = D3DFMT_D16;
-				presentParameters.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
+				presentParameters.MultiSampleType = D3DMULTISAMPLE_8_SAMPLES;
 
 				direct3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, handle, D3DCREATE_SOFTWARE_VERTEXPROCESSING,
 									   &presentParameters, &device);
 				return new TD3DWidget(handle, device);
 			}
 
-
-
-
-
-			
 		}; // class Window
 
 	} // namespace framework
