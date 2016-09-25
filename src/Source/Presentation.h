@@ -363,89 +363,70 @@ public:
 * \brief Converts a light wave length to the RGBA representation.
 * \param[in] waveLength Light wave length in nanometers.
 */
-PRESENTATION_API inline Color Presentation::ConvertWaveLengthToRGB(double const waveLength)
+PRESENTATION_API inline Color Presentation::ConvertWaveLengthToRGB(double Wavelength)
 {
 	auto static const gamma = 0.80;
 	auto static const intensityMax = 255.0;
 
-	double red, green, blue;
+//	Wavelength = Wavelength / (740.0 - 380.0) * (781.0 - 380.0);
 
-	auto static const violetMinWaveLength = 380.0;
-	auto static const violetMaxWaveLength = 440.0;
-	if (waveLength >= violetMinWaveLength && waveLength < violetMaxWaveLength)
-	{
-		red = -(waveLength - violetMaxWaveLength) / (violetMaxWaveLength - violetMinWaveLength);
-		green = 0.0;
-		blue = 1.0;
+	double Red, Green, Blue;
+
+	if ((Wavelength >= 380) && (Wavelength<440)) {
+		Red = -(Wavelength - 440) / (440 - 380);
+		Green = 0.0;
+		Blue = 1.0;
 	}
-	else
-	{
-		auto static const blueMinWaveLength = violetMaxWaveLength;
-		auto static const blueMaxWaveLength = 490.0;
-		if (waveLength >= blueMinWaveLength && waveLength < blueMaxWaveLength)
-		{
-			red = 0.0;
-			green = (waveLength - blueMinWaveLength) / (blueMaxWaveLength - blueMinWaveLength);
-			blue = 1.0;
-		}
-		else
-		{
-			auto static const skyBlueMinWaveLength = blueMinWaveLength;
-			auto static const skyBlueMaxWaveLength = 500.0;
-			if (waveLength >= 490.0 && waveLength < 510.0)
-			{
-				red = 0.0;
-				green = 1.0;
-				blue = -(waveLength - 510.0) / (510.0 - 490.0);
-			}
-			else if (waveLength >= 510.0 && waveLength < 580.0)
-			{
-				red = (waveLength - 510.0) / (580 - 510.0);
-				green = 1.0;
-				blue = 0.0;
-			}
-			else if (waveLength >= 580.0 && waveLength < 645.0)
-			{
-				red = 1.0;
-				green = -(waveLength - 645.0) / (645.0 - 580.0);
-				blue = 0.0;
-			}
-			else if (waveLength >= 645.0 && waveLength < 781.0)
-			{
-				red = 1.0;
-				green = 0.0;
-				blue = 0.0;
-			}
-			else
-			{
-				red = 0.0;
-				green = 0.0;
-				blue = 0.0;
-			}
-		}
+	else if ((Wavelength >= 440) && (Wavelength<490)) {
+		Red = 0.0;
+		Green = (Wavelength - 440) / (490 - 440);
+		Blue = 1.0;
 	}
+	else if ((Wavelength >= 490) && (Wavelength<510)) {
+		Red = 0.0;
+		Green = 1.0;
+		Blue = -(Wavelength - 510) / (510 - 490);
+	}
+	else if ((Wavelength >= 510) && (Wavelength<580)) {
+		Red = (Wavelength - 510) / (580 - 510);
+		Green = 1.0;
+		Blue = 0.0;
+	}
+	else if ((Wavelength >= 580) && (Wavelength<645)) {
+		Red = 1.0;
+		Green = -(Wavelength - 645) / (645 - 580);
+		Blue = 0.0;
+	}
+	else if ((Wavelength >= 645) && (Wavelength<781)) {
+		Red = 1.0;
+		Green = 0.0;
+		Blue = 0.0;
+	}
+	else {
+		Red = 0.0;
+		Green = 0.0;
+		Blue = 0.0;
+	};
+
+	// Let the intensity fall off near the vision limits
 
 	double factor;
-	if (waveLength >= 380 && waveLength < 420)
-	{
-		factor = 0.3 + 0.7 * (waveLength - 380.0) / (420.0 - 380.0);
+	if ((Wavelength >= 380) && (Wavelength<420)) {
+		factor = 0.3 + 0.7*(Wavelength - 380) / (420 - 380);
 	}
-	else if (waveLength >= 420.0 && waveLength < 701.0)
-	{
+	else if ((Wavelength >= 420) && (Wavelength<701)) {
 		factor = 1.0;
 	}
-	else if (waveLength >= 701.0 && waveLength < 781.0)
-	{
-		factor = 0.3 + 0.7 * (780.0 - waveLength) / (780.0 - 700.0);
+	else if ((Wavelength >= 701) && (Wavelength<781)) {
+		factor = 0.3 + 0.7*(780 - Wavelength) / (780 - 700);
 	}
-	else
-	{
+	else {
 		factor = 0.0;
-	}
+	};
 
 	unsigned rgb[3];
-	rgb[0] = red == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(red * factor, gamma)));
-	rgb[1] = green == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(green * factor, gamma)));
-	rgb[2] = blue == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(blue * factor, gamma)));
+	rgb[0] = Red == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(Red * factor, gamma)));
+	rgb[1] = Green == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(Green * factor, gamma)));
+	rgb[2] = Blue == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(Blue * factor, gamma)));
 	return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], 0xFF / 8);
 }

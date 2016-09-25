@@ -7,105 +7,73 @@
 #include "Presentation.h"
 #include "PresentationEngine.h"
 #include <ctime>
+#include <algorithm>
 
 namespace Presentation1
 {
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-	typedef FLOAT(*RefractiveIndexFunc)(FLOAT const waveLength);
+	typedef DOUBLE(*RefractiveIndexFunc)(DOUBLE const waveLength);
 
-	static FLOAT DummyRefractiveIndex(FLOAT const waveLength)
+	static DOUBLE DummyRefractiveIndex(DOUBLE const waveLength)
 	{
 		(void)waveLength;
 		return 1.0f;
 	}
 
-	static FLOAT AirGlassRefractiveIndex(FLOAT const waveLength)
+	static DOUBLE AirGlassRefractiveIndex(DOUBLE const waveLength)
 	{
 		auto static const violetWaveLength = 380.0f;
-		auto static const redWaveLength = 740.0f;
+		auto static const redWaveLength = 780.0f;
 
-		auto static const redRefractiveIndex = 1.550f;
-		auto static const violetRefractiveIndex = 1.510f;
+		auto static const violetRefractiveIndex = 1.550f;
+		auto static const redRefractiveIndex = 1.510f;
 
-		auto const v = (redWaveLength - waveLength) / (redWaveLength - violetWaveLength);
-		return violetRefractiveIndex - v * (violetRefractiveIndex - redRefractiveIndex);
+		auto const v = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
+		return violetRefractiveIndex + v * (redRefractiveIndex - violetRefractiveIndex);
 	}
-	static FLOAT GlassAirRefractiveIndex(FLOAT const waveLength)
+	static DOUBLE GlassAirRefractiveIndex(DOUBLE const waveLength)
 	{
 		return 1.0f / AirGlassRefractiveIndex(waveLength);
 	}
 
-	static FLOAT GovnoAirRefractiveIndex(FLOAT const waveLength)
+	static DOUBLE GovnoAirRefractiveIndex(DOUBLE const waveLength)
 	{
 		/// @todo Implement me.
-		//float static const grid[] = {
-		//	/*0*/ 1.60,
-		//	/*1*/ 1.59,
-		//	/*2*/ 1.58,
-		//	/*3*/ 1.56,
-		//	/*4*/ 1.55,
-		//	/*5*/ 1.54,
-		//	/*6*/ 1.52,
-		//	/*7*/ 1.47,
-		//	/*8*/ 1.45,
-		//	/*9*/ 1.40,
-		//	/*10*/ 1.35,
-		//	/*11*/ 1.25,
-		//	/*12*/ 1.20,
-		//	/*13*/ 1.10,
-		//	/*14*/ 1.07,
-		//	/*15*/ 1.06,
-		//	/*16*/ 1.11,
-		//	/*17*/ 1.18,
-		//	/*18*/ 1.27,
-		//	/*19*/ 1.37,
-		//	/*20*/ 1.40,
-		//	/*21*/ 1.60,
-		//	/*22*/ 1.80,
-		//	/*23*/ 1.95,
-		//	/*24*/ 2.20,
-		//	/*25*/ 2.30,
-		//	/*26*/ 2.35,
-		//	/*27*/ 2.30,
-		//	/*28*/ 2.22,
-		//	/*29*/ 2.16,
-		//	/*30*/ 2.12,
-		//	/*31*/ 2.10,
-		//	/*32*/ 2.07,
-		//	/*33*/ 2.03,
-		//	/*34*/ 2.00,
-		//	/*35*/ 1.97,
-		//	/*36*/ 1.95,
-		//	/*37*/ 1.92,
-		//	/*38*/ 1.9,
-		//	/*39*/ 1.88,
-		//	/*40*/ 1.86,
-		//};
+		float static const grid[] = {
+			0.38 * 0 + 1.6,			0.38404 * 0 + 1.59588,  0.388081 * 0 + 1.59145, 0.392121 * 0 + 1.58665, 0.396162 * 0 + 1.58156, 0.400202 * 0 + 1.57621, 0.404242 * 0 + 1.5706,
+			0.408283 * 0 + 1.56468, 0.412323 * 0 + 1.55836, 0.416364 * 0 + 1.55151, 0.420404 * 0 + 1.544,   0.424444 * 0 + 1.53573, 0.428485 * 0 + 1.52658, 0.432525 * 0 + 1.51646,
+			0.436566 * 0 + 1.5053,  0.440606 * 0 + 1.49304, 0.444646 * 0 + 1.47965, 0.448687 * 0 + 1.46511, 0.452727 * 0 + 1.44944, 0.456768 * 0 + 1.43268, 0.460808 * 0 + 1.41492,
+			0.464848 * 0 + 1.39627, 0.468889 * 0 + 1.37692, 0.472929 * 0 + 1.35706, 0.47697 * 0 + 1.33696,  0.48101 * 0 + 1.31688,  0.485051 * 0 + 1.29717, 0.489091 * 0 + 1.27815,
+			0.493131 * 0 + 1.26019, 0.497172 * 0 + 1.24364, 0.501212 * 0 + 1.22886, 0.505253 * 0 + 1.21618, 0.509293 * 0 + 1.20592, 0.513333 * 0 + 1.19835, 0.517374 * 0 + 1.19372,
+			0.521414 * 0 + 1.19225, 0.525455 * 0 + 1.19408, 0.529495 * 0 + 1.19935, 0.533535 * 0 + 1.20814, 0.537576 * 0 + 1.22049, 0.541616 * 0 + 1.23641, 0.545657 * 0 + 1.25589,
+			0.549697 * 0 + 1.27887, 0.553737 * 0 + 1.30526, 0.557778 * 0 + 1.33497, 0.561818 * 0 + 1.36783, 0.565859 * 0 + 1.40368, 0.569899 * 0 + 1.44231, 0.573939 * 0 + 1.48346,
+			0.57798 * 0 + 1.52684,  0.58202 * 0 + 1.57209,  0.586061 * 0 + 1.61884, 0.590101 * 0 + 1.66663, 0.594141 * 0 + 1.715,   0.598182 * 0 + 1.76341, 0.602222 * 0 + 1.81131,
+			0.606263 * 0 + 1.85815, 0.610303 * 0 + 1.90333, 0.614343 * 0 + 1.94632, 0.618384 * 0 + 1.98657, 0.622424 * 0 + 2.02361, 0.626465 * 0 + 2.05702, 0.630505 * 0 + 2.08646,
+			0.634545 * 0 + 2.11169, 0.638586 * 0 + 2.13256, 0.642626 * 0 + 2.14903, 0.646667 * 0 + 2.16118, 0.650707 * 0 + 2.16915, 0.654747 * 0 + 2.17322, 0.658788 * 0 + 2.17371,
+			0.662828 * 0 + 2.17101, 0.666869 * 0 + 2.16555, 0.670909 * 0 + 2.15777, 0.674949 * 0 + 2.14813, 0.67899 * 0 + 2.13704,  0.68303 * 0 + 2.1249,   0.687071 * 0 + 2.11206,
+			0.691111 * 0 + 2.0988,  0.695152 * 0 + 2.08535, 0.699192 * 0 + 2.07189, 0.703232 * 0 + 2.05856, 0.707273 * 0 + 2.04543, 0.711313 * 0 + 2.03255, 0.715354 * 0 + 2.01997,
+			0.719394 * 0 + 2.00769, 0.723434 * 0 + 1.99571, 0.727475 * 0 + 1.98404, 0.731515 * 0 + 1.97269, 0.735556 * 0 + 1.96165, 0.739596 * 0 + 1.95092, 0.743636 * 0 + 1.94052,
+			0.747677 * 0 + 1.93043, 0.751717 * 0 + 1.92065, 0.755758 * 0 + 1.91118, 0.759798 * 0 + 1.90202, 0.763838 * 0 + 1.89316, 0.767879 * 0 + 1.88458, 0.771919 * 0 + 1.87625,
+			0.77596 * 0 + 1.86809,  0.78 * 0 + 1.86
+		};
 
-		//auto static const violetWaveLength = 380.0f;
-		//auto static const redWaveLength = 740.0f;
+		auto static const violetWaveLength = 380.0f;
+		auto static const redWaveLength = 780.0f;
 
-		//auto const v = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
-		//auto const i = size_t(v * (dxm::countof(grid) - 1));
-		//if (i == 0)
-		//	return 0.6f * grid[i];
+		auto const v = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
+		auto const i = size_t(v * (dxm::countof(grid) - 1));
+		if (i == dxm::countof(grid) - 1)
+			return grid[dxm::countof(grid) - 1];
 
-		//auto const yi = grid[i], yi1 = grid[i - 1];
-		//auto const xi = violetWaveLength + i * (redWaveLength - violetWaveLength) / dxm::countof(grid);
-		//auto const xi1 = violetWaveLength + (i - 1) * (redWaveLength - violetWaveLength) / dxm::countof(grid);
-		//return 0.6f * (yi1 + (waveLength - xi1) / (xi - xi1) * (yi - yi1));
-
-		return 2 * (
-			0.00000000000417299576428171859261373    * pow(waveLength, 5.0)
-			+ -0.00000001223387932502352073824293364    * pow(waveLength, 4.0)
-			+ 0.00001396834599461971313987067934196    * pow(waveLength, 3.0)
-			+ -0.00774425672328623025711356484549695    * pow(waveLength, 2.0)
-			+ 2.08160415159368307176146244874576278    * waveLength
-			+ -216.20369980275894921956380367118371404);
+		auto const yi = grid[i], yi1 = grid[i + 1];
+		auto const xi = violetWaveLength + i * (redWaveLength - violetWaveLength) / dxm::countof(grid);
+		auto const xi1 = violetWaveLength + (i + 1) * (redWaveLength - violetWaveLength) / dxm::countof(grid);
+		auto y = yi + (waveLength - xi) / (xi1 - xi) * (yi1 - yi);
+		return y;
 	}
-	static FLOAT AirGovnoRefractiveIndex(FLOAT const waveLength)
+	static DOUBLE AirGovnoRefractiveIndex(DOUBLE const waveLength)
 	{
 		return 1.0f / GovnoAirRefractiveIndex(waveLength);
 	}
@@ -132,10 +100,10 @@ namespace Presentation1
 		}
 
 		// -----------------------
-		dxm::vec3 Refract(dxm::vec3 const& direction, FLOAT const waveLength) const
+		dxm::vec3 Refract(dxm::vec3 const& direction, DOUBLE const waveLength) const
 		{
 			auto const angleBefore = acosf(dxm::dot(direction, Normal) / dxm::length(Normal) / dxm::length(direction));
-			auto const angleAfter = asinf(dxm::clamp(1.0f /RefractiveIndex(waveLength) * sinf(angleBefore), -1.0f, 1.0f));
+			auto const angleAfter = asinf(dxm::clamp(1.0 / RefractiveIndex(waveLength) * sin(angleBefore), -1.0, 1.0));
 			return dxm::rotate(direction, angleBefore - angleAfter, dxm::cross(direction, Normal));
 		}
 	};	// struct Plane
@@ -295,14 +263,13 @@ namespace Presentation1
 			LoadOBJ("../../gfx/holder_leg.obj", m_PrismHolderLeg);
 			LoadOBJ("../../gfx/holder_gimbal.obj", m_PrismHolderGimbal);
 			
-		//	m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
+			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers[0].Position = { 0.0f, 0.5f, 1.0f };
-		//	m_PrismRenderers[1].Type = PrismType::Govno;
-		//	m_PrismRenderers[1].Angle = DXM_PI / 6.0f;
-		//	m_PrismRenderers[1].Position = { 0.0f, 0.8f, 2.0f };
-		//	m_PrismRenderers[1].RotationX = DXM_PI / 3.0f;
-		//	m_PrismRenderers[1].RotationZ = DXM_PI / 2.0f;
+			m_PrismRenderers[1].Type = PrismType::Govno;
+			m_PrismRenderers[1].Angle = DXM_PI / 6.0f;
+			m_PrismRenderers[1].Position = { 0.0f, 0.9f, 2.0f };
+			m_PrismRenderers[1].RotationZ = DXM_PI / 2.0f;
 			for (auto& prism : m_PrismRenderers)
 			{
 				prism.UpdatePlanes(m_PrismPlanes);
@@ -334,8 +301,8 @@ namespace Presentation1
 					m_AreRaysSynced = true;
 					GenerateRaysMesh(1000);
 				}
-				m_RaysRenderer.Render();
 				m_RaysProjectionRenderer.Render();
+				m_RaysRenderer.Render();
 
 				/* Updating and rendering prisms and holders. */
 				for (auto& prism : m_PrismRenderers)
@@ -355,25 +322,30 @@ namespace Presentation1
 				auto coord = dxm::vec3(0.0f, 1.5f, -2.0f);
 				auto direction = m_PrismRenderers[0].Position - coord;
 
-				auto static const violetWaveLength = 380.0f;
-				auto static const redWaveLength = 740.0f;
+				auto static const violetWaveLength = 380.0;
+				auto static const redWaveLength = 740.0;
 				auto const waveLength = violetWaveLength + i * (redWaveLength - violetWaveLength) / partitioning;
 				auto const rgb = Presentation::ConvertWaveLengthToRGB(waveLength);
 
-				/*if (waveLength >= 520.0f && waveLength <= 640.0f)
-					continue;*/
+				if (waveLength >= 550.0f && waveLength <= 620.0f)
+					continue;
 
 				for (auto j = 0u; j < m_PrismPlanes.size(); ++j)
 				{
 					auto& plane = m_PrismPlanes[j];
+					auto static const eps = 0.00001;
+					auto const d = (plane.RefractiveIndex(waveLength + eps) - plane.RefractiveIndex(waveLength)) / eps;
+				//	if (d > 0)
+				//		break;
 
 					m_RaysMesh.AddVertex({ coord, rgb });
 					plane.Intersect(coord, coord, direction);
-					m_RaysMesh.AddVertex({ coord, rgb });
+					m_RaysMesh.AddVertex({ coord, j == m_PrismPlanes.size() - 1 ? rgb & 0x00FFFFFF : rgb });
 					direction = plane.Refract(direction, waveLength);
 
 					if (j == m_PrismPlanes.size() - 1)
 					{
+						auto const irgb = rgb & 0x00FFFFFF | 0x03000000;
 						auto const scale = 0.09f;
 						dxm::vec3 static const uvOffset = { 0.5f, 0.5f, 0.0f };
 						dxm::vec3 static const triangleVert[] = {
@@ -387,7 +359,7 @@ namespace Presentation1
 						};
 						for (auto k = 0u; k < dxm::countof(triangleVert); ++k)
 						{
-							m_RaysProjectionMesh.AddVertex({ triangleVert[k] * scale + coord,{ 0.0, 0.0, -1.0f }, rgb, triangleVert[k] + uvOffset });
+							m_RaysProjectionMesh.AddVertex({ triangleVert[k] * scale + coord,{ 0.0, 0.0, -1.0f }, irgb, triangleVert[k] + uvOffset });
 						}
 					}
 				}
