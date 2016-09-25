@@ -37,20 +37,77 @@ namespace Presentation1
 		return 1.0f / AirGlassRefractiveIndex(waveLength);
 	}
 
-	static FLOAT AirGovnoRefractiveIndex(FLOAT const waveLength)
-	{
-		/// @todo Implement me.
-		return 0.3 * (
-			0.0000000000098913823223182 * pow(waveLength, 5.0)
-			+ -0.0000000289763923941455186 * pow(waveLength, 4.0)
-			+ +0.0000333125484955842371898  * pow(waveLength, 3.0)
-			+ -0.0187615519724694658533727  * pow(waveLength, 2.0)
-			+ +5.1727621842059236445914745  * waveLength
-			+ -557.0298741325654066692800118);
-	}
 	static FLOAT GovnoAirRefractiveIndex(FLOAT const waveLength)
 	{
-		return 1.0f / AirGovnoRefractiveIndex(waveLength);
+		/// @todo Implement me.
+		//float static const grid[] = {
+		//	/*0*/ 1.60,
+		//	/*1*/ 1.59,
+		//	/*2*/ 1.58,
+		//	/*3*/ 1.56,
+		//	/*4*/ 1.55,
+		//	/*5*/ 1.54,
+		//	/*6*/ 1.52,
+		//	/*7*/ 1.47,
+		//	/*8*/ 1.45,
+		//	/*9*/ 1.40,
+		//	/*10*/ 1.35,
+		//	/*11*/ 1.25,
+		//	/*12*/ 1.20,
+		//	/*13*/ 1.10,
+		//	/*14*/ 1.07,
+		//	/*15*/ 1.06,
+		//	/*16*/ 1.11,
+		//	/*17*/ 1.18,
+		//	/*18*/ 1.27,
+		//	/*19*/ 1.37,
+		//	/*20*/ 1.40,
+		//	/*21*/ 1.60,
+		//	/*22*/ 1.80,
+		//	/*23*/ 1.95,
+		//	/*24*/ 2.20,
+		//	/*25*/ 2.30,
+		//	/*26*/ 2.35,
+		//	/*27*/ 2.30,
+		//	/*28*/ 2.22,
+		//	/*29*/ 2.16,
+		//	/*30*/ 2.12,
+		//	/*31*/ 2.10,
+		//	/*32*/ 2.07,
+		//	/*33*/ 2.03,
+		//	/*34*/ 2.00,
+		//	/*35*/ 1.97,
+		//	/*36*/ 1.95,
+		//	/*37*/ 1.92,
+		//	/*38*/ 1.9,
+		//	/*39*/ 1.88,
+		//	/*40*/ 1.86,
+		//};
+
+		//auto static const violetWaveLength = 380.0f;
+		//auto static const redWaveLength = 740.0f;
+
+		//auto const v = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
+		//auto const i = size_t(v * (dxm::countof(grid) - 1));
+		//if (i == 0)
+		//	return 0.6f * grid[i];
+
+		//auto const yi = grid[i], yi1 = grid[i - 1];
+		//auto const xi = violetWaveLength + i * (redWaveLength - violetWaveLength) / dxm::countof(grid);
+		//auto const xi1 = violetWaveLength + (i - 1) * (redWaveLength - violetWaveLength) / dxm::countof(grid);
+		//return 0.6f * (yi1 + (waveLength - xi1) / (xi - xi1) * (yi - yi1));
+
+		return 2 * (
+			0.00000000000417299576428171859261373    * pow(waveLength, 5.0)
+			+ -0.00000001223387932502352073824293364    * pow(waveLength, 4.0)
+			+ 0.00001396834599461971313987067934196    * pow(waveLength, 3.0)
+			+ -0.00774425672328623025711356484549695    * pow(waveLength, 2.0)
+			+ 2.08160415159368307176146244874576278    * waveLength
+			+ -216.20369980275894921956380367118371404);
+	}
+	static FLOAT AirGovnoRefractiveIndex(FLOAT const waveLength)
+	{
+		return 1.0f / GovnoAirRefractiveIndex(waveLength);
 	}
 
 	struct Plane final
@@ -238,13 +295,14 @@ namespace Presentation1
 			LoadOBJ("../../gfx/holder_leg.obj", m_PrismHolderLeg);
 			LoadOBJ("../../gfx/holder_gimbal.obj", m_PrismHolderGimbal);
 			
-			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
+		//	m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers[0].Position = { 0.0f, 0.5f, 1.0f };
-			m_PrismRenderers[1].Type = PrismType::Govno;
-			m_PrismRenderers[1].Angle = DXM_PI / 4.0f;
-			m_PrismRenderers[1].Position = { 0.0f, 1.0f, 2.0f };
-			m_PrismRenderers[1].RotationZ = DXM_PI / 2.0f;
+		//	m_PrismRenderers[1].Type = PrismType::Govno;
+		//	m_PrismRenderers[1].Angle = DXM_PI / 6.0f;
+		//	m_PrismRenderers[1].Position = { 0.0f, 0.8f, 2.0f };
+		//	m_PrismRenderers[1].RotationX = DXM_PI / 3.0f;
+		//	m_PrismRenderers[1].RotationZ = DXM_PI / 2.0f;
 			for (auto& prism : m_PrismRenderers)
 			{
 				prism.UpdatePlanes(m_PrismPlanes);
@@ -274,9 +332,9 @@ namespace Presentation1
 				if (!m_AreRaysSynced)
 				{
 					m_AreRaysSynced = true;
-					GenerateRaysMesh(10000);
+					GenerateRaysMesh(1000);
 				}
-			//	m_RaysRenderer.Render();
+				m_RaysRenderer.Render();
 				m_RaysProjectionRenderer.Render();
 
 				/* Updating and rendering prisms and holders. */
@@ -302,8 +360,8 @@ namespace Presentation1
 				auto const waveLength = violetWaveLength + i * (redWaveLength - violetWaveLength) / partitioning;
 				auto const rgb = Presentation::ConvertWaveLengthToRGB(waveLength);
 
-				if (waveLength >= 560.0f && waveLength <= 620.0f)
-					continue;
+				/*if (waveLength >= 520.0f && waveLength <= 640.0f)
+					continue;*/
 
 				for (auto j = 0u; j < m_PrismPlanes.size(); ++j)
 				{
