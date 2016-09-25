@@ -40,7 +40,13 @@ namespace Presentation1
 	static FLOAT AirGovnoRefractiveIndex(FLOAT const waveLength)
 	{
 		/// @todo Implement me.
-		return 0.3f * AirGlassRefractiveIndex(waveLength);
+		return 0.3 * (
+			0.0000000000098913823223182 * pow(waveLength, 5.0)
+			+ -0.0000000289763923941455186 * pow(waveLength, 4.0)
+			+ +0.0000333125484955842371898  * pow(waveLength, 3.0)
+			+ -0.0187615519724694658533727  * pow(waveLength, 2.0)
+			+ +5.1727621842059236445914745  * waveLength
+			+ -557.0298741325654066692800118);
 	}
 	static FLOAT GovnoAirRefractiveIndex(FLOAT const waveLength)
 	{
@@ -114,7 +120,7 @@ namespace Presentation1
 			
 			auto const& refractiveIndexFuncs = refractiveIndexFuncsTable[static_cast<size_t>(Type)];
 			auto const transformationMatrix = dxm::translate(Position)
-				* dxm::yawPitchRoll(RotationX, 0.0f, RotationZ) * dxm::scale(glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f)));
+				* dxm::yawPitchRoll(RotationX, 0.0f, RotationZ) * dxm::scale(/*2.0f * */glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f)));
 			{
 				auto const p1 = transformationMatrix * dxm::vec4(-0.1f, -0.1f, +0.0f, 1.0);
 				auto const p2 = transformationMatrix * dxm::vec4(+0.1f, -0.1f, +0.0f, 1.0);
@@ -236,9 +242,9 @@ namespace Presentation1
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers[0].Position = { 0.0f, 0.5f, 1.0f };
 			m_PrismRenderers[1].Type = PrismType::Govno;
-			m_PrismRenderers[1].Angle = DXM_PI / 6.0f;
-			m_PrismRenderers[1].Position = { 0.0f, 0.9f, 2.0f };
-			m_PrismRenderers[1].RotationZ = DXM_PI / 2.5f;
+			m_PrismRenderers[1].Angle = DXM_PI / 4.0f;
+			m_PrismRenderers[1].Position = { 0.0f, 1.0f, 2.0f };
+			m_PrismRenderers[1].RotationZ = DXM_PI / 2.0f;
 			for (auto& prism : m_PrismRenderers)
 			{
 				prism.UpdatePlanes(m_PrismPlanes);
@@ -268,9 +274,9 @@ namespace Presentation1
 				if (!m_AreRaysSynced)
 				{
 					m_AreRaysSynced = true;
-					GenerateRaysMesh(100);
+					GenerateRaysMesh(10000);
 				}
-				m_RaysRenderer.Render();
+			//	m_RaysRenderer.Render();
 				m_RaysProjectionRenderer.Render();
 
 				/* Updating and rendering prisms and holders. */
@@ -295,6 +301,9 @@ namespace Presentation1
 				auto static const redWaveLength = 740.0f;
 				auto const waveLength = violetWaveLength + i * (redWaveLength - violetWaveLength) / partitioning;
 				auto const rgb = Presentation::ConvertWaveLengthToRGB(waveLength);
+
+				if (waveLength >= 560.0f && waveLength <= 620.0f)
+					continue;
 
 				for (auto j = 0u; j < m_PrismPlanes.size(); ++j)
 				{
