@@ -154,8 +154,8 @@ public:
 		m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
 		m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 
-	//	D3DXCreateTextureFromFile(m_Device, L"../../gfx/backed.png", &m_Lightmap);
-		D3DXCreateTextureFromFile(m_Device, L"../../gfx/color_mask.png", &m_ColorMask);
+	//	D3DXCreateTextureFromFile(m_Device, L"../gfx/backed.png", &m_Lightmap);
+		D3DXCreateTextureFromFile(m_Device, L"../gfx/color_mask.png", &m_ColorMask);
 		m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
 		m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 		m_Device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);   //Ignored
@@ -181,10 +181,10 @@ public:
 		//////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
 
-		ImportozameshenieBJD("../../gfx/screen.obj", m_Kommunalks);
+		ImportozameshenieBJD("../gfx/screen.obj", m_Kommunalks);
 		m_Kommunalks.SetupVerticesBuffer(device);
 
-		ImportozameshenieBJD("../../gfx/Prizbma.bjd", m_PrismMesh);
+		ImportozameshenieBJD("../gfx/Prizbma.bjd", m_PrismMesh);
 		m_PrismMesh.SetupVerticesBuffer(device);
 
 		m_Prisms = {

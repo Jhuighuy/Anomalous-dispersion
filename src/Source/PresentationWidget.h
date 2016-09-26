@@ -248,20 +248,20 @@ namespace Presentation1
 			m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 
 			/* Setting up static scene parameters. */
-			LoadOBJ("../../gfx/room.obj", m_RoomMesh);
-			LoadTexture(m_Device, L"../../gfx/roomLightMap.png", &m_RoomRenderer.Texture);
+			LoadOBJ("../gfx/room.obj", m_RoomMesh);
+			LoadTexture(m_Device, L"../gfx/roomLightMap.png", &m_RoomRenderer.Texture);
 			m_RoomRenderer.Position.z = 2.0f;
 			m_RoomRenderer.Rotation.x = DXM_PI;
-			LoadOBJ("../../gfx/screen.obj", m_ScreenMesh);
-			LoadTexture(m_Device, L"../../gfx/screenLightMap.png", &m_ScreenRenderer.Texture);
+			LoadOBJ("../gfx/screen.obj", m_ScreenMesh);
+			LoadTexture(m_Device, L"../gfx/screenLightMap.png", &m_ScreenRenderer.Texture);
 			m_ScreenRenderer.Position.z = 2.0f;
 			m_ScreenRenderer.Rotation.x = DXM_PI;
 		
 			/* Setting up dynamic scene parameters. */
-			LoadOBJ("../../gfx/prism.obj", m_PrismMesh, 0xFF/3);
-			LoadOBJ("../../gfx/holder_base.obj", m_PrismHolderBase);
-			LoadOBJ("../../gfx/holder_leg.obj", m_PrismHolderLeg);
-			LoadOBJ("../../gfx/holder_gimbal.obj", m_PrismHolderGimbal);
+			LoadOBJ("../gfx/prism.obj", m_PrismMesh, 0xFF/3);
+			LoadOBJ("../gfx/holder_base.obj", m_PrismHolderBase);
+			LoadOBJ("../gfx/holder_leg.obj", m_PrismHolderLeg);
+			LoadOBJ("../gfx/holder_gimbal.obj", m_PrismHolderGimbal);
 			
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
@@ -277,8 +277,8 @@ namespace Presentation1
 			m_PrismPlanes.push_back({ { 0.0f, 0.0f, 3.49f },{ 0.0f, 0.0f, 3.0f }, { 0.0f, 0.0f, 1.0f }, &DummyRefractiveIndex });
 
 			/* Setting up some other shit. */
-			LoadTexture(m_Device, L"../../gfx/color_mask.png", &m_RaysProjectionRenderer.Texture);
-			LoadShader(m_Device, L"../../gfx/ColoredTextureShader.hlsl", &m_RaysProjectionRenderer.PixelShader);
+			LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer.Texture);
+			LoadShader(m_Device, L"../gfx/ColoredTextureShader.hlsl", &m_RaysProjectionRenderer.PixelShader);
 		}
 
 		// -----------------------
