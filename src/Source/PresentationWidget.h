@@ -14,14 +14,23 @@ namespace Presentation1
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-	typedef DOUBLE(*RefractiveIndexFunc)(DOUBLE const waveLength);
+	typedef DOUBLE(*IndexFunc)(DOUBLE const waveLength);
 
-	static DOUBLE DummyRefractiveIndex(DOUBLE const waveLength)
+	static DOUBLE DummyIndex(DOUBLE const waveLength)
 	{
 		(void)waveLength;
 		return 1.0f;
 	}
 
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+	static DOUBLE GovnoAbsorptionIndex(DOUBLE const waveLength)
+	{
+		auto const x = waveLength / 1000.0;
+		auto const y = dxm::clamp(1.0 - 0.7 * exp(-120 * M_PI * (x - 0.57) * (x - 0.57)), 0.0, 1.0);
+		return y;
+	}
+
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	static DOUBLE AirGlassRefractiveIndex(DOUBLE const waveLength)
 	{
 		auto static const violetWaveLength = 380.0f;
@@ -38,7 +47,7 @@ namespace Presentation1
 		return 1.0f / AirGlassRefractiveIndex(waveLength);
 	}
 
-	static DOUBLE GovnoAirRefractiveIndex(DOUBLE const waveLength)
+	static DOUBLE AirGovnoRefractiveIndex(DOUBLE const waveLength)
 	{
 		/// @todo Implement me.
 		float static const grid[] = {
@@ -71,18 +80,19 @@ namespace Presentation1
 		auto const xi = violetWaveLength + i * (redWaveLength - violetWaveLength) / dxm::countof(grid);
 		auto const xi1 = violetWaveLength + (i + 1) * (redWaveLength - violetWaveLength) / dxm::countof(grid);
 		auto y = yi + (waveLength - xi) / (xi1 - xi) * (yi1 - yi);
-		return y;
+		return 0.2f * (y - 1.6f) + 1.6f;
 	}
-	static DOUBLE AirGovnoRefractiveIndex(DOUBLE const waveLength)
+	static DOUBLE GovnoAirRefractiveIndex(DOUBLE const waveLength)
 	{
-		return 1.0f / GovnoAirRefractiveIndex(waveLength);
+		return 1.41f / AirGovnoRefractiveIndex(waveLength);
 	}
 
 	struct Plane final
 	{
 		dxm::vec3 PointMin, PointMax;
 		dxm::vec3 Normal;
-		RefractiveIndexFunc RefractiveIndex;
+		IndexFunc RefractiveIndex;
+		IndexFunc AbsorptionIndex;
 		bool IsScreen;
 
 		// -----------------------
@@ -138,12 +148,19 @@ namespace Presentation1
 		// -----------------------
 		void UpdatePlanes(std::vector<Plane>& planes) const
 		{
-			struct { RefractiveIndexFunc In, Out; } static const refractiveIndexFuncsTable[] = {
+			struct { IndexFunc In, Out; } static const refractiveIndexFuncsTable[] = {
 				{ &AirGlassRefractiveIndex, &GlassAirRefractiveIndex },
 				{ &AirGovnoRefractiveIndex, &GovnoAirRefractiveIndex },
 			};
+
+			IndexFunc static const absorptionIndexFuncTable[] {
+				&DummyIndex,
+				&GovnoAbsorptionIndex
+			};
 			
 			auto const& refractiveIndexFuncs = refractiveIndexFuncsTable[static_cast<size_t>(Type)];
+			auto const absorptionIndexFunc = absorptionIndexFuncTable[static_cast<size_t>(Type)];;
+
 			auto const transformationMatrix = dxm::translate(Position)
 				* dxm::yawPitchRoll(RotationX, 0.0f, RotationZ) * dxm::scale(/*2.0f * */glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f)));
 			{
@@ -151,7 +168,7 @@ namespace Presentation1
 				auto const p2 = transformationMatrix * dxm::vec4(+0.1f, -0.1f, +0.0f, 1.0);
 				auto const p3 = transformationMatrix * dxm::vec4(+0.1f, +0.1f, -0.2f, 1.0);
 				auto const normal = dxm::cross(dxm::vec3(p2 - p1), dxm::vec3(p3 - p1));
-				planes.push_back({ p1, p3, normal, refractiveIndexFuncs.In });
+				planes.push_back({ p1, p3, normal, refractiveIndexFuncs.In, absorptionIndexFunc });
 			}
 
 			{
@@ -159,7 +176,7 @@ namespace Presentation1
 				auto const p2 = transformationMatrix * dxm::vec4(+0.1f, -0.1f, +0.0f, 1.0);
 				auto const p3 = transformationMatrix * dxm::vec4(-0.1f, +0.1f, +0.2f, 1.0);
 				auto const normal = dxm::cross(dxm::vec3(p2 - p1), dxm::vec3(p3 - p1));
-				planes.push_back({ p1, p3, normal, refractiveIndexFuncs.Out });
+				planes.push_back({ p1, p3, normal, refractiveIndexFuncs.Out, &DummyIndex });
 			}
 		}
 
@@ -267,14 +284,15 @@ namespace Presentation1
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers[0].Position = { 0.0f, 0.5f, 1.0f };
 			m_PrismRenderers[1].Type = PrismType::Govno;
-			m_PrismRenderers[1].Angle = DXM_PI / 6.0f;
+			m_PrismRenderers[1].Angle = DXM_PI / 3.0f;
 			m_PrismRenderers[1].Position = { 0.0f, 0.9f, 2.0f };
 			m_PrismRenderers[1].RotationZ = DXM_PI / 2.0f;
+		//	m_PrismRenderers[1].RotationX = DXM_PI / 6.0f;
 			for (auto& prism : m_PrismRenderers)
 			{
 				prism.UpdatePlanes(m_PrismPlanes);
 			}
-			m_PrismPlanes.push_back({ { 0.0f, 0.0f, 3.49f },{ 0.0f, 0.0f, 3.0f }, { 0.0f, 0.0f, 1.0f }, &DummyRefractiveIndex });
+			m_PrismPlanes.push_back({ { 0.0f, 0.0f, 3.49f },{ 0.0f, 0.0f, 3.0f }, { 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
 
 			/* Setting up some other shit. */
 			LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer.Texture);
@@ -325,11 +343,11 @@ namespace Presentation1
 				auto static const violetWaveLength = 380.0;
 				auto static const redWaveLength = 740.0;
 				auto const waveLength = violetWaveLength + i * (redWaveLength - violetWaveLength) / partitioning;
-				auto const rgb = Presentation::ConvertWaveLengthToRGB(waveLength);
 
-				if (waveLength >= 550.0f && waveLength <= 620.0f)
-					continue;
+			//	if (waveLength >= 550.0f && waveLength <= 620.0f)
+			//		continue;
 
+				auto rgb = Presentation::ConvertWaveLengthToRGB(waveLength);
 				for (auto j = 0u; j < m_PrismPlanes.size(); ++j)
 				{
 					auto& plane = m_PrismPlanes[j];
@@ -343,9 +361,20 @@ namespace Presentation1
 					m_RaysMesh.AddVertex({ coord, j == m_PrismPlanes.size() - 1 ? rgb & 0x00FFFFFF : rgb });
 					direction = plane.Refract(direction, waveLength);
 
+					{
+						auto const alphaPrev = ((rgb >> 24) & 0xFF) / 255.0;
+						auto const alpha = alphaPrev * plane.AbsorptionIndex(waveLength);
+						rgb &= 0x00FFFFFF;
+						rgb |= DWORD(alpha * 255.0) << 24;
+					}
+
 					if (j == m_PrismPlanes.size() - 1)
 					{
-						auto const irgb = rgb & 0x00FFFFFF | 0x03000000;
+						auto const alphaPrev = ((rgb >> 24) & 0xFF) / 255.0;
+						auto const alpha = alphaPrev * 0.2;
+						rgb &= 0x00FFFFFF;
+						rgb |= DWORD(alpha * 255.0) << 24;
+
 						auto const scale = 0.09f;
 						dxm::vec3 static const uvOffset = { 0.5f, 0.5f, 0.0f };
 						dxm::vec3 static const triangleVert[] = {
@@ -359,7 +388,7 @@ namespace Presentation1
 						};
 						for (auto k = 0u; k < dxm::countof(triangleVert); ++k)
 						{
-							m_RaysProjectionMesh.AddVertex({ triangleVert[k] * scale + coord,{ 0.0, 0.0, -1.0f }, irgb, triangleVert[k] + uvOffset });
+							m_RaysProjectionMesh.AddVertex({ triangleVert[k] * scale + coord,{ 0.0, 0.0, -1.0f }, rgb, triangleVert[k] + uvOffset });
 						}
 					}
 				}

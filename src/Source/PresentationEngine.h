@@ -69,7 +69,7 @@ namespace Presentation1
 		dxm::mat4 m_ProjectionMatrix;
 		dxm::mat4 m_ViewMatrix;
 	public:
-		dxm::vec3 const RotationCenter = { 0.0f, 1.75f, 2.0f };	/// @todo And here.
+		dxm::vec3 const RotationCenter = { 0.0f, 1.3f, 2.0f };	/// @todo And here.
 		dxm::vec3 const CenterOffset = { 0.0f, 0.0f, -1.8f };
 		dxm::vec3 const Up = { 0.0f, 1.0f, 0.0f };
 
