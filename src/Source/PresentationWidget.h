@@ -3,7 +3,6 @@
 // Computational Methods @ Computational Mathematics & Cybernetics, MSU.
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 #pragma once
-#include "yx2Engine.h"
 #include "Presentation.h"
 #include "PresentationEngine.h"
 #include <ctime>
@@ -129,7 +128,7 @@ namespace Presentation1
 	{
 		PrismType Type = PrismType::Air;
 		dxm::vec3 Position;
-		FLOAT Angle = DXM_PI / 3.0f;
+		FLOAT Angle = F_PI / 3.0f;
 		FLOAT RotationX = 0.0f;// -F_PI / 12.0f;
 		FLOAT RotationZ = 0.0f;//-F_PI / 3.0f;
 
@@ -204,9 +203,10 @@ namespace Presentation1
 		}
 	};	// struct Prism
 
-	class PresentationWidget final : public yx2::engine::Runtime
+	typedef std::shared_ptr<class PresentationWidget> PresentationWidgetPtr;
+	class PresentationWidget final : public D3DWidget
 	{
-	private:
+	public:
 		OrbitalCamera m_Camera;
 
 		TriangleMutableMesh m_RoomMesh;
@@ -227,8 +227,9 @@ namespace Presentation1
 		std::vector<Plane> m_PrismPlanes;
 
 	public:
-		explicit PresentationWidget(HWND const hwnd, IDirect3DDevice9* const device)
-			: Runtime(hwnd, device)
+		explicit PresentationWidget(HWND const hwnd, IDirect3DDevice9* const device, ...)
+			: D3DWidget(hwnd, device)
+			// -----------------------
 			, m_Camera(device)
 			// -----------------------
 			, m_RoomMesh(device), m_RoomRenderer(device, m_RoomMesh)
@@ -255,8 +256,8 @@ namespace Presentation1
 			spotLight.Direction = { -1.0f, 0.0f, 0.0f };
 			spotLight.Range = 4.32f;
 			spotLight.Falloff = 1.0f;
-			spotLight.Theta = 4.0f / DXM_PI * 180.0f;
-			spotLight.Phi = 52.5f / DXM_PI * 180.0f;
+			spotLight.Theta = 4.0f / F_PI * 180.0f;
+			spotLight.Phi = 52.5f / F_PI * 180.0f;
 			spotLight.Attenuation0 = 0.1f;
 			m_Device->SetLight(0, &spotLight);
 
@@ -268,11 +269,11 @@ namespace Presentation1
 			LoadOBJ("../gfx/room.obj", m_RoomMesh);
 			LoadTexture(m_Device, L"../gfx/roomLightMap.png", &m_RoomRenderer.Texture);
 			m_RoomRenderer.Position.z = 2.0f;
-			m_RoomRenderer.Rotation.x = DXM_PI;
+			m_RoomRenderer.Rotation.x = F_PI;
 			LoadOBJ("../gfx/screen.obj", m_ScreenMesh);
 			LoadTexture(m_Device, L"../gfx/screenLightMap.png", &m_ScreenRenderer.Texture);
 			m_ScreenRenderer.Position.z = 2.0f;
-			m_ScreenRenderer.Rotation.x = DXM_PI;
+			m_ScreenRenderer.Rotation.x = F_PI;
 		
 			/* Setting up dynamic scene parameters. */
 			LoadOBJ("../gfx/prism.obj", m_PrismMesh, 0xFF/3);
@@ -284,9 +285,9 @@ namespace Presentation1
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers[0].Position = { 0.0f, 0.5f, 1.0f };
 			m_PrismRenderers[1].Type = PrismType::Govno;
-			m_PrismRenderers[1].Angle = DXM_PI / 3.0f;
+			m_PrismRenderers[1].Angle = F_PI / 3.0f;
 			m_PrismRenderers[1].Position = { 0.0f, 0.9f, 2.0f };
-			m_PrismRenderers[1].RotationZ = DXM_PI / 2.0f;
+			m_PrismRenderers[1].RotationZ = F_PI / 2.0f;
 		//	m_PrismRenderers[1].RotationX = DXM_PI / 6.0f;
 			for (auto& prism : m_PrismRenderers)
 			{

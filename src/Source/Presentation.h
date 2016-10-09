@@ -14,7 +14,7 @@
 #include "ObjLoader.h"
 #include <array>
 
-#include "yx2Engine.h"
+#include "PresentationEngine.h"
 
 #define PRESENTATION_API
 #define F_PI float(M_PI)
@@ -74,7 +74,7 @@ static std::array<double, 100> glassAir = GlassAirComputation();
 /**
  * \brief
  */
-class Presentation final : public yx2::engine::Runtime
+class Presentation final : public Presentation1::D3DWidget
 {
 	auto static const g_Width = 1280;
 	auto static const g_Height = 720;
@@ -144,7 +144,7 @@ public:
 
 public:
 	PRESENTATION_API explicit Presentation(HWND const hwnd, IDirect3DDevice9* const device) 
-		: Runtime(hwnd, device)
+		: D3DWidget(hwnd, device)
 	{
 	//	device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 	//	device->SetRenderState(D3DRS_LIGHTING, FALSE);
@@ -317,7 +317,7 @@ public:
 				auto const deltaPitch = static_cast<float>(mouseCurrentPosition.x - m_PrevMousePosition.x) / g_Width;
 
 				m_CameraRotationYaw += deltaPitch;
-				m_CameraRotationPitch = clampf(m_CameraRotationPitch + deltaYaw, -DXM_PI / 12.0f, DXM_PI / 3.0f);
+				m_CameraRotationPitch = clampf(m_CameraRotationPitch + deltaYaw, -F_PI / 12.0f, F_PI / 3.0f);
 			}
 			GetCursorPos(&m_PrevMousePosition);
 
@@ -328,7 +328,7 @@ public:
 			auto const center = glm::vec3(cameraRotationCenter);
 			auto const up = glm::vec3(cameraRotation * cameraUp);
 			m_Device->SetTransform(D3DTS_VIEW, to_d3d(glm::lookAtLH(eye, center, up)));
-			m_Device->SetTransform(D3DTS_PROJECTION, to_d3d(glm::perspectiveFovLH<float>(DXM_PI / 3.0f, g_Width, g_Height, 0.01f, 100.0f)));
+			m_Device->SetTransform(D3DTS_PROJECTION, to_d3d(glm::perspectiveFovLH<float>(F_PI / 3.0f, g_Width, g_Height, 0.01f, 100.0f)));
 		}
 
 		m_Device->SetTexture(0, m_Lightmap);

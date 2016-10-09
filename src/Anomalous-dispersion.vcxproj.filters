@@ -4,9 +4,6 @@
     <Filter Include="Source">
       <UniqueIdentifier>{9a743af9-2c52-4e37-a7cc-0c07439b89f2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\yx2Engine">
-      <UniqueIdentifier>{762cb4c3-e240-47a4-b2f5-7eaea254ddf5}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Program.cpp">
@@ -18,12 +15,6 @@
     <ClCompile Include="Source\ObjLoader.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Source\yx2Engine.cpp">
-      <Filter>Source\yx2Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\yx2Framework.cpp">
-      <Filter>Source\yx2Engine</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Presentation.h">
@@ -32,25 +23,14 @@
     <ClInclude Include="Source\ObjLoader.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="Source\yx2Engine.h">
-      <Filter>Source\yx2Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\yx2Framework.h">
-      <Filter>Source\yx2Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\yx2Mesh.h">
-      <Filter>Source\yx2Engine</Filter>
-    </ClInclude>
     <ClInclude Include="Source\PresentationWidget.h">
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Source\PresentationEngine.h">
       <Filter>Source</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Source\yx2Mesh.inl">
-      <Filter>Source\yx2Engine</Filter>
-    </None>
+    <ClInclude Include="Source\PresentationFramework.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

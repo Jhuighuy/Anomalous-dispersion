@@ -3,8 +3,7 @@
 // Computational Methods @ Computational Mathematics & Cybernetics, MSU.
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 #pragma once
-#include "yx2Engine.h"
-#include "Presentation.h"
+#include "PresentationFramework.h"
 
 // ReSharper disable CppRedundantQualifier
 #include <d3d9.h>
@@ -15,6 +14,8 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
 #pragma warning(pop)
+
+#define F_PI float(M_PI)
 
 namespace Presentation1
 {
@@ -64,7 +65,7 @@ namespace Presentation1
 		FLOAT const m_Width;
 		FLOAT const m_Height;
 		FLOAT m_CameraRotationYaw = 0.0f;	/// @todo Calibrate value here.
-		FLOAT m_CameraRotationPitch = DXM_PI / 2.0f;
+		FLOAT m_CameraRotationPitch = F_PI / 2.0f;
 		POINT m_PrevMousePosition = {};
 		dxm::mat4 m_ProjectionMatrix;
 		dxm::mat4 m_ViewMatrix;
@@ -77,7 +78,7 @@ namespace Presentation1
 		explicit OrbitalCamera(IDirect3DDevice9* const device, UINT const width = 1280, UINT const height = 720)
 			: m_Device(device), m_Width(static_cast<FLOAT>(width)), m_Height(static_cast<FLOAT>(height))
 		{
-			m_ProjectionMatrix = dxm::perspectiveFovLH(DXM_PI / 3.0f, m_Width, m_Height, 0.01f, 100.0f);
+			m_ProjectionMatrix = dxm::perspectiveFovLH(F_PI / 3.0f, m_Width, m_Height, 0.01f, 100.0f);
 			m_ViewMatrix = dxm::lookAtLH(RotationCenter + CenterOffset, RotationCenter, Up);
 		}
 
@@ -97,7 +98,7 @@ namespace Presentation1
 				auto const deltaPitch = static_cast<float>(mouseCurrentPosition.x - m_PrevMousePosition.x) / m_Width;
 
 				m_CameraRotationYaw += deltaPitch;
-				m_CameraRotationPitch = dxm::clamp(m_CameraRotationPitch + deltaYaw, -DXM_PI / 12.0f, DXM_PI / 7.5f);
+				m_CameraRotationPitch = dxm::clamp(m_CameraRotationPitch + deltaYaw, -F_PI / 12.0f, F_PI / 7.5f);
 
 				auto const translation = dxm::translate(glm::vec3(RotationCenter));
 				auto const cameraRotation = dxm::yawPitchRoll(m_CameraRotationYaw, m_CameraRotationPitch, 0.0f);
