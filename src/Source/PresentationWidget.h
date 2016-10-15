@@ -3,10 +3,13 @@
 // Computational Methods @ Computational Mathematics & Cybernetics, MSU.
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 #pragma once
-#include "Presentation.h"
 #include "PresentationEngine.h"
+
 #include <ctime>
-#include <algorithm>
+
+#pragma warning(push, 0)
+#include <glm/gtx/rotate_vector.hpp>
+#pragma warning(pop)
 
 namespace Presentation1
 {
@@ -25,31 +28,31 @@ namespace Presentation1
 	static DOUBLE GovnoAbsorptionIndex(DOUBLE const waveLength)
 	{
 		auto const x = waveLength / 1000.0;
-		auto const y = dxm::clamp(1.0 - 0.7 * exp(-120 * M_PI * (x - 0.57) * (x - 0.57)), 0.0, 1.0);
-		return y;
+		auto const y = 0.45 * exp(-120 * M_PI * (x - 0.58) * (x - 0.58));
+		return dxm::clamp(1.0 - y, 0.0, 1.0);
 	}
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	static DOUBLE AirGlassRefractiveIndex(DOUBLE const waveLength)
 	{
-		auto static const violetWaveLength = 380.0f;
-		auto static const redWaveLength = 780.0f;
+		auto static const violetWaveLength = 380.0;
+		auto static const redWaveLength = 780.0;
 
-		auto static const violetRefractiveIndex = 1.550f;
-		auto static const redRefractiveIndex = 1.510f;
+		auto static const violetRefractiveIndex = 1.550;
+		auto static const redRefractiveIndex = 1.510;
 
 		auto const v = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
 		return violetRefractiveIndex + v * (redRefractiveIndex - violetRefractiveIndex);
 	}
 	static DOUBLE GlassAirRefractiveIndex(DOUBLE const waveLength)
 	{
-		return 1.0f / AirGlassRefractiveIndex(waveLength);
+		return 1.0 / AirGlassRefractiveIndex(waveLength);
 	}
 
 	static DOUBLE AirGovnoRefractiveIndex(DOUBLE const waveLength)
 	{
 		/// @todo Implement me.
-		float static const grid[] = {
+		double static const grid[] = {
 			0.380000 * 0 + 1.60000,	0.384040 * 0 + 1.59588, 0.388081 * 0 + 1.59145, 0.392121 * 0 + 1.58665, 0.396162 * 0 + 1.58156, 0.400202 * 0 + 1.57621, 0.404242 * 0 + 1.57060,
 			0.408283 * 0 + 1.56468, 0.412323 * 0 + 1.55836, 0.416364 * 0 + 1.55151, 0.420404 * 0 + 1.54400, 0.424444 * 0 + 1.53573, 0.428485 * 0 + 1.52658, 0.432525 * 0 + 1.51646,
 			0.436566 * 0 + 1.50530, 0.440606 * 0 + 1.49304, 0.444646 * 0 + 1.47965, 0.448687 * 0 + 1.46511, 0.452727 * 0 + 1.44944, 0.456768 * 0 + 1.43268, 0.460808 * 0 + 1.41492,
@@ -67,8 +70,8 @@ namespace Presentation1
 			0.775960 * 0 + 1.86809, 0.780000 * 0 + 1.86000,
 		};
 
-		auto static const violetWaveLength = 380.0f;
-		auto static const redWaveLength = 780.0f;
+		auto static const violetWaveLength = 380.0;
+		auto static const redWaveLength = 780.0;
 
 		auto const v = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
 		auto const i = size_t(v * (dxm::countof(grid) - 1));
@@ -79,11 +82,11 @@ namespace Presentation1
 		auto const xi = violetWaveLength + i * (redWaveLength - violetWaveLength) / dxm::countof(grid);
 		auto const xi1 = violetWaveLength + (i + 1) * (redWaveLength - violetWaveLength) / dxm::countof(grid);
 		auto y = yi + (waveLength - xi) / (xi1 - xi) * (yi1 - yi);
-		return 0.2f * (y - 1.6f) + 1.6f;
+		return 0.2 * (y - 1.6) + 1.6;
 	}
 	static DOUBLE GovnoAirRefractiveIndex(DOUBLE const waveLength)
 	{
-		return 1.41f / AirGovnoRefractiveIndex(waveLength);
+		return 1.41 / AirGovnoRefractiveIndex(waveLength);
 	}
 
 	struct Plane final
@@ -112,7 +115,7 @@ namespace Presentation1
 		dxm::vec3 Refract(dxm::vec3 const& direction, DOUBLE const waveLength) const
 		{
 			auto const angleBefore = acosf(dxm::dot(direction, Normal) / dxm::length(Normal) / dxm::length(direction));
-			auto const angleAfter = asinf(dxm::clamp(1.0 / RefractiveIndex(waveLength) * sin(angleBefore), -1.0, 1.0));
+			auto const angleAfter = static_cast<float>(asin(dxm::clamp(1.0 / RefractiveIndex(waveLength) * sin(angleBefore), -1.0, 1.0)));
 			return dxm::rotate(direction, angleBefore - angleAfter, dxm::cross(direction, Normal));
 		}
 	};	// struct Plane
@@ -127,8 +130,8 @@ namespace Presentation1
 	struct Prism final
 	{
 		PrismType Type = PrismType::Air;
-		dxm::vec3 Position;
 		FLOAT Angle = F_PI / 3.0f;
+		dxm::vec3 Position;
 		FLOAT RotationX = 0.0f;// -F_PI / 12.0f;
 		FLOAT RotationZ = 0.0f;//-F_PI / 3.0f;
 
@@ -344,37 +347,22 @@ namespace Presentation1
 				auto static const violetWaveLength = 380.0;
 				auto static const redWaveLength = 740.0;
 				auto const waveLength = violetWaveLength + i * (redWaveLength - violetWaveLength) / partitioning;
-
-			//	if (waveLength >= 550.0f && waveLength <= 620.0f)
-			//		continue;
-
-				auto rgb = Presentation::ConvertWaveLengthToRGB(waveLength);
+				auto color = ConvertWaveLengthToRGB(waveLength);
+				
 				for (auto j = 0u; j < m_PrismPlanes.size(); ++j)
 				{
 					auto& plane = m_PrismPlanes[j];
-					auto static const eps = 0.00001;
-					auto const d = (plane.RefractiveIndex(waveLength + eps) - plane.RefractiveIndex(waveLength)) / eps;
-				//	if (d > 0)
-				//		break;
-
-					m_RaysMesh.AddVertex({ coord, rgb });
+					
+					m_RaysMesh.AddVertex({ coord, color });
 					plane.Intersect(coord, coord, direction);
-					m_RaysMesh.AddVertex({ coord, j == m_PrismPlanes.size() - 1 ? rgb & 0x00FFFFFF : rgb });
+					m_RaysMesh.AddVertex({ coord, j == m_PrismPlanes.size() - 1 ? color & 0x00FFFFFF : color });
 					direction = plane.Refract(direction, waveLength);
 
-					{
-						auto const alphaPrev = ((rgb >> 24) & 0xFF) / 255.0;
-						auto const alpha = alphaPrev * plane.AbsorptionIndex(waveLength);
-						rgb &= 0x00FFFFFF;
-						rgb |= DWORD(alpha * 255.0) << 24;
-					}
+					AbsorbAlpha(color, plane.AbsorptionIndex(waveLength));
 
 					if (j == m_PrismPlanes.size() - 1)
 					{
-						auto const alphaPrev = ((rgb >> 24) & 0xFF) / 255.0;
-						auto const alpha = alphaPrev * 0.2;
-						rgb &= 0x00FFFFFF;
-						rgb |= DWORD(alpha * 255.0) << 24;
+						AbsorbAlpha(color, 0.2);
 
 						auto const scale = 0.09f;
 						dxm::vec3 static const uvOffset = { 0.5f, 0.5f, 0.0f };
@@ -389,12 +377,98 @@ namespace Presentation1
 						};
 						for (auto k = 0u; k < dxm::countof(triangleVert); ++k)
 						{
-							m_RaysProjectionMesh.AddVertex({ triangleVert[k] * scale + coord,{ 0.0, 0.0, -1.0f }, rgb, triangleVert[k] + uvOffset });
+							m_RaysProjectionMesh.AddVertex({ triangleVert[k] * scale + coord,{ 0.0, 0.0, -1.0f }, color, triangleVert[k] + uvOffset });
 						}
 					}
 				}
 			}
 			m_AreRaysSynced = true;
+		}
+
+		// -----------------------
+		static void AbsorbAlpha(dxm::argb& color, DOUBLE const index)
+		{
+			// Modifying alpha-based absorbtion.
+			auto const alphaPrev = (color >> 24 & 0xFF) / 255.0;
+			auto const alpha = alphaPrev * index;
+			color &= 0x00FFFFFF;
+			color |= DWORD(alpha * 255.0) << 24;
+		}
+
+		// -----------------------
+		static dxm::argb ConvertWaveLengthToRGB(double waveLength)
+		{
+			auto static const gamma = 0.8;
+			auto static const intensityMax = 255.0;
+
+			double red, green, blue;
+			if (waveLength >= 380.0 && waveLength < 440.0)
+			{
+				red = -(waveLength - 440.0) / (440.0 - 380.0);
+				green = 0.0;
+				blue = 1.0;
+			}
+			else if (waveLength >= 440.0 && waveLength < 490.0)
+			{
+				red = 0.0;
+				green = (waveLength - 440.0) / (490.0 - 440.0);
+				blue = 1.0;
+			}
+			else if (waveLength >= 490.0 && waveLength < 510.0)
+			{
+				red = 0.0;
+				green = 1.0;
+				blue = -(waveLength - 510.0) / (510.0 - 490.0);
+			}
+			else if (waveLength >= 510.0 && waveLength < 580.0)
+			{
+				red = (waveLength - 510.0) / (580.0 - 510.0);
+				green = 1.0;
+				blue = 0.0;
+			}
+			else if (waveLength >= 580.0 && waveLength < 645.0)
+			{
+				red = 1.0;
+				green = -(waveLength - 645.0) / (645.0 - 580.0);
+				blue = 0.0;
+			}
+			else if (waveLength >= 645.0 && waveLength < 781.0)
+			{
+				red = 1.0;
+				green = 0.0;
+				blue = 0.0;
+			}
+			else 
+			{
+				red = 0.0;
+				green = 0.0;
+				blue = 0.0;
+			}
+
+			// Let the intensity fall off near the vision limits.
+			double factor;
+			if (waveLength >= 380.0 && waveLength < 420.0)
+			{
+				factor = 0.3 + 0.7 * (waveLength - 380.0) / (420.0 - 380.0);
+			}
+			else if (waveLength >= 420.0 && waveLength < 701.0)
+			{
+				factor = 1.0;
+			}
+			else if (waveLength >= 701.0 && waveLength < 781.0)
+			{
+				factor = 0.3 + 0.7 * (780.0 - waveLength) / (780.0 - 700.0);
+			}
+			else 
+			{
+				factor = 0.0;
+			}
+
+			unsigned rgb[3];
+			rgb[0] = red == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(red * factor, gamma)));
+			rgb[1] = green == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(green * factor, gamma)));
+			rgb[2] = blue == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(blue * factor, gamma)));
+			return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], 0xFF / 8);
 		}
 
 	}; // class PresentationWidget

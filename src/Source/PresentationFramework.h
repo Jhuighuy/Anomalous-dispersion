@@ -23,6 +23,14 @@
 
 namespace Presentation1
 {
+	namespace dxm
+	{
+		template<typename T>
+		static T clamp(T const value, T const min, T const max)
+		{
+			return value < min ? min : value > max ? max : value;
+		}
+	}	// namespace dxm
 
 	inline void GetDesktopResolution(unsigned& horizontal, unsigned& vertical)
 	{
@@ -37,6 +45,12 @@ namespace Presentation1
 		horizontal = desktop.right;
 		vertical = desktop.bottom;
 	}
+	inline unsigned GetDesktopHeight()
+	{
+		unsigned w, h;
+		GetDesktopResolution(w, h);
+		return h;
+	}
 
 	struct Rect
 	{
@@ -47,24 +61,23 @@ namespace Presentation1
 		unsigned h;
 
 		Rect() : x(0), y(0), w(0), h(0) {}
-		//Rect(int const x, int const y, unsigned const w, unsigned const h) : x(x), y(y), w(w), h(h) {}
+		Rect(nullptr_t, int const x, int const y, unsigned const w, unsigned const h) : x(x), y(y), w(w), h(h) {}
 
 		Rect(int const x1, int const y1, unsigned const w1, unsigned const h1)
 		{
 			unsigned horizontal, vertical;
 			GetDesktopResolution(horizontal, vertical);
-			x = round(x1 * horizontal / STANDART_DESKTOP_WIDTH);
-			y = round(y1 * vertical / STANDART_DESKTOP_HEIGHT);
-			w = round(w1 * horizontal / STANDART_DESKTOP_WIDTH);
-			h = round(h1 * vertical / STANDART_DESKTOP_HEIGHT);
-
+			x = x1 * horizontal / STANDART_DESKTOP_WIDTH;
+			y = y1 * vertical / STANDART_DESKTOP_HEIGHT;
+			w = dxm::clamp(w1 * horizontal / STANDART_DESKTOP_WIDTH, 1u, UINT_MAX);
+			h = dxm::clamp(h1 * vertical / STANDART_DESKTOP_HEIGHT, 1u, UINT_MAX);
 		}
 
 		static Rect Fullscreen()
 		{
 			unsigned horizontal, vertical;
 			GetDesktopResolution(horizontal, vertical);
-			return Rect(0, 0, horizontal, vertical);
+			return Rect(nullptr, 0, 0, horizontal, vertical);
 		}
 	}; // struct Rect
 
@@ -125,7 +138,8 @@ namespace Presentation1
 					HFONT static defaultFont = nullptr;
 					if (defaultFont == nullptr)
 					{
-						defaultFont = CreateFont(20, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
+						defaultFont = CreateFont(20 * GetDesktopHeight() / STANDART_DESKTOP_HEIGHT
+							, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
 							, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS
 							, L"Times New Roman");
 					}
@@ -136,7 +150,8 @@ namespace Presentation1
 					HFONT static largeFont = nullptr;
 					if (largeFont == nullptr)
 					{
-						largeFont = CreateFont(40, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
+						largeFont = CreateFont(40 * GetDesktopHeight() / STANDART_DESKTOP_HEIGHT
+							, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
 							, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS
 							, L"Times New Roman");
 					}
@@ -147,7 +162,8 @@ namespace Presentation1
 					HFONT static veryLargeFont = nullptr;
 					if (veryLargeFont == nullptr)
 					{
-						veryLargeFont = CreateFont(75, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
+						veryLargeFont = CreateFont(75 * GetDesktopHeight() / STANDART_DESKTOP_HEIGHT
+							, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
 							, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS
 							, L"Times New Roman");
 					}
@@ -247,14 +263,14 @@ namespace Presentation1
 	public:
 		explicit Window(Rect const& rect, wchar_t const* const caption = nullptr, bool const fullscreen = false)
 		{
-			WNDCLASSEX static windowClass;
+			WNDCLASSEX static windowClass = {};
 			if (windowClass.cbSize == 0)
 			{
 				windowClass.cbSize = sizeof(WNDCLASSEX);
 				windowClass.style = CS_HREDRAW | CS_VREDRAW;
 				windowClass.lpfnWndProc = WindowProc;
 				windowClass.hInstance = GetModuleHandleW(nullptr);
-				windowClass.hbrBackground = /*reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1)*/(HBRUSH)COLOR_WINDOW;
+				windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW);
 				windowClass.lpszClassName = L"PresentationWindowClass1";
 				RegisterClassEx(&windowClass);
 			}
@@ -318,7 +334,7 @@ namespace Presentation1
 				, rect.x - rect.w / 2, rect.y - rect.h / 2, rect.w, rect.h, m_hwnd, nullptr, nullptr, nullptr);
 			if (handle != nullptr)
 			{
-				auto const bitmap = LoadImageW(nullptr, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+				auto const bitmap = LoadImageW(nullptr, path, IMAGE_BITMAP, rect.w, rect.h, LR_LOADFROMFILE | LR_DEFAULTSIZE);
 				if (bitmap != nullptr)
 				{
 					SendMessageW(handle, STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(bitmap));
@@ -343,12 +359,12 @@ namespace Presentation1
 		// Buttons.
 		// ***********************************************************************************************
 
-		WindowWidgetPtr Button(Rect const& rect, wchar_t const* const text, WindowWidgetCallback&& callback, TextSize const textSize = TextSize::Default)
+		WindowWidgetPtr Button(Rect const& rect, wchar_t const* const text, WindowWidgetCallback const callback, TextSize const textSize = TextSize::Default)
 		{
 			assert(rect.w != 0 && rect.h != 0);
 			assert(text != nullptr);
 
-			auto const hash = Hash(text);
+			auto const hash = Hash(text) + static_cast<WindowWidgetHash>(rect.x + rect.y + rect.w + rect.h);
 			m_Callbacks[hash] = callback;
 			return std::make_shared<WindowWidget>(
 				CreateWindowW(L"Button", text, WS_VISIBLE | WS_CHILD

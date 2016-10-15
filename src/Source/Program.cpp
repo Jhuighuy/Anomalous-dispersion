@@ -3,7 +3,6 @@
 
 //#include "Presentation.h"
 #include "PresentationWidget.h"
-#include <iostream>
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")
 
@@ -57,6 +56,21 @@ namespace Presentation1
 	private:
 		PresentationWidgetPtr m_Presentation;
 		WindowWidgetPtr m_BackButton;
+
+		struct ModifierControl
+		{
+			WindowWidgetPtr PlusButton;
+			WindowWidgetPtr ValueEdit;
+			WindowWidgetPtr MinusButton;
+		};	// struct ModifierControl
+
+		struct
+		{
+			WindowWidgetPtr EnabledButton;
+			ModifierControl Angle;
+			ModifierControl PositionX, PositionY, PositionZ;
+			ModifierControl RotationX, RotationZ;
+		} m_PrismsControl[2];
 
 	public:
 		PresentationWindow();
@@ -135,6 +149,39 @@ namespace Presentation1
 		: Window(Rect(), L"Презентация", true)
 	{
 		m_Presentation = Direct3D9<PresentationWidget>({ STANDART_DESKTOP_WIDTH * 3 / 8, STANDART_DESKTOP_HEIGHT / 2, STANDART_DESKTOP_WIDTH * 3 / 4, STANDART_DESKTOP_HEIGHT});
+		// -----------------------
+		for (auto i = 0; i < /*dxm::countof(m_PrismsControl)*/1; ++i)
+		{
+			auto& prism = m_Presentation->m_PrismRenderers[i];	// @todo
+			auto& prismControl = m_PrismsControl[i];
+
+			auto static const InitializeModifierControl = [i, this](ModifierControl& control, auto& value, auto eps, auto j)
+			{
+				auto static const buttonSize = 40u;
+				auto static const textEditWidth = 250u;
+				auto static const spacingSize = 10;
+
+				auto const topOffset = j * (spacingSize + (int)buttonSize);
+				auto static const leftButtonOffset = STANDART_DESKTOP_WIDTH * 3 / 4 + (int)(buttonSize + spacingSize);
+				auto static const rightButtonOffset = STANDART_DESKTOP_WIDTH - (int)(buttonSize + spacingSize);
+				auto static const textEditOffset = (leftButtonOffset + rightButtonOffset) / 2;
+				control.MinusButton = Button({leftButtonOffset, topOffset, buttonSize, buttonSize}, L"-", [&value, &control, eps](long)
+				{
+					value -= eps;
+					control.ValueEdit->SetText(std::to_wstring(value).c_str());
+				});
+				control.ValueEdit = TextEdit({ textEditOffset, topOffset, textEditWidth, buttonSize }, std::to_wstring(value).c_str(), TextEditFlags::CenterAlignment);
+				control.PlusButton = Button({ rightButtonOffset, topOffset, buttonSize, buttonSize }, L"+", [&value, &control, eps](long)
+				{
+					value += eps;
+					control.ValueEdit->SetText(std::to_wstring(value).c_str());
+				});
+			};
+			InitializeModifierControl(prismControl.Angle, prism.Angle, 0.25f, 1);
+			InitializeModifierControl(prismControl.PositionX, prism.Position.x, 0.25f, 2);
+			InitializeModifierControl(prismControl.PositionY, prism.Position.y, 0.25f, 3);
+			InitializeModifierControl(prismControl.PositionZ, prism.Position.z, 0.25f, 4);
+		}
 		// -----------------------
 		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4, 80 }, L"Назад", [](long)
 		{

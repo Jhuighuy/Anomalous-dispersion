@@ -55,7 +55,6 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <TreatWarningAsError>false</TreatWarningAsError>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -71,7 +70,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <TreatWarningAsError>false</TreatWarningAsError>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -84,12 +82,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\ObjLoader.cpp" />
-    <ClCompile Include="Source\Presentation.cpp" />
     <ClCompile Include="Source\Program.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ObjLoader.h" />
-    <ClInclude Include="Source\Presentation.h" />
     <ClInclude Include="Source\PresentationEngine.h" />
     <ClInclude Include="Source\PresentationFramework.h" />
     <ClInclude Include="Source\PresentationWidget.h" />

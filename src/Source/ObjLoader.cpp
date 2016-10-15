@@ -1,6 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <cstdio>
+#pragma warning(push, 0)
 #include <glm/glm.hpp>
+#pragma warning(pop)
 #include <string>
 #include <vector>
 #include <stdlib.h>
@@ -53,7 +55,7 @@ bool ImportozameshenieBJD(const char* path, Mesh& out_vertices)
 			fgets(stupidBuffer, 1000, file);
 
 			double u, v, w;
-			auto a = sscanf(stupidBuffer, "%lf %lf %lf\n", &u, &v, &w);
+			sscanf(stupidBuffer, "%lf %lf %lf\n", &u, &v, &w);
 			temp_uvs.push_back(glm::vec2(u, 1-v));
 		}
 		else if (strcmp(lineHeader, "f") == 0)
@@ -157,7 +159,7 @@ namespace Presentation1
 				fgets(stupidBuffer, 1000, file);
 
 				double u, v, w;
-				auto a = sscanf(stupidBuffer, "%lf %lf %lf\n", &u, &v, &w);
+				sscanf(stupidBuffer, "%lf %lf %lf\n", &u, &v, &w);
 				temp_uvs.push_back(glm::vec2(u, 1 - v));
 			}
 			else if (strcmp(lineHeader, "f") == 0)

@@ -11,10 +11,11 @@
 #pragma warning(push, 0)
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
-#include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
 #pragma warning(pop)
 
+#define _USE_MATH_DEFINES
+#include <math.h>
 #define F_PI float(M_PI)
 
 namespace Presentation1
@@ -30,11 +31,6 @@ namespace Presentation1
 			return reinterpret_cast<D3DMATRIX const*>(&matrix[0][0]);
 		}
 
-		template<typename T>
-		static T clamp(T const value, T const min, T const max)
-		{
-			return value < min ? min : value > max ? max : value;
-		}
 	}	// namespace dxm
 	static bool operator>= (dxm::vec3 const& a, dxm::vec3 const& b)
 	{
@@ -64,22 +60,23 @@ namespace Presentation1
 		IDirect3DDevice9* const m_Device;
 		FLOAT const m_Width;
 		FLOAT const m_Height;
-		FLOAT m_CameraRotationYaw = 0.0f;	/// @todo Calibrate value here.
-		FLOAT m_CameraRotationPitch = F_PI / 2.0f;
+		FLOAT m_CameraRotationYaw = -F_PI / 2.0f;	/// @todo Calibrate value here.
+		FLOAT m_CameraRotationPitch = 0.0f;
 		POINT m_PrevMousePosition = {};
 		dxm::mat4 m_ProjectionMatrix;
 		dxm::mat4 m_ViewMatrix;
 	public:
-		dxm::vec3 const RotationCenter = { 0.0f, 1.3f, 2.0f };	/// @todo And here.
+		dxm::vec3 const RotationCenter = { 0.0f, 1.2f, 2.0f };	/// @todo And here.
 		dxm::vec3 const CenterOffset = { 0.0f, 0.0f, -1.8f };
 		dxm::vec3 const Up = { 0.0f, 1.0f, 0.0f };
 
 		// -----------------------
-		explicit OrbitalCamera(IDirect3DDevice9* const device, UINT const width = 1280, UINT const height = 720)
+		explicit OrbitalCamera(IDirect3DDevice9* const device, UINT const width = 1280 * 3 / 4, UINT const height = 720)
 			: m_Device(device), m_Width(static_cast<FLOAT>(width)), m_Height(static_cast<FLOAT>(height))
 		{
 			m_ProjectionMatrix = dxm::perspectiveFovLH(F_PI / 3.0f, m_Width, m_Height, 0.01f, 100.0f);
-			m_ViewMatrix = dxm::lookAtLH(RotationCenter + CenterOffset, RotationCenter, Up);
+		//	m_ViewMatrix = dxm::lookAtLH(RotationCenter + CenterOffset, RotationCenter, Up);
+			Update();
 		}
 
 		// -----------------------
