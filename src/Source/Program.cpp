@@ -159,14 +159,15 @@ namespace Presentation1
 			auto& prism = m_Presentation->m_PrismRenderers[i];	// @todo
 			auto& prismControl = m_PrismsControl[i];
 
-			auto static const cellWidth = STANDART_DESKTOP_WIDTH / 4 / 2;
+			auto static const padding = 5;
+			auto static const cellWidth = (STANDART_DESKTOP_WIDTH / 4 - 2 * padding) / 2 - 2;
 			auto static const cellHeight = 80;
 			auto static const subcellWidth = cellWidth;
 			auto static const subcellHeight = cellHeight / 2;
 
 			auto static const InitializePrismEnabledButton = [this](Prism& prism, PrismsControl& control, auto i, auto j)
 			{
-				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
+				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4 + padding;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
 				auto const lowerSubcellY = cellY + cellHeight / 4;
 
@@ -178,7 +179,7 @@ namespace Presentation1
 			};
 			auto static const InitializePrismCombobox = [this](Prism& prism, PrismsControl& control, auto i, auto j)
 			{
-				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
+				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4 + padding;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
 				auto const lowerSubcellY = cellY + cellHeight / 4;
 
@@ -192,7 +193,7 @@ namespace Presentation1
 			};
 			auto static const InitializeModifierControl = [this](ModifierControl& control, auto label, auto& value, auto eps, auto i, auto j)
 			{
-				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
+				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4 + padding;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
 				auto const lowerSubcellY = cellY + cellHeight / 4;
 				auto const upperSubcellY = cellY - cellHeight / 4;
