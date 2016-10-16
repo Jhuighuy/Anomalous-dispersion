@@ -57,7 +57,6 @@ namespace Presentation1
 	{
 	private:
 		PresentationWidgetPtr m_Presentation;
-		WindowWidgetPtr m_BackButton;
 
 		struct ModifierControl
 		{
@@ -69,12 +68,17 @@ namespace Presentation1
 
 		struct PrismsControl
 		{
+			WindowWidgetPtr Label;
 			WindowWidgetPtr EnabledCheckbox;
 			WindowWidgetPtr MaterialCombobox;
 			ModifierControl Angle;
 			ModifierControl PositionX, PositionY, PositionZ;
 			ModifierControl RotationX, RotationZ;
 		} m_PrismsControl[2];
+
+		WindowWidgetPtr m_NormImage;
+		WindowWidgetPtr m_AnomImage;
+		WindowWidgetPtr m_BackButton;
 
 	public:
 		PresentationWindow();
@@ -154,6 +158,10 @@ namespace Presentation1
 	{
 		m_Presentation = Direct3D9<PresentationWidget>({ STANDART_DESKTOP_WIDTH * 3 / 8, STANDART_DESKTOP_HEIGHT / 2, STANDART_DESKTOP_WIDTH * 3 / 4, STANDART_DESKTOP_HEIGHT});
 		// -----------------------
+		Rect const imageRect = { STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, 820, 480, 330 };
+		m_NormImage = Image(imageRect, L"../gfx/norm-func.bmp");
+		m_AnomImage = Image(imageRect, L"../gfx/anom-func.bmp");
+		// -----------------------
 		for (auto i = 0; i < dxm::countof(m_PrismsControl); ++i)
 		{
 			auto& prism = m_Presentation->m_PrismRenderers[i];	// @todo
@@ -166,11 +174,18 @@ namespace Presentation1
 			auto static const subcellWidth = cellWidth;
 			auto static const subcellHeight = cellHeight / 2;
 
+			auto static const InitializePrismLabel = [this](Prism& prism, PrismsControl& control, auto i, auto j)
+			{
+				auto const cellX = STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8;
+				auto const cellY = cellHeight / 2 + cellHeight * j;
+
+				control.Label = Label({ cellX, cellY, subcellWidth, subcellHeight }, j == 0 ? L"Первая призма" : L"Вторая призма", LabelFlags::CenterAlignment, TextSize::NotSoLarge);
+			};
 			auto static const InitializePrismEnabledButton = [this](Prism& prism, PrismsControl& control, auto i, auto j)
 			{
 				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
-				auto const lowerSubcellY = cellY + cellHeight / 4;
+				auto const lowerSubcellY = cellY + cellHeight / 2;
 
 				control.EnabledCheckbox = CheckBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, L"Выключена", [&](long disabled)
 				{
@@ -182,7 +197,7 @@ namespace Presentation1
 			{
 				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
-				auto const lowerSubcellY = cellY + cellHeight / 4;
+				auto const lowerSubcellY = cellY + cellHeight / 2;
 
 				/*std::vector<wchar_t const*> Texts = { L"Стекло", L"Говно" };
 				control.MaterialCombobox = ComboBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, Texts, [](long) {});*/
@@ -190,6 +205,11 @@ namespace Presentation1
 				{
 					prism.Type = (PrismType)enabled;
 					m_Presentation->m_AreRaysSynced = false;
+					if (i != 0)
+					{
+						m_NormImage->Show(enabled);
+						m_AnomImage->Hide(enabled);
+					}
 				}, prism.Type == PrismType::Govno);
 			};
 			auto static const InitializeModifierControl = [this](ModifierControl& control, auto label, auto& value, auto eps, auto i, auto j)
@@ -226,6 +246,7 @@ namespace Presentation1
 				});
 			};
 
+			InitializePrismLabel(prism, prismControl, 0, i * 4);
 			InitializePrismEnabledButton(prism, prismControl, 0, i * 4);
 			InitializePrismCombobox(prism, prismControl, 1, i * 4);
 			InitializeModifierControl(prismControl.Angle,     L"Угол призмы",    prism.Angle,      0.05f, 1, 1 + i * 4);

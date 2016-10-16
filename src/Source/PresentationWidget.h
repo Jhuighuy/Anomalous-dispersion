@@ -324,7 +324,7 @@ namespace Presentation1
 
 				/* Rendering scene. */
 				m_RoomRenderer.Render();
-				m_ScreenRenderer.Render();
+			//	m_ScreenRenderer.Render();
 
 				/* Updating and rendering rays. */
 				if (!m_AreRaysSynced)
@@ -334,8 +334,8 @@ namespace Presentation1
 					{
 						prism.UpdatePlanes(m_PrismPlanes);
 					}
-					m_PrismPlanes.push_back({ { -100.0f, -100.0f, 3.49f },{ 100.0f, 100.0f, 3.49f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
-					GenerateRaysMesh(1000);
+					m_PrismPlanes.push_back({ { -100.0f, -100.0f, 3.92f },{ 100.0f, 100.0f, 3.9f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
+					GenerateRaysMesh(2000);
 					m_AreRaysSynced = true;
 				}
 				m_RaysProjectionRenderer.Render();

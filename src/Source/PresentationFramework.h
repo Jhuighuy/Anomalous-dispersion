@@ -84,6 +84,7 @@ namespace Presentation1
 	enum class TextSize : DWORD
 	{
 		Default,
+		NotSoLarge,
 		Large,
 		VeryLarge,
 		_Count,
@@ -146,6 +147,18 @@ namespace Presentation1
 							, fontName);
 					}
 					return defaultFont;
+				}
+				case TextSize::NotSoLarge:
+				{
+					HFONT static notSoLargeFont = nullptr;
+					if (notSoLargeFont == nullptr)
+					{
+						notSoLargeFont = CreateFont(30 * GetDesktopHeight() / STANDART_DESKTOP_HEIGHT
+							, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
+							, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS
+							, fontName);
+					}
+					return notSoLargeFont;
 				}
 				case TextSize::Large:
 				{
