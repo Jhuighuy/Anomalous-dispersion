@@ -106,17 +106,23 @@ namespace Presentation1
 			{
 				auto const v = dp1 / dp2;
 				intersectionPoint = coord + v * direction;
-				return PointMin <= intersectionPoint && intersectionPoint >= PointMax;
+				return dxm::aabb_check(PointMin, PointMax, intersectionPoint);
 			}
 			return false;
 		}
 
 		// -----------------------
-		dxm::vec3 Refract(dxm::vec3 const& direction, DOUBLE const waveLength) const
+		bool Refract(dxm::vec3& direction, DOUBLE const waveLength) const
 		{
 			auto const angleBefore = acosf(dxm::dot(direction, Normal) / dxm::length(Normal) / dxm::length(direction));
-			auto const angleAfter = static_cast<float>(asin(dxm::clamp(1.0 / RefractiveIndex(waveLength) * sin(angleBefore), -1.0, 1.0)));
-			return dxm::rotate(direction, angleBefore - angleAfter, dxm::cross(direction, Normal));
+			auto const sinAngleAfter = 1.0 / RefractiveIndex(waveLength) * sin(angleBefore);
+			if (sinAngleAfter >= -1.0 && sinAngleAfter <= 1.0)
+			{
+				auto const angleAfter = static_cast<float>(asin(sinAngleAfter));
+				direction = dxm::rotate(direction, angleBefore - angleAfter, dxm::cross(direction, Normal));
+				return true;
+			}
+			return false;
 		}
 	};	// struct Plane
 
@@ -182,7 +188,7 @@ namespace Presentation1
 				auto const p2 = transformationMatrix * dxm::vec4(+0.1f, -0.1f, +0.0f, 1.0);
 				auto const p3 = transformationMatrix * dxm::vec4(-0.1f, +0.1f, +0.2f, 1.0);
 				auto const normal = dxm::cross(dxm::vec3(p2 - p1), dxm::vec3(p3 - p1));
-				planes.push_back({ p1, p3, normal, refractiveIndexFuncs.Out, &DummyIndex });
+				planes.push_back({ p2, p3, normal, refractiveIndexFuncs.Out, &DummyIndex });
 			}
 		}
 
@@ -328,7 +334,7 @@ namespace Presentation1
 					{
 						prism.UpdatePlanes(m_PrismPlanes);
 					}
-					m_PrismPlanes.push_back({ { 0.0f, 0.0f, 3.49f },{ 0.0f, 0.0f, 3.0f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
+					m_PrismPlanes.push_back({ { -100.0f, -100.0f, 3.49f },{ 100.0f, 100.0f, 3.49f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
 					GenerateRaysMesh(1000);
 					m_AreRaysSynced = true;
 				}
@@ -364,10 +370,16 @@ namespace Presentation1
 				{
 					auto& plane = m_PrismPlanes[j];
 					
-					m_RaysMesh.AddVertex({ coord, color });
-					plane.Intersect(coord, coord, direction);
+					auto const prevCoord = coord;
+					if (!plane.Intersect(coord, coord, direction))
+					{
+						coord = prevCoord;
+						continue;
+					}
+					m_RaysMesh.AddVertex({ prevCoord, color });
 					m_RaysMesh.AddVertex({ coord, j == m_PrismPlanes.size() - 1 ? color & 0x00FFFFFF : color });
-					direction = plane.Refract(direction, waveLength);
+					if (!plane.Refract(direction, waveLength))
+						break;
 
 					AbsorbAlpha(color, plane.AbsorptionIndex(waveLength));
 

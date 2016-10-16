@@ -31,6 +31,17 @@ namespace Presentation1
 			return reinterpret_cast<D3DMATRIX const*>(&matrix[0][0]);
 		}
 
+		static bool aabb_check(vec3 const& a, vec3 const& b, vec3 const& v)
+		{
+			auto const mx = min(a.x, b.x), px = max(a.x, b.x);
+			auto const my = min(a.y, b.y), py = max(a.y, b.y);
+			auto const mz = min(a.z, b.z), pz = max(a.z, b.z);
+			auto const r = mx <= v.x && v.x <= px 
+				&& my <= v.y && v.y <= py 
+				&& mz <= v.z && v.z <= pz;
+			return r;
+		}
+
 	}	// namespace dxm
 	static bool operator>= (dxm::vec3 const& a, dxm::vec3 const& b)
 	{
@@ -158,9 +169,6 @@ namespace Presentation1
 	protected:
 		void Update(Vertex const* const vertices, UINT const verticesCount) const
 		{
-			assert(vertices != nullptr);
-			assert(verticesCount != 0);
-
 			auto const verticesSize = verticesCount * sizeof(Vertex);
 			if (m_VertexBuffer != nullptr)
 			{
@@ -174,19 +182,22 @@ namespace Presentation1
 					m_VertexBuffer = nullptr;
 				}
 			}
-			if (m_VertexBuffer == nullptr)
+			if (verticesCount != 0)
 			{
-				/* Buffer does not exist. We need to create the new of the
-				 * corresponding size. */
-				ThrowIfFailed(m_Device->CreateVertexBuffer(verticesSize, 0, Vertex::FVF, D3DPOOL_MANAGED, &m_VertexBuffer, nullptr));
-			}
-			assert(m_VertexBuffer != nullptr);
+				if (m_VertexBuffer == nullptr)
+				{
+					/* Buffer does not exist. We need to create the new of the
+					 * corresponding size. */
+					ThrowIfFailed(m_Device->CreateVertexBuffer(verticesSize, 0, Vertex::FVF, D3DPOOL_MANAGED, &m_VertexBuffer, nullptr));
+				}
+				assert(m_VertexBuffer != nullptr);
 
-			void* verticesGpuData = nullptr;
-			ThrowIfFailed(m_VertexBuffer->Lock(0, 0, &verticesGpuData, 0));
-			memcpy_s(verticesGpuData, verticesSize, vertices, verticesSize);
-			ThrowIfFailed(m_VertexBuffer->Unlock());
-			m_PrimitivesCount = verticesCount / (PrimitiveType == D3DPT_TRIANGLELIST ? 3 : 2);
+				void* verticesGpuData = nullptr;
+				ThrowIfFailed(m_VertexBuffer->Lock(0, 0, &verticesGpuData, 0));
+				memcpy_s(verticesGpuData, verticesSize, vertices, verticesSize);
+				ThrowIfFailed(m_VertexBuffer->Unlock());
+				m_PrimitivesCount = verticesCount / (PrimitiveType == D3DPT_TRIANGLELIST ? 3 : 2);
+			}
 		}
 
 	public:

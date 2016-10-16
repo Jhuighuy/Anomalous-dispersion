@@ -160,14 +160,15 @@ namespace Presentation1
 			auto& prismControl = m_PrismsControl[i];
 
 			auto static const padding = 5;
-			auto static const cellWidth = (STANDART_DESKTOP_WIDTH / 4 - 2 * padding) / 2 - 2;
+			auto static const realCellWidth = STANDART_DESKTOP_WIDTH / 4 / 2;
+			auto static const cellWidth = realCellWidth - 2 * padding;
 			auto static const cellHeight = 80;
 			auto static const subcellWidth = cellWidth;
 			auto static const subcellHeight = cellHeight / 2;
 
 			auto static const InitializePrismEnabledButton = [this](Prism& prism, PrismsControl& control, auto i, auto j)
 			{
-				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4 + padding;
+				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
 				auto const lowerSubcellY = cellY + cellHeight / 4;
 
@@ -179,7 +180,7 @@ namespace Presentation1
 			};
 			auto static const InitializePrismCombobox = [this](Prism& prism, PrismsControl& control, auto i, auto j)
 			{
-				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4 + padding;
+				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
 				auto const lowerSubcellY = cellY + cellHeight / 4;
 
@@ -193,24 +194,31 @@ namespace Presentation1
 			};
 			auto static const InitializeModifierControl = [this](ModifierControl& control, auto label, auto& value, auto eps, auto i, auto j)
 			{
-				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4 + padding;
+				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
 				auto const lowerSubcellY = cellY + cellHeight / 4;
 				auto const upperSubcellY = cellY - cellHeight / 4;
-
-				auto static const textEditWidth = cellWidth - 2 * subcellHeight;
-				auto const leftButtonX = cellX - cellWidth / 2 + subcellHeight / 2;
-				auto const rightButtonX = cellX + cellWidth / 2 - subcellHeight / 2;
+				
+				auto static const buttonWidth = subcellHeight;
+				auto static const buttonHeight = subcellHeight / 2;
+				auto const minusButtonX = cellX - cellWidth / 2 + buttonWidth / 2;
+				auto const minusButtonY = lowerSubcellY + subcellHeight / 4;
+				auto const plusButtonX = minusButtonX;
+				auto const plusButtonY = lowerSubcellY - subcellHeight / 4;
+				auto static const textEditWidth = subcellWidth - buttonWidth;
+				auto static const textEditHeight = subcellHeight;
+				auto const textEditX = cellX + buttonWidth / 2;
+				auto const textEditY = lowerSubcellY;
 
 				control.Label = Label({ cellX, upperSubcellY + subcellHeight / 2, subcellWidth, subcellHeight }, label);
-				control.MinusButton = Button({ leftButtonX, lowerSubcellY, subcellHeight, subcellHeight }, L"-", [this, &value, &control, eps](long)
+				control.MinusButton = Button({ minusButtonX, minusButtonY, buttonWidth, buttonHeight }, L"-", [this, &value, &control, eps](long)
 				{
 					value -= eps;
 					control.ValueEdit->SetText(std::to_wstring(value).c_str());
 					m_Presentation->m_AreRaysSynced = false;
 				});
-				control.ValueEdit = TextEdit({ cellX, lowerSubcellY, textEditWidth, subcellHeight }, std::to_wstring(value).c_str(), TextEditFlags::CenterAlignment);
-				control.PlusButton = Button({ rightButtonX, lowerSubcellY, subcellHeight, subcellHeight }, L"+", [this, &value, &control, eps](long)
+				control.ValueEdit = TextEdit({ textEditX, lowerSubcellY, textEditWidth, textEditHeight }, std::to_wstring(value).c_str(), TextEditFlags::CenterAlignment);
+				control.PlusButton = Button({ plusButtonX, plusButtonY, buttonWidth, buttonHeight }, L"+", [this, &value, &control, eps](long)
 				{
 					value += eps;
 					control.ValueEdit->SetText(std::to_wstring(value).c_str());
@@ -218,14 +226,13 @@ namespace Presentation1
 				});
 			};
 
-			InitializePrismEnabledButton(prism, prismControl, 0, i * 5);
-			InitializePrismCombobox(prism, prismControl, 1, i * 5);
-			InitializeModifierControl(prismControl.Angle,     L"Angle",      prism.Angle,      0.05f, 1, 1 + i * 5);
-			InitializeModifierControl(prismControl.RotationX, L"Rotation X", prism.RotationX,  0.05f, 1, 2 + i * 5);
-			InitializeModifierControl(prismControl.RotationZ, L"Rotation Z", prism.RotationZ,  0.05f, 1, 3 + i * 5);
-			InitializeModifierControl(prismControl.PositionX, L"Position X", prism.Position.x, 0.05f, 0, 1 + i * 5);
-			InitializeModifierControl(prismControl.PositionY, L"Position Y", prism.Position.y, 0.05f, 0, 2 + i * 5);
-			InitializeModifierControl(prismControl.PositionZ, L"Position Z", prism.Position.z, 0.05f, 0, 3 + i * 5);
+			InitializePrismEnabledButton(prism, prismControl, 0, i * 4);
+			InitializePrismCombobox(prism, prismControl, 1, i * 4);
+			InitializeModifierControl(prismControl.Angle,     L"Угол призмы",    prism.Angle,      0.05f, 1, 1 + i * 4);
+			InitializeModifierControl(prismControl.RotationZ, L"Поворот призмы", prism.RotationZ,  0.05f, 1, 2 + i * 4);
+			InitializeModifierControl(prismControl.PositionX, L"Координата (X)", prism.Position.x, 0.05f, 0, 1 + i * 4);
+			InitializeModifierControl(prismControl.PositionY, L"Координата (Y)", prism.Position.y, 0.05f, 0, 2 + i * 4);
+			InitializeModifierControl(prismControl.PositionZ, L"Координата (Z)", prism.Position.z, 0.05f, 0, 3 + i * 4);
 		}
 		// -----------------------
 		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4, 80 }, L"Назад", [](long)

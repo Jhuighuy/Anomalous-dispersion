@@ -131,6 +131,8 @@ namespace Presentation1
 		HFONT static GetFont(TextSize const textSize)
 		{
 			assert(textSize < TextSize::_Count);
+
+			auto static const fontName = L"Consolas";
 			switch (textSize)
 			{
 				case TextSize::Default:
@@ -141,7 +143,7 @@ namespace Presentation1
 						defaultFont = CreateFont(20 * GetDesktopHeight() / STANDART_DESKTOP_HEIGHT
 							, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
 							, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS
-							, L"Times New Roman");
+							, fontName);
 					}
 					return defaultFont;
 				}
@@ -153,7 +155,7 @@ namespace Presentation1
 						largeFont = CreateFont(40 * GetDesktopHeight() / STANDART_DESKTOP_HEIGHT
 							, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
 							, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS
-							, L"Times New Roman");
+							, fontName);
 					}
 					return largeFont;
 				}
@@ -165,7 +167,7 @@ namespace Presentation1
 						veryLargeFont = CreateFont(75 * GetDesktopHeight() / STANDART_DESKTOP_HEIGHT
 							, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
 							, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS
-							, L"Times New Roman");
+							, fontName);
 					}
 					return veryLargeFont;
 				}
