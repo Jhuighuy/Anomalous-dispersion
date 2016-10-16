@@ -42,11 +42,11 @@ namespace Presentation1
 		auto static const redRefractiveIndex = 1.510;
 
 		auto const v = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
-		return violetRefractiveIndex + v * (redRefractiveIndex - violetRefractiveIndex);
+		return (violetRefractiveIndex + v * (redRefractiveIndex - violetRefractiveIndex));
 	}
 	static DOUBLE GlassAirRefractiveIndex(DOUBLE const waveLength)
 	{
-		return 1.0 / AirGlassRefractiveIndex(waveLength);
+		return 1.13 / AirGlassRefractiveIndex(waveLength);
 	}
 
 	static DOUBLE AirGovnoRefractiveIndex(DOUBLE const waveLength)
@@ -82,11 +82,11 @@ namespace Presentation1
 		auto const xi = violetWaveLength + i * (redWaveLength - violetWaveLength) / dxm::countof(grid);
 		auto const xi1 = violetWaveLength + (i + 1) * (redWaveLength - violetWaveLength) / dxm::countof(grid);
 		auto y = yi + (waveLength - xi) / (xi1 - xi) * (yi1 - yi);
-		return 0.2 * (y - 1.6) + 1.6;
+		return 0.3 * (y - 1.6) + 1.6;
 	}
 	static DOUBLE GovnoAirRefractiveIndex(DOUBLE const waveLength)
 	{
-		return 1.41 / AirGovnoRefractiveIndex(waveLength);
+		return 1.38 / AirGovnoRefractiveIndex(waveLength);
 	}
 
 	struct Plane final
@@ -283,6 +283,7 @@ namespace Presentation1
 			LoadOBJ("../gfx/screen.obj", m_ScreenMesh);
 			LoadTexture(m_Device, L"../gfx/screenLightMap.png", &m_ScreenRenderer.Texture);
 			m_ScreenRenderer.Position.z = 2.0f;
+			m_ScreenRenderer.Position.x = -0.7f;
 			m_ScreenRenderer.Rotation.x = F_PI;
 		
 			/* Setting up dynamic scene parameters. */
