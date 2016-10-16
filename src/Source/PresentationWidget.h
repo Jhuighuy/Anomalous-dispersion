@@ -129,6 +129,7 @@ namespace Presentation1
 
 	struct Prism final
 	{
+		bool IsEnabled = true;
 		PrismType Type = PrismType::Air;
 		FLOAT Angle = F_PI / 3.0f;
 		dxm::vec3 Position;
@@ -150,6 +151,9 @@ namespace Presentation1
 		// -----------------------
 		void UpdatePlanes(std::vector<Plane>& planes) const
 		{
+			if (!IsEnabled)
+				return;
+
 			struct { IndexFunc In, Out; } static const refractiveIndexFuncsTable[] = {
 				{ &AirGlassRefractiveIndex, &GlassAirRefractiveIndex },
 				{ &AirGovnoRefractiveIndex, &GovnoAirRefractiveIndex },
@@ -185,6 +189,9 @@ namespace Presentation1
 		// -----------------------
 		void Update() 
 		{
+			if (!IsEnabled)
+				return;
+
 			auto static const LegHeight = 1.5f;
 			auto static const GimbalHeight = 0.2f;
 
@@ -292,12 +299,7 @@ namespace Presentation1
 			m_PrismRenderers[1].Position = { 0.0f, 0.9f, 2.0f };
 			m_PrismRenderers[1].RotationZ = F_PI / 2.0f;
 		//	m_PrismRenderers[1].RotationX = DXM_PI / 6.0f;
-			for (auto& prism : m_PrismRenderers)
-			{
-				prism.UpdatePlanes(m_PrismPlanes);
-			}
-			m_PrismPlanes.push_back({ { 0.0f, 0.0f, 3.49f },{ 0.0f, 0.0f, 3.0f }, { 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
-
+			
 			/* Setting up some other shit. */
 			LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer.Texture);
 			LoadShader(m_Device, L"../gfx/ColoredTextureShader.hlsl", &m_RaysProjectionRenderer.PixelShader);
@@ -320,8 +322,14 @@ namespace Presentation1
 				/* Updating and rendering rays. */
 				if (!m_AreRaysSynced)
 				{
-					m_AreRaysSynced = true;
+					m_PrismPlanes.clear();
+					for (auto& prism : m_PrismRenderers)
+					{
+						prism.UpdatePlanes(m_PrismPlanes);
+					}
+					m_PrismPlanes.push_back({ { 0.0f, 0.0f, 3.49f },{ 0.0f, 0.0f, 3.0f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
 					GenerateRaysMesh(1000);
+					m_AreRaysSynced = true;
 				}
 				m_RaysProjectionRenderer.Render();
 				m_RaysRenderer.Render();
@@ -339,10 +347,12 @@ namespace Presentation1
 		// -----------------------
 		void GenerateRaysMesh(UINT const partitioning)
 		{
+			m_RaysMesh.ClearVertices();
+			m_RaysProjectionMesh.ClearVertices();
 			for (auto i = 0u; i < partitioning; ++i)
 			{
 				auto coord = dxm::vec3(0.0f, 1.5f, -2.0f);
-				auto direction = m_PrismRenderers[0].Position - coord;
+				auto direction = (m_PrismRenderers[0].IsEnabled? m_PrismRenderers[0].Position : m_PrismRenderers[1].Position) - coord;
 
 				auto static const violetWaveLength = 380.0;
 				auto static const redWaveLength = 740.0;

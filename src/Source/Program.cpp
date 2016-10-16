@@ -5,6 +5,7 @@
 #include "PresentationWidget.h"
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")
+#pragma comment(lib, "Comctl32.lib")
 
 namespace Presentation1
 {
@@ -24,6 +25,7 @@ namespace Presentation1
 
 	class MainWindow final : public MenuWindow
 	{
+	private:
 		WindowWidgetPtr m_BeginButton;
 		WindowWidgetPtr m_AuthorsButton;
 		WindowWidgetPtr m_ExitButton;
@@ -59,14 +61,16 @@ namespace Presentation1
 
 		struct ModifierControl
 		{
+			WindowWidgetPtr Label;
 			WindowWidgetPtr PlusButton;
 			WindowWidgetPtr ValueEdit;
 			WindowWidgetPtr MinusButton;
 		};	// struct ModifierControl
 
-		struct
+		struct PrismsControl
 		{
-			WindowWidgetPtr EnabledButton;
+			WindowWidgetPtr EnabledCheckbox;
+			WindowWidgetPtr MaterialCombobox;
 			ModifierControl Angle;
 			ModifierControl PositionX, PositionY, PositionZ;
 			ModifierControl RotationX, RotationZ;
@@ -150,37 +154,77 @@ namespace Presentation1
 	{
 		m_Presentation = Direct3D9<PresentationWidget>({ STANDART_DESKTOP_WIDTH * 3 / 8, STANDART_DESKTOP_HEIGHT / 2, STANDART_DESKTOP_WIDTH * 3 / 4, STANDART_DESKTOP_HEIGHT});
 		// -----------------------
-		for (auto i = 0; i < /*dxm::countof(m_PrismsControl)*/1; ++i)
+		for (auto i = 0; i < dxm::countof(m_PrismsControl); ++i)
 		{
 			auto& prism = m_Presentation->m_PrismRenderers[i];	// @todo
 			auto& prismControl = m_PrismsControl[i];
 
-			auto static const InitializeModifierControl = [i, this](ModifierControl& control, auto& value, auto eps, auto j)
-			{
-				auto static const buttonSize = 40u;
-				auto static const textEditWidth = 250u;
-				auto static const spacingSize = 10;
+			auto static const cellWidth = STANDART_DESKTOP_WIDTH / 4 / 2;
+			auto static const cellHeight = 80;
+			auto static const subcellWidth = cellWidth;
+			auto static const subcellHeight = cellHeight / 2;
 
-				auto const topOffset = j * (spacingSize + (int)buttonSize);
-				auto static const leftButtonOffset = STANDART_DESKTOP_WIDTH * 3 / 4 + (int)(buttonSize + spacingSize);
-				auto static const rightButtonOffset = STANDART_DESKTOP_WIDTH - (int)(buttonSize + spacingSize);
-				auto static const textEditOffset = (leftButtonOffset + rightButtonOffset) / 2;
-				control.MinusButton = Button({leftButtonOffset, topOffset, buttonSize, buttonSize}, L"-", [&value, &control, eps](long)
+			auto static const InitializePrismEnabledButton = [this](Prism& prism, PrismsControl& control, auto i, auto j)
+			{
+				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
+				auto const cellY = cellHeight / 2 + cellHeight * j;
+				auto const lowerSubcellY = cellY + cellHeight / 4;
+
+				control.EnabledCheckbox = CheckBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, L"Выключена", [&](long disabled)
+				{
+					prism.IsEnabled = (bool)!disabled;
+					m_Presentation->m_AreRaysSynced = false;
+				});
+			};
+			auto static const InitializePrismCombobox = [this](Prism& prism, PrismsControl& control, auto i, auto j)
+			{
+				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
+				auto const cellY = cellHeight / 2 + cellHeight * j;
+				auto const lowerSubcellY = cellY + cellHeight / 4;
+
+				/*std::vector<wchar_t const*> Texts = { L"Стекло", L"Говно" };
+				control.MaterialCombobox = ComboBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, Texts, [](long) {});*/
+				control.MaterialCombobox = CheckBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, L"Заполнена газом", [&](long enabled)
+				{
+					prism.Type = (PrismType)enabled;
+					m_Presentation->m_AreRaysSynced = false;
+				}, prism.Type == PrismType::Govno);
+			};
+			auto static const InitializeModifierControl = [this](ModifierControl& control, auto label, auto& value, auto eps, auto i, auto j)
+			{
+				auto const cellX = cellWidth / 2 + cellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
+				auto const cellY = cellHeight / 2 + cellHeight * j;
+				auto const lowerSubcellY = cellY + cellHeight / 4;
+				auto const upperSubcellY = cellY - cellHeight / 4;
+
+				auto static const textEditWidth = cellWidth - 2 * subcellHeight;
+				auto const leftButtonX = cellX - cellWidth / 2 + subcellHeight / 2;
+				auto const rightButtonX = cellX + cellWidth / 2 - subcellHeight / 2;
+
+				control.Label = Label({ cellX, upperSubcellY + subcellHeight / 2, subcellWidth, subcellHeight }, label);
+				control.MinusButton = Button({ leftButtonX, lowerSubcellY, subcellHeight, subcellHeight }, L"-", [this, &value, &control, eps](long)
 				{
 					value -= eps;
 					control.ValueEdit->SetText(std::to_wstring(value).c_str());
+					m_Presentation->m_AreRaysSynced = false;
 				});
-				control.ValueEdit = TextEdit({ textEditOffset, topOffset, textEditWidth, buttonSize }, std::to_wstring(value).c_str(), TextEditFlags::CenterAlignment);
-				control.PlusButton = Button({ rightButtonOffset, topOffset, buttonSize, buttonSize }, L"+", [&value, &control, eps](long)
+				control.ValueEdit = TextEdit({ cellX, lowerSubcellY, textEditWidth, subcellHeight }, std::to_wstring(value).c_str(), TextEditFlags::CenterAlignment);
+				control.PlusButton = Button({ rightButtonX, lowerSubcellY, subcellHeight, subcellHeight }, L"+", [this, &value, &control, eps](long)
 				{
 					value += eps;
 					control.ValueEdit->SetText(std::to_wstring(value).c_str());
+					m_Presentation->m_AreRaysSynced = false;
 				});
 			};
-			InitializeModifierControl(prismControl.Angle, prism.Angle, 0.25f, 1);
-			InitializeModifierControl(prismControl.PositionX, prism.Position.x, 0.25f, 2);
-			InitializeModifierControl(prismControl.PositionY, prism.Position.y, 0.25f, 3);
-			InitializeModifierControl(prismControl.PositionZ, prism.Position.z, 0.25f, 4);
+
+			InitializePrismEnabledButton(prism, prismControl, 0, i * 5);
+			InitializePrismCombobox(prism, prismControl, 1, i * 5);
+			InitializeModifierControl(prismControl.Angle,     L"Angle",      prism.Angle,      0.05f, 1, 1 + i * 5);
+			InitializeModifierControl(prismControl.RotationX, L"Rotation X", prism.RotationX,  0.05f, 1, 2 + i * 5);
+			InitializeModifierControl(prismControl.RotationZ, L"Rotation Z", prism.RotationZ,  0.05f, 1, 3 + i * 5);
+			InitializeModifierControl(prismControl.PositionX, L"Position X", prism.Position.x, 0.05f, 0, 1 + i * 5);
+			InitializeModifierControl(prismControl.PositionY, L"Position Y", prism.Position.y, 0.05f, 0, 2 + i * 5);
+			InitializeModifierControl(prismControl.PositionZ, L"Position Z", prism.Position.z, 0.05f, 0, 3 + i * 5);
 		}
 		// -----------------------
 		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4, 80 }, L"Назад", [](long)

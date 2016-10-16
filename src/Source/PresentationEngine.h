@@ -251,7 +251,7 @@ namespace Presentation1
 		}
 		void ClearVertices()
 		{
-			m_VertexAccumulator.resize(0);
+			m_VertexAccumulator.clear();
 			m_IsSynced = false;
 		}
 

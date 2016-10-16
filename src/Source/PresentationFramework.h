@@ -12,11 +12,11 @@
 #include <vector>
 #include <functional>
 
-#include <Windows.h>
-#include <assert.h>
 #include <d3d9.h>
-#include <wtypes.h>
+#include <assert.h>
+#include <Windows.h>
 #include <winuser.h>
+#include <commctrl.h>
 
 #define STANDART_DESKTOP_WIDTH 1920
 #define STANDART_DESKTOP_HEIGHT 1080
@@ -32,7 +32,7 @@ namespace Presentation1
 		}
 	}	// namespace dxm
 
-	inline void GetDesktopResolution(unsigned& horizontal, unsigned& vertical)
+	inline void GetDesktopResolution(int& horizontal, int& vertical)
 	{
 		RECT desktop;
 		// Get a handle to the desktop window
@@ -45,9 +45,9 @@ namespace Presentation1
 		horizontal = desktop.right;
 		vertical = desktop.bottom;
 	}
-	inline unsigned GetDesktopHeight()
+	inline int GetDesktopHeight()
 	{
-		unsigned w, h;
+		int w, h;
 		GetDesktopResolution(w, h);
 		return h;
 	}
@@ -55,27 +55,27 @@ namespace Presentation1
 	struct Rect
 	{
 	public:
-		int  x;
-		int  y;
-		unsigned w;
-		unsigned h;
+		int x;
+		int y;
+		int w;
+		int h;
 
 		Rect() : x(0), y(0), w(0), h(0) {}
-		Rect(nullptr_t, int const x, int const y, unsigned const w, unsigned const h) : x(x), y(y), w(w), h(h) {}
+		Rect(nullptr_t, int const x, int const y, int const w, int const h) : x(x), y(y), w(w), h(h) {}
 
-		Rect(int const x1, int const y1, unsigned const w1, unsigned const h1)
+		Rect(int const x1, int const y1, int const w1, int const h1)
 		{
-			unsigned horizontal, vertical;
+			int horizontal, vertical;
 			GetDesktopResolution(horizontal, vertical);
 			x = x1 * horizontal / STANDART_DESKTOP_WIDTH;
 			y = y1 * vertical / STANDART_DESKTOP_HEIGHT;
-			w = dxm::clamp(w1 * horizontal / STANDART_DESKTOP_WIDTH, 1u, UINT_MAX);
-			h = dxm::clamp(h1 * vertical / STANDART_DESKTOP_HEIGHT, 1u, UINT_MAX);
+			w = dxm::clamp(w1 * horizontal / STANDART_DESKTOP_WIDTH, 1, INT_MAX);
+			h = dxm::clamp(h1 * vertical / STANDART_DESKTOP_HEIGHT, 1, INT_MAX);
 		}
 
 		static Rect Fullscreen()
 		{
-			unsigned horizontal, vertical;
+			int horizontal, vertical;
 			GetDesktopResolution(horizontal, vertical);
 			return Rect(nullptr, 0, 0, horizontal, vertical);
 		}
@@ -114,7 +114,7 @@ namespace Presentation1
 		WantReturn = ES_WANTRETURN,
 	}; // enum class TextEditFlags
 
-	typedef WORD WindowWidgetHash;
+	typedef WORD WindowWidgetID;
 	typedef std::function<void(long)> WindowWidgetCallback;
 
 	/**
@@ -225,7 +225,7 @@ namespace Presentation1
 	class Window : public WindowWidget
 	{
 	private:
-		std::map<WindowWidgetHash, WindowWidgetCallback> m_Callbacks;
+		std::map<WindowWidgetID, WindowWidgetCallback> m_Callbacks;
 
 		// ----------------------------------------------------------------
 		// ----------------------------------------------------------------
@@ -243,10 +243,13 @@ namespace Presentation1
 			{
 				case WM_COMMAND:
 				{
-					auto const hash = static_cast<WindowWidgetHash>(LOWORD(wParam));
+					auto const hash = static_cast<WindowWidgetID>(LOWORD(wParam));
+					auto const checked = IsDlgButtonChecked(m_hwnd, hash);
+					CheckDlgButton(m_hwnd, hash, checked ? BST_UNCHECKED : BST_CHECKED);
+
 					if (m_Callbacks.count(hash) != 0 && m_Callbacks[hash] != nullptr)
 					{
-						m_Callbacks[hash](0);
+						m_Callbacks[hash](!checked);
 					}
 				} break;
 				default:
@@ -255,9 +258,10 @@ namespace Presentation1
 			return DefWindowProcW(m_hwnd, message, wParam, lParam);
 		}
 
-		auto static Hash(wchar_t const* const string)
+		auto static GenID()
 		{
-			return static_cast<WindowWidgetHash>(std::hash<wchar_t const*>()(string));
+			WindowWidgetID static id = 0;
+			return ++id;
 		}
 
 	public:
@@ -270,7 +274,7 @@ namespace Presentation1
 				windowClass.style = CS_HREDRAW | CS_VREDRAW;
 				windowClass.lpfnWndProc = WindowProc;
 				windowClass.hInstance = GetModuleHandleW(nullptr);
-				windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW);
+				windowClass.hbrBackground = /*reinterpret_cast<HBRUSH>(COLOR_WINDOW)*/GetSysColorBrush(COLOR_3DFACE);
 				windowClass.lpszClassName = L"PresentationWindowClass1";
 				RegisterClassEx(&windowClass);
 			}
@@ -299,6 +303,7 @@ namespace Presentation1
 		// Static controls.
 		// ***********************************************************************************************
 
+		// -----------------------
 		WindowWidgetPtr HorizontalSeparator(Rect const& rect) const
 		{
 			assert(rect.w != 0 && rect.h != 0);
@@ -307,6 +312,7 @@ namespace Presentation1
 					, rect.x - rect.w / 2, rect.y - rect.h / 2, rect.w, rect.h, m_hwnd, nullptr, nullptr, nullptr));
 		}
 
+		// -----------------------
 		WindowWidgetPtr VerticalSeparator(Rect const& rect) const
 		{
 			assert(rect.w != 0 && rect.h != 0);
@@ -315,6 +321,7 @@ namespace Presentation1
 					, rect.x - rect.w / 2, rect.y - rect.h / 2, rect.w, rect.h, m_hwnd, nullptr, nullptr, nullptr));
 		}
 
+		// -----------------------
 		WindowWidgetPtr Label(Rect const& rect, wchar_t const* const text, LabelFlags const flags = LabelFlags::LeftAlignment, TextSize const textSize = TextSize::Default) const
 		{
 			assert(rect.w != 0 && rect.h != 0);
@@ -325,6 +332,7 @@ namespace Presentation1
 					, rect.x - rect.w / 2, rect.y - rect.h / 2, rect.w, rect.h, m_hwnd, nullptr, nullptr, nullptr), textSize);
 		}
 
+		// -----------------------
 		WindowWidgetPtr Image(Rect const& rect, wchar_t const* const path) const
 		{
 			assert(rect.w != 0 && rect.h != 0);
@@ -347,6 +355,7 @@ namespace Presentation1
 		// Inputs.
 		// ***********************************************************************************************
 
+		// -----------------------
 		WindowWidgetPtr TextEdit(Rect const& rect, wchar_t const* const text = nullptr, TextEditFlags const flags = TextEditFlags::None, TextSize const textSize = TextSize::Default) const
 		{
 			assert(rect.w != 0 && rect.h != 0);
@@ -359,22 +368,53 @@ namespace Presentation1
 		// Buttons.
 		// ***********************************************************************************************
 
+		// -----------------------
+		WindowWidgetPtr CheckBox(Rect const& rect, wchar_t const* const text, WindowWidgetCallback const callback, bool const enabled = false, TextSize const textSize = TextSize::Default)
+		{
+			assert(rect.w != 0 && rect.h != 0);
+			assert(text != nullptr);
+
+			auto const id = GenID();
+			m_Callbacks[id] = callback;
+			auto const handle = CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE | BS_CHECKBOX
+				, rect.x - rect.w / 2, rect.y - rect.h / 2, rect.w, rect.h, m_hwnd, reinterpret_cast<HMENU>(id), nullptr, nullptr);
+			CheckDlgButton(handle, id, enabled ? BST_CHECKED : BST_UNCHECKED);
+			return std::make_shared<WindowWidget>(handle, textSize);
+		}
+
+		// -----------------------
 		WindowWidgetPtr Button(Rect const& rect, wchar_t const* const text, WindowWidgetCallback const callback, TextSize const textSize = TextSize::Default)
 		{
 			assert(rect.w != 0 && rect.h != 0);
 			assert(text != nullptr);
 
-			auto const hash = Hash(text) + static_cast<WindowWidgetHash>(rect.x + rect.y + rect.w + rect.h);
-			m_Callbacks[hash] = callback;
+			auto const id = GenID();
+			m_Callbacks[id] = callback;
 			return std::make_shared<WindowWidget>(
-				CreateWindowW(L"Button", text, WS_VISIBLE | WS_CHILD
-					, rect.x - rect.w / 2, rect.y - rect.h / 2, rect.w, rect.h, m_hwnd, reinterpret_cast<HMENU>(hash), nullptr, nullptr), textSize);
+				CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE
+					, rect.x - rect.w / 2, rect.y - rect.h / 2, rect.w, rect.h, m_hwnd, reinterpret_cast<HMENU>(id), nullptr, nullptr), textSize);
+		}
+
+		// -----------------------
+		WindowWidgetPtr ComboBox(Rect const& rect, std::vector<wchar_t const*> const& texts, WindowWidgetCallback const callback, TextSize const textSize = TextSize::Default) const
+		{
+			assert(rect.w != 0 && rect.h != 0);
+			assert(!texts.empty());
+
+			auto const handle = CreateWindowW(L"Combobox", nullptr, WS_CHILD | WS_VISIBLE | CBS_DROPDOWN
+				, rect.x - rect.w / 2, rect.y - rect.h / 2, rect.w, rect.h, m_hwnd, nullptr, nullptr, nullptr);
+			for (auto text : texts)
+			{
+				SendMessageW(handle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(text));
+			}
+			return std::make_shared<WindowWidget>(handle, textSize);
 		}
 
 		// ***********************************************************************************************
 		// Direct3D 9.
 		// ***********************************************************************************************
 
+		// -----------------------
 		template<typename TD3DWidget = D3DWidget>
 		std::shared_ptr<TD3DWidget> Direct3D9(Rect const& rect) const
 		{
