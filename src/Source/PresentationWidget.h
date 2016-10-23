@@ -139,10 +139,9 @@ namespace Presentation1
 	{
 		bool IsEnabled = true;
 		PrismType Type = PrismType::Air;
-		FLOAT Angle = F_PI / 3.0f;
-		dxm::vec3 Position;
-		FLOAT RotationX = 0.0f;// -F_PI / 12.0f;
-		FLOAT RotationZ = 0.0f;//-F_PI / 3.0f;
+		FLOAT Angle = F_PI / 3.0f, AngleMin = F_PI / 12.0f, AngleMax = F_PI / 2.0f;
+		dxm::vec3 Position, PositionMin, PositionMax;
+		FLOAT RotationZ = 0.0f, RotationZMin = -F_PI / 2, RotationZMax = F_PI / 2;
 
 	private:
 		TriangleMutableMeshRenderer<TRUE> m_PrismMesh;
@@ -176,7 +175,7 @@ namespace Presentation1
 			auto const absorptionIndexFunc = absorptionIndexFuncTable[static_cast<size_t>(Type)];;
 
 			auto const transformationMatrix = dxm::translate(Position)
-				* dxm::yawPitchRoll(RotationX, 0.0f, RotationZ) * dxm::scale(/*2.0f * */glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f)));
+				* dxm::yawPitchRoll(0.0f, 0.0f, RotationZ) * dxm::scale(/*2.0f * */glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f)));
 			{
 				auto const p1 = transformationMatrix * dxm::vec4(-0.1f, -0.1f, +0.0f, 1.0);
 				auto const p2 = transformationMatrix * dxm::vec4(+0.1f, -0.1f, +0.0f, 1.0);
@@ -215,7 +214,6 @@ namespace Presentation1
 
 			m_PrismMesh.Position = Position;
 			m_PrismMesh.Scale = glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f));
-			m_PrismMesh.Rotation.x = RotationX;
 			m_PrismMesh.Rotation.z = RotationZ;
 			m_PrismMesh.Render();
 		}
@@ -291,7 +289,6 @@ namespace Presentation1
 			LoadOBJ("../gfx/screen.obj", m_ScreenMesh);
 			LoadTexture(m_Device, L"../gfx/screenLightMap.png", &m_ScreenRenderer.Texture);
 			m_ScreenRenderer.Position.z = 2.0f;
-			m_ScreenRenderer.Position.x = -0.7f;
 			m_ScreenRenderer.Rotation.x = F_PI;
 		
 			/* Setting up dynamic scene parameters. */
@@ -303,11 +300,14 @@ namespace Presentation1
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers[0].Position = { 0.0f, 0.5f, 1.0f };
+			m_PrismRenderers[0].PositionMin = { -1.05f, 0.5f, 0.4f };
+			m_PrismRenderers[0].PositionMax = { +1.05f, 1.0f, 1.6f};
 			m_PrismRenderers[1].Type = PrismType::Govno;
 			m_PrismRenderers[1].Angle = F_PI / 3.0f;
 			m_PrismRenderers[1].Position = { 0.0f, 0.7f, 2.0f };
+			m_PrismRenderers[1].PositionMin = { -1.05f, 0.5f, 2.0f };
+			m_PrismRenderers[1].PositionMax = { +1.05f, 1.0f, 3.25f };
 			m_PrismRenderers[1].RotationZ = F_PI / 2.0f;
-		//	m_PrismRenderers[1].RotationX = DXM_PI / 6.0f;
 			
 			/* Setting up some other shit. */
 			LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer.Texture);
@@ -336,7 +336,7 @@ namespace Presentation1
 					{
 						prism.UpdatePlanes(m_PrismPlanes);
 					}
-					m_PrismPlanes.push_back({ { -100.0f, -100.0f, 3.92f },{ 100.0f, 100.0f, 3.9f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
+					m_PrismPlanes.push_back({ { -1.8f, 0.3f, 3.49f }, { 1.8f, 2.0f, 3.49f }, { 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
 					GenerateRaysMesh(1000);
 					m_AreRaysSynced = true;
 				}

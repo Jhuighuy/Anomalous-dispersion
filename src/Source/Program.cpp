@@ -211,18 +211,18 @@ namespace Presentation1
 				auto const cellY = cellHeight / 2 + cellHeight * j;
 				auto const lowerSubcellY = cellY + cellHeight / 2;
 				
-				control.MaterialCombobox = CheckBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, L"Заполнена газом", [&prism, this, i](long enabled)
+				control.MaterialCombobox = CheckBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, L"Аномальная дисперсия", [&](long enabled)
 				{
 					prism.Type = static_cast<PrismType>(enabled);
 					m_Presentation->m_AreRaysSynced = false;
-					if (i != 0)
+					if (j != 0)
 					{
 						m_AnomImage->Hide(!enabled);
 						m_NormImage->Show(!enabled);
 					}
 				}, prism.Type == PrismType::Govno);
 			};
-			auto static const InitializeModifierControl = [this](ModifierControl& control, auto label, auto& value, auto eps, auto i, auto j)
+			auto static const InitializeModifierControl = [this](ModifierControl& control, auto label, auto min, auto& value, auto max, auto delta, auto i, auto j)
 			{
 				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
@@ -241,16 +241,16 @@ namespace Presentation1
 				auto const textEditY = lowerSubcellY;
 
 				control.Label = Label({ cellX, upperSubcellY + subcellHeight / 2, subcellWidth, subcellHeight }, label);
-				control.MinusButton = Button({ minusButtonX, minusButtonY, buttonWidth, buttonHeight }, L"-", [this, &value, &control, eps](long)
+				control.MinusButton = Button({ minusButtonX, minusButtonY, buttonWidth, buttonHeight }, L"-", [this, min, &value, max, &control, delta](long)
 				{
-					value -= eps;
+					value = dxm::clamp(value - delta, min, max);
 					control.ValueEdit->SetText(std::to_wstring(value).c_str());
 					m_Presentation->m_AreRaysSynced = false;
 				});
 				control.ValueEdit = TextEdit({ textEditX, lowerSubcellY, textEditWidth, textEditHeight }, std::to_wstring(value).c_str(), TextEditFlags::CenterAlignment);
-				control.PlusButton = Button({ plusButtonX, plusButtonY, buttonWidth, buttonHeight }, L"+", [this, &value, &control, eps](long)
+				control.PlusButton = Button({ plusButtonX, plusButtonY, buttonWidth, buttonHeight }, L"+", [this, min, &value, max, &control, delta](long)
 				{
-					value += eps;
+					value = dxm::clamp(value + delta, min, max);
 					control.ValueEdit->SetText(std::to_wstring(value).c_str());
 					m_Presentation->m_AreRaysSynced = false;
 				});
@@ -259,11 +259,11 @@ namespace Presentation1
 			InitializePrismLabel(prismControl, j * 4);
 			InitializePrismEnabledButton(prism, prismControl, 0, j * 4);
 			InitializePrismCombobox(prism, prismControl, 1, j * 4);
-			InitializeModifierControl(prismControl.Angle,     L"Угол призмы",    prism.Angle,      0.05f, 1, 1 + j * 4);
-			InitializeModifierControl(prismControl.RotationZ, L"Поворот призмы", prism.RotationZ,  0.05f, 1, 2 + j * 4);
-			InitializeModifierControl(prismControl.PositionX, L"Координата (X)", prism.Position.x, 0.05f, 0, 1 + j * 4);
-			InitializeModifierControl(prismControl.PositionY, L"Координата (Y)", prism.Position.y, 0.05f, 0, 2 + j * 4);
-			InitializeModifierControl(prismControl.PositionZ, L"Координата (Z)", prism.Position.z, 0.05f, 0, 3 + j * 4);
+			InitializeModifierControl(prismControl.Angle,     L"Угол призмы",    prism.AngleMin,      prism.Angle,      prism.AngleMax,      0.05f, 1, 1 + j * 4);
+			InitializeModifierControl(prismControl.RotationZ, L"Поворот призмы", prism.RotationZMin,  prism.RotationZ,  prism.RotationZMax,  0.05f, 1, 2 + j * 4);
+			InitializeModifierControl(prismControl.PositionX, L"Координата (X)", prism.PositionMin.x, prism.Position.x, prism.PositionMax.x, 0.05f, 0, 1 + j * 4);
+			InitializeModifierControl(prismControl.PositionY, L"Координата (Y)", prism.PositionMin.y, prism.Position.y, prism.PositionMax.y, 0.05f, 0, 2 + j * 4);
+			InitializeModifierControl(prismControl.PositionZ, L"Координата (Z)", prism.PositionMin.z, prism.Position.z, prism.PositionMax.z, 0.05f, 0, 3 + j * 4);
 		}
 		// -----------------------
 		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4 - 10, 70 }, L"Назад", [](long)
