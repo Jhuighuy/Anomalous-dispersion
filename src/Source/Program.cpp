@@ -7,6 +7,8 @@
 #pragma comment(lib, "d3dx9.lib")
 #pragma comment(lib, "Comctl32.lib")
 
+#include <thread>
+
 namespace Presentation1
 {
 	class MenuWindow : public Window
@@ -50,7 +52,7 @@ namespace Presentation1
 
 	public:
 		AuthorsWindow();
-	} static g_AuthorsWindow;	// class AuthorsWindow
+	} static *g_AuthorsWindow = nullptr;	// class AuthorsWindow
 
 	// -----------------------
 	class PresentationWindow final : public Window
@@ -86,7 +88,7 @@ namespace Presentation1
 		{
 			m_Presentation->Update();
 		}
-	} static g_PresentationWindow;	// class PresentationWindow
+	} static *g_PresentationWindow = nullptr;	// class PresentationWindow
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 	// Windows setup.
@@ -106,8 +108,8 @@ namespace Presentation1
 			L"Нормальная и аномальная дисперсия", LabelFlags::CenterAlignment, TextSize::VeryLarge);
 		// -----------------------
 		m_UniversitySeparator = HorizontalSeparator({ STANDART_DESKTOP_WIDTH / 2, 210, STANDART_DESKTOP_WIDTH, 1 });
-		m_UniversityYearLabel = Label({ STANDART_DESKTOP_WIDTH / 2, 190, 1500, 20 },
-			L"2016 г.", LabelFlags::CenterAlignment);
+		m_UniversityYearLabel = Label({ STANDART_DESKTOP_WIDTH / 2, 180, 1500, 40 },
+			L"2016 г.", LabelFlags::CenterAlignment, TextSize::NotSoLarge);
 	}
 
 	// -----------------------
@@ -117,12 +119,21 @@ namespace Presentation1
 		m_BeginButton = Button({ STANDART_DESKTOP_WIDTH / 2, 500, 700, 80 }, L"Начало", [](long)
 		{
 			g_MainWindow.Hide();
-			g_PresentationWindow.Show();
+			if (g_PresentationWindow == nullptr)
+			{
+				g_PresentationWindow = new PresentationWindow();
+				Sleep(100);
+			}
+			g_PresentationWindow->Show();
 		}, TextSize::Large);
 		m_AuthorsButton = Button({ STANDART_DESKTOP_WIDTH / 2, 590, 700, 80 }, L"Авторы", [](long)
 		{
 			g_MainWindow.Hide();
-			g_AuthorsWindow.Show();
+			if (g_AuthorsWindow == nullptr)
+			{
+				g_AuthorsWindow = new AuthorsWindow();
+			}
+			g_AuthorsWindow->Show();
 		}, TextSize::Large);
 		m_ExitButton = Button({ STANDART_DESKTOP_WIDTH / 2, 680, 700, 80 }, L"Выход", [](long)
 		{
@@ -142,12 +153,12 @@ namespace Presentation1
 			, L"Бутаков Олег\r\nБорисович", LabelFlags::RightAlignment, TextSize::Large);
 		// -----------------------
 		m_PidorsSeparator = HorizontalSeparator({ STANDART_DESKTOP_WIDTH / 2, STANDART_DESKTOP_HEIGHT / 2 + 400, STANDART_DESKTOP_WIDTH, 1 });
-		m_LecturersLabel = Label({ STANDART_DESKTOP_WIDTH / 3, STANDART_DESKTOP_HEIGHT / 2 + 450, 500, 80 }
+		m_LecturersLabel = Label({ STANDART_DESKTOP_WIDTH / 3 + 100, STANDART_DESKTOP_HEIGHT / 2 + 450, 500 + 200, 80 }
 			, L"Лекторы:\r\nВ.П. Кандидов, А.Ю. Чикишев", LabelFlags::LeftAlignment, TextSize::Large);
 		// -----------------------
-		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 3, STANDART_DESKTOP_HEIGHT / 2 + 450, 500, 80 }, L"Назад", [](long)
+		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 3 + 100, STANDART_DESKTOP_HEIGHT / 2 + 450, 500 - 200, 80 }, L"Назад", [](long)
 		{
-			g_AuthorsWindow.Hide();
+			g_AuthorsWindow->Hide();
 			g_MainWindow.Show();
 		}, TextSize::Large);
 	}
@@ -160,12 +171,13 @@ namespace Presentation1
 		// -----------------------
 		Rect const imageRect = { STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, 820, 480, 330 };
 		m_NormImage = Image(imageRect, L"../gfx/norm-func.bmp");
+		m_NormImage->Hide();
 		m_AnomImage = Image(imageRect, L"../gfx/anom-func.bmp");
 		// -----------------------
-		for (auto i = 0; i < dxm::countof(m_PrismsControl); ++i)
+		for (auto j = 0; j < dxm::countof(m_PrismsControl); ++j)
 		{
-			auto& prism = m_Presentation->m_PrismRenderers[i];	// @todo
-			auto& prismControl = m_PrismsControl[i];
+			auto& prism = m_Presentation->m_PrismRenderers[j];
+			auto& prismControl = m_PrismsControl[j];
 
 			auto static const padding = 5;
 			auto static const realCellWidth = STANDART_DESKTOP_WIDTH / 4 / 2;
@@ -174,7 +186,7 @@ namespace Presentation1
 			auto static const subcellWidth = cellWidth;
 			auto static const subcellHeight = cellHeight / 2;
 
-			auto static const InitializePrismLabel = [this](Prism& prism, PrismsControl& control, auto i, auto j)
+			auto static const InitializePrismLabel = [this](PrismsControl& control, auto j)
 			{
 				auto const cellX = STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
@@ -189,7 +201,7 @@ namespace Presentation1
 
 				control.EnabledCheckbox = CheckBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, L"Выключена", [&](long disabled)
 				{
-					prism.IsEnabled = (bool)!disabled;
+					prism.IsEnabled = !static_cast<bool>(disabled);
 					m_Presentation->m_AreRaysSynced = false;
 				});
 			};
@@ -198,17 +210,15 @@ namespace Presentation1
 				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
 				auto const lowerSubcellY = cellY + cellHeight / 2;
-
-				/*std::vector<wchar_t const*> Texts = { L"Стекло", L"Говно" };
-				control.MaterialCombobox = ComboBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, Texts, [](long) {});*/
-				control.MaterialCombobox = CheckBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, L"Заполнена газом", [&](long enabled)
+				
+				control.MaterialCombobox = CheckBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, L"Заполнена газом", [&prism, this, i](long enabled)
 				{
-					prism.Type = (PrismType)enabled;
+					prism.Type = static_cast<PrismType>(enabled);
 					m_Presentation->m_AreRaysSynced = false;
 					if (i != 0)
 					{
-						m_NormImage->Show(enabled);
-						m_AnomImage->Hide(enabled);
+						m_AnomImage->Hide(!enabled);
+						m_NormImage->Show(!enabled);
 					}
 				}, prism.Type == PrismType::Govno);
 			};
@@ -246,19 +256,19 @@ namespace Presentation1
 				});
 			};
 
-			InitializePrismLabel(prism, prismControl, 0, i * 4);
-			InitializePrismEnabledButton(prism, prismControl, 0, i * 4);
-			InitializePrismCombobox(prism, prismControl, 1, i * 4);
-			InitializeModifierControl(prismControl.Angle,     L"Угол призмы",    prism.Angle,      0.05f, 1, 1 + i * 4);
-			InitializeModifierControl(prismControl.RotationZ, L"Поворот призмы", prism.RotationZ,  0.05f, 1, 2 + i * 4);
-			InitializeModifierControl(prismControl.PositionX, L"Координата (X)", prism.Position.x, 0.05f, 0, 1 + i * 4);
-			InitializeModifierControl(prismControl.PositionY, L"Координата (Y)", prism.Position.y, 0.05f, 0, 2 + i * 4);
-			InitializeModifierControl(prismControl.PositionZ, L"Координата (Z)", prism.Position.z, 0.05f, 0, 3 + i * 4);
+			InitializePrismLabel(prismControl, j * 4);
+			InitializePrismEnabledButton(prism, prismControl, 0, j * 4);
+			InitializePrismCombobox(prism, prismControl, 1, j * 4);
+			InitializeModifierControl(prismControl.Angle,     L"Угол призмы",    prism.Angle,      0.05f, 1, 1 + j * 4);
+			InitializeModifierControl(prismControl.RotationZ, L"Поворот призмы", prism.RotationZ,  0.05f, 1, 2 + j * 4);
+			InitializeModifierControl(prismControl.PositionX, L"Координата (X)", prism.Position.x, 0.05f, 0, 1 + j * 4);
+			InitializeModifierControl(prismControl.PositionY, L"Координата (Y)", prism.Position.y, 0.05f, 0, 2 + j * 4);
+			InitializeModifierControl(prismControl.PositionZ, L"Координата (Z)", prism.Position.z, 0.05f, 0, 3 + j * 4);
 		}
 		// -----------------------
-		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4, 80 }, L"Назад", [](long)
+		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4 - 10, 70 }, L"Назад", [](long)
 		{
-			g_PresentationWindow.Hide();
+			g_PresentationWindow->Hide();
 			g_MainWindow.Show();
 		}, TextSize::Large);
 	}
@@ -286,8 +296,14 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 
-		Presentation1::g_PresentationWindow.Update();
+		if (Presentation1::g_PresentationWindow != nullptr)
+		{
+			Presentation1::g_PresentationWindow->Update();
+		}
 	}
+
+	delete Presentation1::g_AuthorsWindow;
+	delete Presentation1::g_PresentationWindow;
 
 	return 0;
 }

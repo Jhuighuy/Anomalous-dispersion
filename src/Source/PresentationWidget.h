@@ -43,8 +43,8 @@ namespace Presentation1
 
 		auto const v = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
 		return (violetRefractiveIndex + v * (redRefractiveIndex - violetRefractiveIndex)); */
-		DOUBLE length = 0.001*waveLength;
-		return 0.286458*length*length - 0.469792*length + 1.70216;
+		auto const length = 0.001 * waveLength;
+		return 0.286458 * length * length - 0.469792*length + 1.70216;
 	}
 	static DOUBLE GlassAirRefractiveIndex(DOUBLE const waveLength)
 	{
@@ -305,7 +305,7 @@ namespace Presentation1
 			m_PrismRenderers[0].Position = { 0.0f, 0.5f, 1.0f };
 			m_PrismRenderers[1].Type = PrismType::Govno;
 			m_PrismRenderers[1].Angle = F_PI / 3.0f;
-			m_PrismRenderers[1].Position = { 0.0f, 0.9f, 2.0f };
+			m_PrismRenderers[1].Position = { 0.0f, 0.7f, 2.0f };
 			m_PrismRenderers[1].RotationZ = F_PI / 2.0f;
 		//	m_PrismRenderers[1].RotationX = DXM_PI / 6.0f;
 			
@@ -326,7 +326,7 @@ namespace Presentation1
 
 				/* Rendering scene. */
 				m_RoomRenderer.Render();
-			//	m_ScreenRenderer.Render();
+				m_ScreenRenderer.Render();
 
 				/* Updating and rendering rays. */
 				if (!m_AreRaysSynced)
@@ -337,7 +337,7 @@ namespace Presentation1
 						prism.UpdatePlanes(m_PrismPlanes);
 					}
 					m_PrismPlanes.push_back({ { -100.0f, -100.0f, 3.92f },{ 100.0f, 100.0f, 3.9f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
-					GenerateRaysMesh(2000);
+					GenerateRaysMesh(1000);
 					m_AreRaysSynced = true;
 				}
 				m_RaysProjectionRenderer.Render();

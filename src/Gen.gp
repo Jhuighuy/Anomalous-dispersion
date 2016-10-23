@@ -1,4 +1,6 @@
-set terminal png
+set terminal png size 480,330
+set obj 1 rectangle behind from screen 0,0 to screen 1,1
+set obj 1 fillstyle solid 1.0 fillcolor rgbcolor "#fff0f0f0"
 set encoding utf8
 
 set yrange [1:2.2]

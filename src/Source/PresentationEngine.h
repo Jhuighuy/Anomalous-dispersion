@@ -43,14 +43,6 @@ namespace Presentation1
 		}
 
 	}	// namespace dxm
-	static bool operator>= (dxm::vec3 const& a, dxm::vec3 const& b)
-	{
-		return a.x >= b.x && a.y >= b.y && a.z >= b.z;
-	}
-	static bool operator<= (dxm::vec3 const& a, dxm::vec3 const& b)
-	{
-		return a.x <= b.x && a.y <= b.y && a.z <= b.z;
-	}
 
 	static void ThrowIfFailed(HRESULT const result)
 	{
@@ -86,24 +78,23 @@ namespace Presentation1
 			: m_Device(device), m_Width(static_cast<FLOAT>(width)), m_Height(static_cast<FLOAT>(height))
 		{
 			m_ProjectionMatrix = dxm::perspectiveFovLH(F_PI / 3.0f, m_Width, m_Height, 0.01f, 100.0f);
-		//	m_ViewMatrix = dxm::lookAtLH(RotationCenter + CenterOffset, RotationCenter, Up);
-			Update();
+			Update(0, true);
 		}
 
 		// -----------------------
-		void Update(UINT const mouseWheelDelta = 0)
+		void Update(UINT const mouseWheelDelta = 0, bool const forceUpdate = false)
 		{
 			// Scaling is not implemented.
 			assert(mouseWheelDelta == 0);
 			(void)mouseWheelDelta;
 
-			if (GetAsyncKeyState(VK_LBUTTON) != 0)
+			if (GetAsyncKeyState(VK_LBUTTON) != 0 || forceUpdate)
 			{
 				POINT mouseCurrentPosition = {};
 				GetCursorPos(&mouseCurrentPosition);
 
-				auto const deltaYaw = static_cast<float>(mouseCurrentPosition.y - m_PrevMousePosition.y) / m_Height;
-				auto const deltaPitch = static_cast<float>(mouseCurrentPosition.x - m_PrevMousePosition.x) / m_Width;
+				auto const deltaYaw = forceUpdate ? 0 :static_cast<float>(mouseCurrentPosition.y - m_PrevMousePosition.y) / m_Height;
+				auto const deltaPitch = forceUpdate ? 0 : static_cast<float>(mouseCurrentPosition.x - m_PrevMousePosition.x) / m_Width;
 
 				m_CameraRotationYaw += deltaPitch;
 				m_CameraRotationPitch = dxm::clamp(m_CameraRotationPitch + deltaYaw, -F_PI / 12.0f, F_PI / 7.5f);

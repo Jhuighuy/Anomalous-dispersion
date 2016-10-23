@@ -393,7 +393,7 @@ namespace Presentation1
 			m_Callbacks[id] = callback;
 			auto const handle = CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE | BS_CHECKBOX
 				, rect.x - rect.w / 2, rect.y - rect.h / 2, rect.w, rect.h, m_hwnd, reinterpret_cast<HMENU>(id), nullptr, nullptr);
-			CheckDlgButton(handle, id, enabled ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton(m_hwnd, id, enabled ? BST_CHECKED : BST_UNCHECKED);
 			return std::make_shared<WindowWidget>(handle, textSize);
 		}
 
