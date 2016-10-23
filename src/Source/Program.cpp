@@ -118,13 +118,13 @@ namespace Presentation1
 	{
 		m_BeginButton = Button({ STANDART_DESKTOP_WIDTH / 2, 500, 700, 80 }, L"Начало", [](long)
 		{
-			g_MainWindow.Hide();
 			if (g_PresentationWindow == nullptr)
 			{
 				g_PresentationWindow = new PresentationWindow();
 				Sleep(100);
 			}
 			g_PresentationWindow->Show();
+			g_MainWindow.Hide();
 		}, TextSize::Large);
 		m_AuthorsButton = Button({ STANDART_DESKTOP_WIDTH / 2, 590, 700, 80 }, L"Авторы", [](long)
 		{
@@ -158,8 +158,8 @@ namespace Presentation1
 		// -----------------------
 		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 3 + 100, STANDART_DESKTOP_HEIGHT / 2 + 450, 500 - 200, 80 }, L"Назад", [](long)
 		{
-			g_AuthorsWindow->Hide();
 			g_MainWindow.Show();
+			g_AuthorsWindow->Hide();
 		}, TextSize::Large);
 	}
 
@@ -169,7 +169,7 @@ namespace Presentation1
 	{
 		m_Presentation = Direct3D9<PresentationWidget>({ STANDART_DESKTOP_WIDTH * 3 / 8, STANDART_DESKTOP_HEIGHT / 2, STANDART_DESKTOP_WIDTH * 3 / 4, STANDART_DESKTOP_HEIGHT});
 		// -----------------------
-		Rect const imageRect = { STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, 820, 480, 330 };
+		Rect const imageRect = { STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, 820, 475, 325 };
 		m_NormImage = Image(imageRect, L"../gfx/norm-func.bmp");
 		m_NormImage->Hide();
 		m_AnomImage = Image(imageRect, L"../gfx/anom-func.bmp");
@@ -207,6 +207,9 @@ namespace Presentation1
 			};
 			auto static const InitializePrismCombobox = [this](Prism& prism, PrismsControl& control, auto i, auto j)
 			{
+				if (j == 0)
+					return;
+
 				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
 				auto const cellY = cellHeight / 2 + cellHeight * j;
 				auto const lowerSubcellY = cellY + cellHeight / 2;
@@ -268,8 +271,8 @@ namespace Presentation1
 		// -----------------------
 		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4 - 10, 70 }, L"Назад", [](long)
 		{
-			g_PresentationWindow->Hide();
 			g_MainWindow.Show();
+			g_PresentationWindow->Hide();
 		}, TextSize::Large);
 	}
 

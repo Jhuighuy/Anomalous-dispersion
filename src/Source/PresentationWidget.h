@@ -28,8 +28,8 @@ namespace Presentation1
 	static DOUBLE GovnoAbsorptionIndex(DOUBLE const waveLength)
 	{
 		auto const x = waveLength / 1000.0;
-		auto const y = 0.45 * exp(-120 * M_PI * (x - 0.58) * (x - 0.58));
-		return dxm::clamp(1.0 - y, 0.0, 1.0);
+		auto const y = 0.55 * exp(-120 * M_PI * (x - 0.58) * (x - 0.58));
+		return dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
 	}
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -43,12 +43,13 @@ namespace Presentation1
 
 		auto const v = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
 		return (violetRefractiveIndex + v * (redRefractiveIndex - violetRefractiveIndex)); */
-		auto const length = 0.001 * waveLength;
-		return 0.286458 * length * length - 0.469792*length + 1.70216;
+		auto const x = 0.001 * waveLength;
+		auto const y = 0.286458 * x * x - 0.469792*x + 1.70216;
+		return y;
 	}
 	static DOUBLE GlassAirRefractiveIndex(DOUBLE const waveLength)
 	{
-		return 1.2 / AirGlassRefractiveIndex(waveLength);
+		return 1.1 / AirGlassRefractiveIndex(waveLength);
 	}
 
 	static DOUBLE AirGovnoRefractiveIndex(DOUBLE const waveLength)
@@ -84,7 +85,7 @@ namespace Presentation1
 		auto const xi = violetWaveLength + i * (redWaveLength - violetWaveLength) / dxm::countof(grid);
 		auto const xi1 = violetWaveLength + (i + 1) * (redWaveLength - violetWaveLength) / dxm::countof(grid);
 		auto y = yi + (waveLength - xi) / (xi1 - xi) * (yi1 - yi);
-		return 0.3 * (y - 1.6) + 1.6;
+		return 0.5 * (y - 1.6) + 1.6;
 	}
 	static DOUBLE GovnoAirRefractiveIndex(DOUBLE const waveLength)
 	{
@@ -304,7 +305,7 @@ namespace Presentation1
 			m_PrismRenderers[0].PositionMax = { +1.05f, 1.0f, 1.6f};
 			m_PrismRenderers[1].Type = PrismType::Govno;
 			m_PrismRenderers[1].Angle = F_PI / 3.0f;
-			m_PrismRenderers[1].Position = { 0.0f, 0.7f, 2.0f };
+			m_PrismRenderers[1].Position = { 0.0f, 0.8f, 2.0f };
 			m_PrismRenderers[1].PositionMin = { -1.05f, 0.5f, 2.0f };
 			m_PrismRenderers[1].PositionMax = { +1.05f, 1.0f, 3.25f };
 			m_PrismRenderers[1].RotationZ = F_PI / 2.0f;
@@ -337,7 +338,7 @@ namespace Presentation1
 						prism.UpdatePlanes(m_PrismPlanes);
 					}
 					m_PrismPlanes.push_back({ { -1.8f, 0.3f, 3.49f }, { 1.8f, 2.0f, 3.49f }, { 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
-					GenerateRaysMesh(1000);
+					GenerateRaysMesh(3000);
 					m_AreRaysSynced = true;
 				}
 				m_RaysProjectionRenderer.Render();
