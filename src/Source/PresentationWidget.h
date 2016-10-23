@@ -35,18 +35,20 @@ namespace Presentation1
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	static DOUBLE AirGlassRefractiveIndex(DOUBLE const waveLength)
 	{
-		auto static const violetWaveLength = 380.0;
+		/*auto static const violetWaveLength = 380.0;
 		auto static const redWaveLength = 780.0;
 
 		auto static const violetRefractiveIndex = 1.550;
 		auto static const redRefractiveIndex = 1.510;
 
 		auto const v = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
-		return (violetRefractiveIndex + v * (redRefractiveIndex - violetRefractiveIndex));
+		return (violetRefractiveIndex + v * (redRefractiveIndex - violetRefractiveIndex)); */
+		DOUBLE length = 0.001*waveLength;
+		return 0.286458*length*length - 0.469792*length + 1.70216;
 	}
 	static DOUBLE GlassAirRefractiveIndex(DOUBLE const waveLength)
 	{
-		return 1.13 / AirGlassRefractiveIndex(waveLength);
+		return 1.2 / AirGlassRefractiveIndex(waveLength);
 	}
 
 	static DOUBLE AirGovnoRefractiveIndex(DOUBLE const waveLength)
