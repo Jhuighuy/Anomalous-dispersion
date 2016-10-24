@@ -263,6 +263,7 @@ namespace Presentation1
 			m_Device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
 			m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 			m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+		//	m_Device->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
 
 			/* Setting up default lights. */
 			m_Device->SetRenderState(D3DRS_AMBIENT, D3DCOLOR_XRGB(0x50, 0x50, 0x50));
@@ -356,7 +357,7 @@ namespace Presentation1
 					prism.UpdatePlanes(m_PrismPlanes);
 				}
 				m_PrismPlanes.push_back({ { -1.8f, 0.3f, 3.49f },{ 1.8f, 2.0f, 3.49f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
-				GenerateRaysMesh(300);
+				GenerateRaysMesh(100);
 				m_AreRaysSynced = true;
 			}
 		}
@@ -410,7 +411,7 @@ namespace Presentation1
 
 					prevCoord = coord;
 					prevColor = color;
-					if (!plane.Intersect(coord, coord, direction) && m_PrismPlanes.size() != 1)
+					if (!plane.Intersect(coord, coord, direction) && m_PrismPlanes.size() -1 != j)
 					{
 						coord = prevCoord;
 						continue;
