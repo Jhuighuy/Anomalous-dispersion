@@ -416,7 +416,7 @@ namespace Presentation1
 						continue;
 					}
 					
-					auto const finalColor = j == m_PrismPlanes.size() - 1 ? color & 0x00FFFFFF : color;
+					auto const finalColor = j == m_PrismPlanes.size() - 1 ? color & 0x11FFFFFF : color;
 					if (i != 0)
 					{
 						m_RaysMesh.AddVertex({ coord, rayNormal, finalColor, rayUV });
@@ -429,9 +429,8 @@ namespace Presentation1
 					}
 					if (i != partitioning - 1)
 					{
-						
 						m_RaysMesh.AddVertex({ prevCoord, rayNormal, color, rayUV });
-						m_RaysMesh.AddVertex({ j != 0 ? coord : coord + dxm::vec3(0.002), rayNormal, finalColor, rayUV });
+						m_RaysMesh.AddVertex({ j != 0 ? coord : coord + dxm::vec3(0.002f), rayNormal, finalColor, rayUV });
 					}
 
 					if (!plane.Refract(direction, waveLength))
