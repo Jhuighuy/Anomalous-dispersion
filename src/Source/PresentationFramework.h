@@ -447,7 +447,7 @@ namespace Presentation1
 			presentParameters.BackBufferHeight = rect.h;
 			presentParameters.EnableAutoDepthStencil = TRUE;
 			presentParameters.AutoDepthStencilFormat = D3DFMT_D16;
-			presentParameters.MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
+		//	presentParameters.MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
 
 			direct3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, handle, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &presentParameters, &device);
 			return std::make_shared<TD3DWidget>(handle, device, rect);

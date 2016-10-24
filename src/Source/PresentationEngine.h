@@ -187,8 +187,8 @@ namespace Presentation1
 				ThrowIfFailed(m_VertexBuffer->Lock(0, 0, &verticesGpuData, 0));
 				memcpy_s(verticesGpuData, verticesSize, vertices, verticesSize);
 				ThrowIfFailed(m_VertexBuffer->Unlock());
-				m_PrimitivesCount = verticesCount / (PrimitiveType == D3DPT_TRIANGLELIST ? 3 : 2);
 			}
+			m_PrimitivesCount = verticesCount / (PrimitiveType == D3DPT_TRIANGLELIST ? 3 : 2);
 		}
 
 	public:
@@ -282,7 +282,7 @@ namespace Presentation1
 	using LineMutableMesh = MutableMesh<LineVertex, D3DPT_LINELIST>;
 
 	/// @todo Load from raw data here.
-	bool LoadOBJ(const char* path, TriangleMutableMesh& mesh, UINT const alpha = 0xFF);
+	bool LoadOBJ(const char* path, TriangleMutableMesh& mesh, dxm::argb color = 0xFFFFFFFF);
 
 	/** \brief Describes a template mesh renderer. */
 	template<typename TMesh = TriangleMutableMesh, BOOL TIsTransparent = FALSE, BOOL TIsLit = FALSE>

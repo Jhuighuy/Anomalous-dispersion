@@ -84,9 +84,13 @@ namespace Presentation1
 
 	public:
 		PresentationWindow();
-		void Update()
+		void Update() const
 		{
 			m_Presentation->Update();
+		}
+		void Render() const
+		{
+			m_Presentation->Render();
 		}
 	} static *g_PresentationWindow = nullptr;	// class PresentationWindow
 
@@ -293,16 +297,26 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 
 	Presentation1::g_MainWindow.Show();
 
+	// Rendering presentation in the separate thread to make buttons
+	// render correctly.
+	std::thread([]()
+	{
+		while (true)
+		{
+			OutputDebugString(L"");
+			if (Presentation1::g_PresentationWindow != nullptr)
+			{
+				Presentation1::g_PresentationWindow->Update();
+				Presentation1::g_PresentationWindow->Render();
+			}
+		}
+	}).detach();
+
 	MSG msg;
 	while (GetMessage(&msg, nullptr, 0, 0))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-
-		if (Presentation1::g_PresentationWindow != nullptr)
-		{
-			Presentation1::g_PresentationWindow->Update();
-		}
 	}
 
 	delete Presentation1::g_AuthorsWindow;

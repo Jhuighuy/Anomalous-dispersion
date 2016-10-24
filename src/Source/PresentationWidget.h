@@ -142,7 +142,7 @@ namespace Presentation1
 		PrismType Type = PrismType::Air;
 		FLOAT Angle = F_PI / 3.0f, AngleMin = F_PI / 12.0f, AngleMax = F_PI / 2.0f;
 		dxm::vec3 Position, PositionMin, PositionMax;
-		FLOAT RotationZ = 0.0f, RotationZMin = -F_PI / 2, RotationZMax = F_PI / 2;
+		FLOAT RotationZ = 0.0f, RotationZMin = -F_PI / 2.2f, RotationZMax = F_PI / 2.2f;
 
 	private:
 		TriangleMutableMeshRenderer<TRUE> m_PrismMesh;
@@ -233,8 +233,8 @@ namespace Presentation1
 		TriangleMutableMeshRenderer<> m_ScreenRenderer;
 
 		bool m_AreRaysSynced = false;
-		LineMutableMesh m_RaysMesh;
-		LineMutableMeshRenderer<TRUE> m_RaysRenderer;
+		TriangleMutableMesh m_RaysMesh;
+		TriangleMutableMeshRenderer<TRUE> m_RaysRenderer;
 		TriangleMutableMesh m_RaysProjectionMesh;
 		TriangleMutableMeshRenderer<TRUE> m_RaysProjectionRenderer;
 
@@ -267,10 +267,10 @@ namespace Presentation1
 			/* Setting up default lights. */
 			m_Device->SetRenderState(D3DRS_AMBIENT, D3DCOLOR_XRGB(0x50, 0x50, 0x50));
 			D3DLIGHT9 spotLight = {};
-			spotLight.Type = D3DLIGHT_SPOT;
-			spotLight.Diffuse = { 250.0f / 255.0f, 130.0f / 255.0f, 82.0f / 255.0f, 1.0f};
-			spotLight.Position = { 2.8f, 120.0f, 0.0f };
-			spotLight.Direction = { -1.0f, 0.0f, 0.0f };
+			spotLight.Type = D3DLIGHT_DIRECTIONAL;
+			spotLight.Diffuse = { 1.0f, 1.0f, 1.0f, 1.0f};
+			spotLight.Position = { 0.0f, 120.0f, -2.8f };
+			spotLight.Direction = { 0.0f, -0.3f, 1.0f };
 			spotLight.Range = 4.32f;
 			spotLight.Falloff = 1.0f;
 			spotLight.Theta = 4.0f / F_PI * 180.0f;
@@ -293,22 +293,22 @@ namespace Presentation1
 			m_ScreenRenderer.Rotation.x = F_PI;
 		
 			/* Setting up dynamic scene parameters. */
-			LoadOBJ("../gfx/prism.obj", m_PrismMesh, 0xFF/3);
+			LoadOBJ("../gfx/prism.obj", m_PrismMesh, D3DCOLOR_ARGB(0xFF / 3, 0xFF / 3, 0xFF, 0xFF));
 			LoadOBJ("../gfx/holder_base.obj", m_PrismHolderBase);
 			LoadOBJ("../gfx/holder_leg.obj", m_PrismHolderLeg);
 			LoadOBJ("../gfx/holder_gimbal.obj", m_PrismHolderGimbal);
 			
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
-			m_PrismRenderers[0].Position = { 0.0f, 0.5f, 1.0f };
+			m_PrismRenderers[0].Position = { 0.3f, 0.5f, 1.0f };
 			m_PrismRenderers[0].PositionMin = { -1.05f, 0.5f, 0.4f };
 			m_PrismRenderers[0].PositionMax = { +1.05f, 1.0f, 1.6f};
 			m_PrismRenderers[1].Type = PrismType::Govno;
 			m_PrismRenderers[1].Angle = F_PI / 3.0f;
-			m_PrismRenderers[1].Position = { 0.0f, 0.8f, 2.0f };
+			m_PrismRenderers[1].Position = { 0.35f, 0.8f, 2.0f };
 			m_PrismRenderers[1].PositionMin = { -1.05f, 0.5f, 2.0f };
 			m_PrismRenderers[1].PositionMax = { +1.05f, 1.0f, 3.25f };
-			m_PrismRenderers[1].RotationZ = F_PI / 2.0f;
+			m_PrismRenderers[1].RotationZ = F_PI / 2.3f;
 			
 			/* Setting up some other shit. */
 			LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer.Texture);
@@ -316,33 +316,21 @@ namespace Presentation1
 		}
 
 		// -----------------------
-		void Update()
+		void Render()
 		{
 			m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
 			m_Device->Clear(0, nullptr, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
 			m_Device->BeginScene();
 			{
-				/* Updating camera first. */
-				m_Camera.Update();
-
 				/* Rendering scene. */
 				m_RoomRenderer.Render();
 				m_ScreenRenderer.Render();
 
-				/* Updating and rendering rays. */
-				if (!m_AreRaysSynced)
-				{
-					m_PrismPlanes.clear();
-					for (auto& prism : m_PrismRenderers)
-					{
-						prism.UpdatePlanes(m_PrismPlanes);
-					}
-					m_PrismPlanes.push_back({ { -1.8f, 0.3f, 3.49f }, { 1.8f, 2.0f, 3.49f }, { 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
-					GenerateRaysMesh(3000);
-					m_AreRaysSynced = true;
-				}
+				/* Rendering rays. */
+				m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 				m_RaysProjectionRenderer.Render();
 				m_RaysRenderer.Render();
+				m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
 				/* Updating and rendering prisms and holders. */
 				for (auto& prism : m_PrismRenderers)
@@ -353,13 +341,127 @@ namespace Presentation1
 			m_Device->EndScene();
 			m_Device->Present(nullptr, nullptr, nullptr, nullptr);
 		}
+		// -----------------------
+		void Update()
+		{
+			/* Updating camera first. */
+			m_Camera.Update();
+
+			/* Updating rays. */
+			if (!m_AreRaysSynced)
+			{
+				m_PrismPlanes.clear();
+				for (auto& prism : m_PrismRenderers)
+				{
+					prism.UpdatePlanes(m_PrismPlanes);
+				}
+				m_PrismPlanes.push_back({ { -1.8f, 0.3f, 3.49f },{ 1.8f, 2.0f, 3.49f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
+				GenerateRaysMesh(300);
+				m_AreRaysSynced = true;
+			}
+		}
 
 		// -----------------------
 		void GenerateRaysMesh(UINT const partitioning)
 		{
 			m_RaysMesh.ClearVertices();
 			m_RaysProjectionMesh.ClearVertices();
+
+			struct SavedRay
+			{
+				dxm::vec3 Coord;
+				dxm::vec3 Direction;
+				dxm::argb Color;
+				dxm::vec3 PrevCoord;
+				dxm::argb PrevColor;
+			};	// struct SavedRay
+
+			auto static const rayUV = dxm::vec2(0.0f, 0.0f);
+			auto static const rayNormal = dxm::vec3(1.0, 0.0, 0.0f);
+			auto static const projectionNormal = dxm::vec3(0.0, 0.0, -1.0f);
+
+			auto const startCoord = dxm::vec3(0.0f, 1.5f, -2.0f);
+			auto const startDirection = (m_PrismRenderers[0].IsEnabled ? m_PrismRenderers[0].Position - startCoord : m_PrismRenderers[1].IsEnabled ? m_PrismRenderers[1].Position - startCoord : dxm::vec3(0,0,1));
+			std::vector<SavedRay> savedRays(partitioning, { startCoord, startDirection });
 			for (auto i = 0u; i < partitioning; ++i)
+			{
+				auto static const violetWaveLength = 380.0;
+				auto static const redWaveLength = 740.0;
+				auto const waveLength = violetWaveLength + i * (redWaveLength - violetWaveLength) / partitioning;
+				auto color = ConvertWaveLengthToRGB(waveLength);
+				savedRays[i].Color = color;
+			}
+			
+			for (auto j = 0u; j < m_PrismPlanes.size(); ++j)
+			{
+				auto& plane = m_PrismPlanes[j];
+
+				for (auto i = 0u; i < partitioning; ++i)
+				{
+					auto static const violetWaveLength = 380.0;
+					auto static const redWaveLength = 740.0;
+					auto const waveLength = violetWaveLength + i * (redWaveLength - violetWaveLength) / partitioning;
+
+					auto& coord = savedRays[i].Coord;
+					auto& direction = savedRays[i].Direction;
+					auto& color = savedRays[i].Color;
+					auto& prevCoord = savedRays[i].PrevCoord;
+					auto& prevColor = savedRays[i].PrevColor;
+
+					prevCoord = coord;
+					prevColor = color;
+					if (!plane.Intersect(coord, coord, direction) && m_PrismPlanes.size() != 1)
+					{
+						coord = prevCoord;
+						continue;
+					}
+					
+					auto const finalColor = j == m_PrismPlanes.size() - 1 ? color & 0x00FFFFFF : color;
+					if (i != 0)
+					{
+						m_RaysMesh.AddVertex({ coord, rayNormal, finalColor, rayUV });
+						if (j != 0)
+						{
+							m_RaysMesh.AddVertex({ savedRays[i - 1].PrevCoord, rayNormal, savedRays[i - 1].PrevColor, rayUV });
+							m_RaysMesh.AddVertex({ prevCoord, rayNormal, color, rayUV });
+							m_RaysMesh.AddVertex({ coord, rayNormal, color, rayUV });
+						}
+					}
+					if (i != partitioning - 1)
+					{
+						
+						m_RaysMesh.AddVertex({ prevCoord, rayNormal, color, rayUV });
+						m_RaysMesh.AddVertex({ j != 0 ? coord : coord + dxm::vec3(0.002), rayNormal, finalColor, rayUV });
+					}
+
+					if (!plane.Refract(direction, waveLength))
+						break;
+					AbsorbAlpha(color, plane.AbsorptionIndex(waveLength));
+
+					if (j == m_PrismPlanes.size() - 1)
+					{
+						AbsorbAlpha(color, 0.3);
+
+						auto const scale = 0.09f;
+						dxm::vec3 static const uvOffset = { 0.5f, 0.5f, 0.0f };
+						dxm::vec3 static const triangleVert[] = {
+							{ -0.5f, +0.5f, 0.0f },
+							{ +0.5f, -0.5f, 0.0f },
+							{ -0.5f, -0.5f, 0.0f },
+
+							{ -0.5f, +0.5f, 0.0f },
+							{ +0.5f, +0.5f, 0.0f },
+							{ +0.5f, -0.5f, 0.0f },
+						};
+						for (auto k = 0u; k < dxm::countof(triangleVert); ++k)
+						{
+							m_RaysProjectionMesh.AddVertex({ triangleVert[k] * scale + coord, projectionNormal, color, triangleVert[k] + uvOffset });
+						}
+					}
+				}
+			}
+
+			/*for (auto i = 0u; i < partitioning; ++i)
 			{
 				auto coord = dxm::vec3(0.0f, 1.5f, -2.0f);
 				auto direction = (m_PrismRenderers[0].IsEnabled? m_PrismRenderers[0].Position : m_PrismRenderers[1].Position) - coord;
@@ -407,7 +509,7 @@ namespace Presentation1
 						}
 					}
 				}
-			}
+			}*/
 			m_AreRaysSynced = true;
 		}
 
@@ -494,7 +596,7 @@ namespace Presentation1
 			rgb[0] = red == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(red * factor, gamma)));
 			rgb[1] = green == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(green * factor, gamma)));
 			rgb[2] = blue == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(blue * factor, gamma)));
-			return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], 0xFF / 8);
+			return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], 2 * 0xFF / 3);
 		}
 
 	}; // class PresentationWidget
