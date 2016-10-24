@@ -307,7 +307,7 @@ namespace Presentation1
 			m_PrismRenderers[1].Angle = F_PI / 3.0f;
 			m_PrismRenderers[1].Position = { 0.35f, 0.8f, 2.0f };
 			m_PrismRenderers[1].PositionMin = { -1.05f, 0.5f, 2.0f };
-			m_PrismRenderers[1].PositionMax = { +1.05f, 1.0f, 3.25f };
+			m_PrismRenderers[1].PositionMax = { +1.05f, 1.0f, 2.7f };
 			m_PrismRenderers[1].RotationZ = F_PI / 2.3f;
 			
 			/* Setting up some other shit. */
@@ -525,6 +525,14 @@ namespace Presentation1
 		// -----------------------
 		static dxm::argb ConvertWaveLengthToRGB(double waveLength)
 		{
+			auto static const violetWaveLength = 380.0;
+			auto static const redWaveLength = 740.0;
+			waveLength = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
+
+			auto static const funcVioletWaveLength = 380.0;
+			auto static const funcRedWaveLength = 781.0;
+			waveLength = funcVioletWaveLength + waveLength * (funcRedWaveLength - funcVioletWaveLength);
+
 			auto static const gamma = 0.8;
 			auto static const intensityMax = 255.0;
 
