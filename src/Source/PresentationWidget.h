@@ -142,7 +142,7 @@ namespace Presentation1
 		PrismType Type = PrismType::Air;
 		FLOAT Angle = F_PI / 3.0f, AngleMin = F_PI / 12.0f, AngleMax = F_PI / 2.0f;
 		dxm::vec3 Position, PositionMin, PositionMax;
-		FLOAT RotationZ = 0.0f, RotationZMin = -F_PI / 2.2f, RotationZMax = F_PI / 2.2f;
+		FLOAT RotationZ = 0.0f, RotationZMin = -F_PI / 2, RotationZMax = F_PI / 2;
 
 	private:
 		TriangleMutableMeshRenderer<TRUE> m_PrismMesh;
@@ -308,7 +308,7 @@ namespace Presentation1
 			m_PrismRenderers[1].Position = { 0.35f, 0.8f, 2.0f };
 			m_PrismRenderers[1].PositionMin = { -1.05f, 0.5f, 2.0f };
 			m_PrismRenderers[1].PositionMax = { +1.05f, 1.0f, 2.7f };
-			m_PrismRenderers[1].RotationZ = F_PI / 2.3f;
+			m_PrismRenderers[1].RotationZ = F_PI / 2;
 			
 			/* Setting up some other shit. */
 			LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer.Texture);
@@ -416,7 +416,7 @@ namespace Presentation1
 						continue;
 					}
 					
-					auto const finalColor = j == m_PrismPlanes.size() - 1 ? color & 0x11FFFFFF : color;
+					auto const finalColor = j == m_PrismPlanes.size() - 1 ? color & 0x00FFFFFF : color;
 					if (i != 0)
 					{
 						m_RaysMesh.AddVertex({ coord, rayNormal, finalColor, rayUV });
