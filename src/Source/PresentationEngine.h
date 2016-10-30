@@ -18,6 +18,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #define F_PI float(M_PI)
+#include <atomic>
 
 namespace Presentation1
 {
@@ -235,7 +236,7 @@ namespace Presentation1
 
 	private:
 		std::vector<Vertex> m_VertexAccumulator;
-		bool mutable m_IsSynced = false;
+		std::atomic_bool mutable m_IsSynced = false;
 
 	protected:
 		void Update() const

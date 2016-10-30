@@ -8,7 +8,6 @@
 
 #include <map>
 #include <memory>
-#include <string>
 #include <vector>
 #include <functional>
 
@@ -16,7 +15,6 @@
 #include <assert.h>
 #include <Windows.h>
 #include <winuser.h>
-#include <commctrl.h>
 
 enum
 {
@@ -129,9 +127,10 @@ namespace Presentation1
 	{
 		friend class Window;
 
-	private:
+	public:
 		HWND m_hwnd;
 
+	private:
 		HFONT static GetFont(TextSize const textSize)
 		{
 			assert(textSize < TextSize::_Count);

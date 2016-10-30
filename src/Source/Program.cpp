@@ -8,6 +8,7 @@
 #pragma comment(lib, "Comctl32.lib")
 
 #include <thread>
+#include <string>
 
 namespace Presentation1
 {
@@ -52,7 +53,7 @@ namespace Presentation1
 
 	public:
 		AuthorsWindow();
-	} static *g_AuthorsWindow = nullptr;	// class AuthorsWindow
+	} static *gp_AuthorsWindow = nullptr;	// class AuthorsWindow
 
 	// -----------------------
 	class PresentationWindow final : public Window
@@ -94,7 +95,7 @@ namespace Presentation1
 		{
 			m_Presentation->Render();
 		}
-	} static *g_PresentationWindow = nullptr;	// class PresentationWindow
+	} static *gp_PresentationWindow = nullptr;	// class PresentationWindow
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 	// Windows setup.
@@ -124,22 +125,21 @@ namespace Presentation1
 	{
 		m_BeginButton = Button({ STANDART_DESKTOP_WIDTH / 2, 500, 700, 80 }, L"Начало", [](long)
 		{
-			if (g_PresentationWindow == nullptr)
+			if (gp_PresentationWindow == nullptr)
 			{
-				g_PresentationWindow = new PresentationWindow();
-				Sleep(100);
+				gp_PresentationWindow = new PresentationWindow();
 			}
-			g_PresentationWindow->Show();
+			gp_PresentationWindow->Show();
 			g_MainWindow.Hide();
 		}, TextSize::Large);
 		m_AuthorsButton = Button({ STANDART_DESKTOP_WIDTH / 2, 590, 700, 80 }, L"Авторы", [](long)
 		{
 			g_MainWindow.Hide();
-			if (g_AuthorsWindow == nullptr)
+			if (gp_AuthorsWindow == nullptr)
 			{
-				g_AuthorsWindow = new AuthorsWindow();
+				gp_AuthorsWindow = new AuthorsWindow();
 			}
-			g_AuthorsWindow->Show();
+			gp_AuthorsWindow->Show();
 		}, TextSize::Large);
 		m_ExitButton = Button({ STANDART_DESKTOP_WIDTH / 2, 680, 700, 80 }, L"Выход", [](long)
 		{
@@ -165,7 +165,7 @@ namespace Presentation1
 		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 3 + 100, STANDART_DESKTOP_HEIGHT / 2 + 450, 500 - 200, 80 }, L"Назад", [](long)
 		{
 			g_MainWindow.Show();
-			g_AuthorsWindow->Hide();
+			gp_AuthorsWindow->Hide();
 		}, TextSize::Large);
 	}
 
@@ -196,41 +196,15 @@ namespace Presentation1
 
 			auto static const DEFAULT_SECOND_PRISM_ENABLED = false;
 
-			auto static const SwitchSecondPrismControls = [&](auto const enabled)
-			{
-				auto& prism = m_Presentation->m_PrismRenderers[1];
-				auto& prismControl = m_PrismsControl[1];
-
-				prism.IsEnabled = enabled;
-
-				auto const firstWidgetPtr = reinterpret_cast<WindowWidgetPtr*>(&prismControl);
-				auto const lastWidgetPtr = firstWidgetPtr + sizeof prismControl / sizeof(WindowWidgetPtr);
-				for (auto widgetPtr = firstWidgetPtr; widgetPtr != lastWidgetPtr; ++widgetPtr)
-				{
-					(*widgetPtr)->Show(enabled);
-				}
-			};
-
-			{	// Initializing the layout switch button.
-				auto const cellX = CELL_CENTER_X;
-				auto const cellY = UpperSubcellY(0);
-				auto static secondPrismEnabled = DEFAULT_SECOND_PRISM_ENABLED;
-				auto static const LayoutCheckBoxText = [&]() { return secondPrismEnabled ? L"Две призмы" : L"Одна призма"; };
-				m_SwitchLayoutButton = Button({ cellX, cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }, LayoutCheckBoxText(), [&](long const)
-				{
-					secondPrismEnabled = !secondPrismEnabled;
-					SwitchSecondPrismControls(secondPrismEnabled);
-					m_SwitchLayoutButton->SetText(LayoutCheckBoxText());
-				});
-			}
-
-			for (auto cnt = 0; cnt < m_Presentation->m_PrismRenderers.size(); ++cnt)
+			for (auto cnt = 0; cnt < dxm::countof(m_Presentation->m_PrismRenderers); ++cnt)
 			{
 #if _DEBUG
-				auto j = 4 * cnt;
+				auto static const ROWS_PER_PRISM = 4;
 #else
-				auto j = 2 * cnt;
+				// We have only 2 rows of controls in debug mode - moving controls are disabled.
+				auto static const ROWS_PER_PRISM = 2;
 #endif
+				auto j = ROWS_PER_PRISM * cnt;
 				auto const isSecondPrism = cnt != 0;
 
 				// Initializing the layout controls for prisms.
@@ -265,7 +239,7 @@ namespace Presentation1
 				}
 
 				auto static const InitializeModifierControl = [this](PrismsControl::ModifierControl& control
-					, wchar_t const* const label, auto min, auto& value, auto max, auto delta, auto i, auto j)
+					, wchar_t const* const label, auto min, auto& value, auto max, auto delta, auto i, auto j1)
 				{
 					static_assert(std::is_same_v<decltype(min), std::remove_reference_t<decltype(value)>>
 						&& std::is_same_v<decltype(min), decltype(delta)>
@@ -273,16 +247,16 @@ namespace Presentation1
 
 					// Initializing the modifier controls.
 					auto const cellX = CellX(i);
-					auto const lowerSubcellY = LowerSubcellY(j);
-					auto const upperSubcellY = UpperSubcellY(j);
-				
+					auto const lowerSubcellY = LowerSubcellY(j1);
+					auto const upperSubcellY = UpperSubcellY(j1);
+
 					auto static const BUTTON_WIDTH = SUBCELL_HEIGHT;
 					auto static const BUTTON_HEIGHT = SUBCELL_HEIGHT / 2;
 					auto const minusButtonX = cellX - CELL_WIDTH / 2 + BUTTON_WIDTH / 2;
 					auto const minusButtonY = lowerSubcellY + SUBCELL_HEIGHT / 4;
 					auto const plusButtonX = minusButtonX;
 					auto const plusButtonY = lowerSubcellY - SUBCELL_HEIGHT / 4;
-					
+
 					auto static const TEXTEDIT_WIDTH = SUBCELL_WIDTH - BUTTON_WIDTH;
 					auto static const TEXTEDIT_HEIGHT = SUBCELL_HEIGHT;
 					auto const textEditX = cellX + BUTTON_WIDTH / 2;
@@ -303,7 +277,7 @@ namespace Presentation1
 						m_Presentation->m_AreRaysSynced = false;
 					});
 				};
-				InitializeModifierControl(prismControl.Angle,    L"Угол призмы",    prism.AngleMin,     prism.Angle,     prism.AngleMax,     0.05f, 0, j);
+				InitializeModifierControl(prismControl.Angle, L"Угол призмы", prism.AngleMin, prism.Angle, prism.AngleMax, 0.05f, 0, j);
 				InitializeModifierControl(prismControl.Rotation, L"Поворот призмы", prism.RotationXMin, prism.RotationX, prism.RotationXMax, 0.05f, 1, j);
 #if _DEBUG
 				j++;
@@ -312,13 +286,71 @@ namespace Presentation1
 				InitializeModifierControl(prismControl.PositionZ, L"Координата (Z)", prism.PositionMin.z, prism.Position.z, prism.PositionMax.z, 0.05f, 0, j++);
 #endif
 			}
+
+			auto static const SwitchSecondPrismControls = [&](auto const enabled)
+			{
+				auto& prism = m_Presentation->m_PrismRenderers[1];
+				auto& prismControl = m_PrismsControl[1];
+
+				prism.IsEnabled = enabled;
+				if (enabled)
+				{
+					m_Presentation->SetDualPrismsLayout();
+				}
+				else
+				{
+					m_Presentation->SetSinglePrismLayout();
+				}
+
+				auto const SwitchModifierControl = [&prism, &prismControl, this, enabled](PrismsControl::ModifierControl& control, auto const value)
+				{
+					control.Label->Show(enabled);
+					control.PlusButton->Show(enabled);
+					control.MinusButton->Show(enabled);
+					control.ValueEdit->Show(enabled);
+					control.ValueEdit->SetText(std::to_wstring(value).c_str());
+				};
+				auto const SwitchCheckBox = [&prism, &prismControl, this, enabled](WindowWidgetPtr const& checkbox, auto const checked)
+				{
+					checkbox->Show(enabled);
+					CheckDlgButton(m_hwnd, GetWindowLong(checkbox->m_hwnd, GWL_ID), checked ? BST_CHECKED : BST_UNCHECKED);
+				};
+
+				SwitchCheckBox(prismControl.AnomalousDispersionEnabled, prism.Type == PrismType::Govno);
+				SwitchModifierControl(prismControl.Angle, prism.Angle);
+				SwitchModifierControl(prismControl.Rotation, prism.RotationX);
+#if _DEBUG
+				SwitchModifierControl(prismControl.PositionX, prism.Position.x);
+				SwitchModifierControl(prismControl.PositionY, prism.Position.y);
+				SwitchModifierControl(prismControl.PositionZ, prism.Position.z);
+#endif
+				/*auto const firstWidgetPtr = reinterpret_cast<WindowWidgetPtr*>(&prismControl);
+				auto const lastWidgetPtr = firstWidgetPtr + sizeof prismControl / sizeof(WindowWidgetPtr);
+				for (auto widgetPtr = firstWidgetPtr; widgetPtr != lastWidgetPtr; ++widgetPtr)
+				{
+					(*widgetPtr)->Show(enabled);
+				}*/
+			};
+
+			{	// Initializing the layout switch button.
+				auto const cellX = CELL_CENTER_X;
+				auto const cellY = UpperSubcellY(0);
+				auto static secondPrismEnabled = DEFAULT_SECOND_PRISM_ENABLED;
+				auto static const LayoutCheckBoxText = [&]() { return secondPrismEnabled ? L"Две призмы" : L"Одна призма"; };
+				m_SwitchLayoutButton = Button({ cellX, cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }, LayoutCheckBoxText(), [&](long const)
+				{
+					secondPrismEnabled = !secondPrismEnabled;
+					SwitchSecondPrismControls(secondPrismEnabled);
+					m_SwitchLayoutButton->SetText(LayoutCheckBoxText());
+				});
+			}
 			SwitchSecondPrismControls(DEFAULT_SECOND_PRISM_ENABLED);
 		}
 		// -----------------------
 		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4 - 10, 70 }, L"Назад", [](long)
 		{
 			g_MainWindow.Show();
-			g_PresentationWindow->Hide();
+			gp_PresentationWindow->Hide();
 		}, TextSize::Large);
 	}
 
@@ -343,17 +375,14 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 	// render correctly.
 	std::thread([]()
 	{
+		while (Presentation1::gp_PresentationWindow == nullptr)
+		{
+			Sleep(100);
+		}
 		while (true)
 		{
-			if (Presentation1::g_PresentationWindow != nullptr)
-			{
-				Presentation1::g_PresentationWindow->Update();
-				Presentation1::g_PresentationWindow->Render();
-			}
-			else
-			{
-				Sleep(100);
-			}
+			Presentation1::gp_PresentationWindow->Update();
+			Presentation1::gp_PresentationWindow->Render();
 		}
 	}).detach();
 
@@ -364,8 +393,8 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 		DispatchMessage(&msg);
 	}
 
-	delete Presentation1::g_AuthorsWindow;
-	delete Presentation1::g_PresentationWindow;
+	delete Presentation1::gp_AuthorsWindow;
+	delete Presentation1::gp_PresentationWindow;
 
 	return 0;
 }
