@@ -175,7 +175,7 @@ namespace Presentation1
 	{
 		m_Presentation = Direct3D9<PresentationWidget>({ STANDART_DESKTOP_WIDTH * 3 / 8, STANDART_DESKTOP_HEIGHT / 2, STANDART_DESKTOP_WIDTH * 3 / 4, STANDART_DESKTOP_HEIGHT});
 		// -----------------------
-		Rect const imageRect = { STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, 820, 475, 325 };
+		Rect const imageRect = { STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, 820, 480, 330 };
 		m_AnomImage = Image(imageRect, L"../gfx/anom-func.bmp");
 		m_NormImage = Image(imageRect, L"../gfx/norm-func.bmp");
 		m_NormImage->Hide();

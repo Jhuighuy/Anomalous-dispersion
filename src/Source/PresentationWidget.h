@@ -504,7 +504,7 @@ namespace Presentation1
 					if (!plane.Intersect(coord, coord, direction) && m_PrismPlanes.size() -1 != j)
 					{
 						coord = prevCoord;
-						continue;
+						break;
 					}
 					
 					auto const finalColor = j == m_PrismPlanes.size() - 1 ? color & 0x00FFFFFF : color;
@@ -525,7 +525,7 @@ namespace Presentation1
 					}
 
 					if (!plane.Refract(direction, waveLength))
-						break;
+						continue;
 					AbsorbAlpha(color, plane.AbsorptionIndex(waveLength));
 
 					if (j == m_PrismPlanes.size() - 1)
