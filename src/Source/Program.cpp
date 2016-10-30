@@ -176,9 +176,9 @@ namespace Presentation1
 		m_Presentation = Direct3D9<PresentationWidget>({ STANDART_DESKTOP_WIDTH * 3 / 8, STANDART_DESKTOP_HEIGHT / 2, STANDART_DESKTOP_WIDTH * 3 / 4, STANDART_DESKTOP_HEIGHT});
 		// -----------------------
 		Rect const imageRect = { STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, 820, 480, 330 };
-		m_AnomImage = Image(imageRect, L"../gfx/anom-func.bmp");
 		m_NormImage = Image(imageRect, L"../gfx/norm-func.bmp");
-		m_NormImage->Hide();
+		m_AnomImage = Image(imageRect, L"../gfx/anom-func.bmp");
+		m_AnomImage->Hide();
 		// -----------------------
 		{
 			auto static const PADDING = 5;
@@ -287,13 +287,16 @@ namespace Presentation1
 #endif
 			}
 
-			auto static const SwitchSecondPrismControls = [&](auto const enabled)
+			auto static const SwitchSecondPrismControls = [&](auto const shown)
 			{
+				m_AnomImage->Hide();
+				m_NormImage->Show();
+
 				auto& prism = m_Presentation->m_PrismRenderers[1];
 				auto& prismControl = m_PrismsControl[1];
 
-				prism.IsEnabled = enabled;
-				if (enabled)
+				prism.IsEnabled = shown;
+				if (shown)
 				{
 					m_Presentation->SetDualPrismsLayout();
 				}
@@ -302,20 +305,21 @@ namespace Presentation1
 					m_Presentation->SetSinglePrismLayout();
 				}
 
-				auto const SwitchModifierControl = [&prism, &prismControl, this, enabled](PrismsControl::ModifierControl& control, auto const value)
+				auto const SwitchModifierControl = [&prism, &prismControl, this, shown](PrismsControl::ModifierControl& control, auto const value)
 				{
-					control.Label->Show(enabled);
-					control.PlusButton->Show(enabled);
-					control.MinusButton->Show(enabled);
-					control.ValueEdit->Show(enabled);
+					control.Label->Show(shown);
+					control.PlusButton->Show(shown);
+					control.MinusButton->Show(shown);
+					control.ValueEdit->Show(shown);
 					control.ValueEdit->SetText(std::to_wstring(value).c_str());
 				};
-				auto const SwitchCheckBox = [&prism, &prismControl, this, enabled](WindowWidgetPtr const& checkbox, auto const checked)
+				auto const SwitchCheckBox = [&prism, &prismControl, this, shown](WindowWidgetPtr const& checkbox, auto const checked)
 				{
-					checkbox->Show(enabled);
+					checkbox->Show(shown);
 					CheckDlgButton(m_hwnd, GetWindowLong(checkbox->m_hwnd, GWL_ID), checked ? BST_CHECKED : BST_UNCHECKED);
 				};
 
+				prismControl.Label->Show(shown);
 				SwitchCheckBox(prismControl.AnomalousDispersionEnabled, prism.Type == PrismType::Govno);
 				SwitchModifierControl(prismControl.Angle, prism.Angle);
 				SwitchModifierControl(prismControl.Rotation, prism.RotationX);
