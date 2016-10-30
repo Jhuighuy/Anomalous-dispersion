@@ -11,6 +11,7 @@
 #pragma warning(push, 0)
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 #pragma warning(pop)
 
@@ -323,7 +324,9 @@ namespace Presentation1
 		void Render() const
 		{
 			/* Setting up the transformations. */
-			auto const matrix = dxm::translate(Position) * dxm::yawPitchRoll(Rotation.x, Rotation.y, Rotation.z) * dxm::scale(Scale);
+			auto const matrix = dxm::translate(Position) 
+				* dxm::toMat4(dxm::quat(dxm::vec3(Rotation.x, Rotation.y, Rotation.z)))
+				* dxm::scale(Scale);
 			ThrowIfFailed(m_Device->SetTransform(D3DTS_WORLD, dxm::ptr(matrix)));
 
 			/* Setting up the transparency. */

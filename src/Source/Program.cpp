@@ -60,24 +60,26 @@ namespace Presentation1
 	private:
 		PresentationWidgetPtr m_Presentation;
 
-		struct ModifierControl
-		{
-			WindowWidgetPtr Label;
-			WindowWidgetPtr PlusButton;
-			WindowWidgetPtr ValueEdit;
-			WindowWidgetPtr MinusButton;
-		};	// struct ModifierControl
-
 		struct PrismsControl
 		{
+			struct ModifierControl
+			{
+				WindowWidgetPtr Label;
+				WindowWidgetPtr PlusButton;
+				WindowWidgetPtr ValueEdit;
+				WindowWidgetPtr MinusButton;
+			};	// struct ModifierControl
+
 			WindowWidgetPtr Label;
-			WindowWidgetPtr EnabledCheckbox;
-			WindowWidgetPtr MaterialCombobox;
+			WindowWidgetPtr AnomalousDispersionEnabled;
 			ModifierControl Angle;
+			ModifierControl Rotation;
+#if _DEBUG
 			ModifierControl PositionX, PositionY, PositionZ;
-			ModifierControl RotationX, RotationZ;
+#endif
 		} m_PrismsControl[2];
 
+		WindowWidgetPtr m_SwitchLayoutButton;
 		WindowWidgetPtr m_NormImage;
 		WindowWidgetPtr m_AnomImage;
 		WindowWidgetPtr m_BackButton;
@@ -174,103 +176,143 @@ namespace Presentation1
 		m_Presentation = Direct3D9<PresentationWidget>({ STANDART_DESKTOP_WIDTH * 3 / 8, STANDART_DESKTOP_HEIGHT / 2, STANDART_DESKTOP_WIDTH * 3 / 4, STANDART_DESKTOP_HEIGHT});
 		// -----------------------
 		Rect const imageRect = { STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, 820, 475, 325 };
+		m_AnomImage = Image(imageRect, L"../gfx/anom-func.bmp");
 		m_NormImage = Image(imageRect, L"../gfx/norm-func.bmp");
 		m_NormImage->Hide();
-		m_AnomImage = Image(imageRect, L"../gfx/anom-func.bmp");
 		// -----------------------
-		for (auto j = 0; j < dxm::countof(m_PrismsControl); ++j)
 		{
-			auto& prism = m_Presentation->m_PrismRenderers[j];
-			auto& prismControl = m_PrismsControl[j];
+			auto static const PADDING = 5;
+			auto static const REAL_CELL_WIDTH = STANDART_DESKTOP_WIDTH / 4 / 2;
+			auto static const CELL_WIDTH = REAL_CELL_WIDTH - 2 * PADDING;
+			auto static const CELL_HEIGHT = 80;
+			auto static const SUBCELL_WIDTH = CELL_WIDTH;
+			auto static const SUBCELL_HEIGHT = CELL_HEIGHT / 2;
+			auto static const CELL_CENTER_X = STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8;
 
-			auto static const padding = 5;
-			auto static const realCellWidth = STANDART_DESKTOP_WIDTH / 4 / 2;
-			auto static const cellWidth = realCellWidth - 2 * padding;
-			auto static const cellHeight = 80;
-			auto static const subcellWidth = cellWidth;
-			auto static const subcellHeight = cellHeight / 2;
+			auto static const CellX = [](auto const i) { return REAL_CELL_WIDTH / 2 + REAL_CELL_WIDTH * i + STANDART_DESKTOP_WIDTH * 3 / 4; };
+			auto static const CellY = [](auto const j) { return CELL_HEIGHT / 2 + CELL_HEIGHT * j; };
+			auto static const LowerSubcellY = [](auto const j) { return CellY(j) + SUBCELL_HEIGHT / 2; };
+			auto static const UpperSubcellY = [](auto const j) { return CellY(j) - SUBCELL_HEIGHT / 2; };
 
-			auto static const InitializePrismLabel = [this](PrismsControl& control, auto j)
+			auto static const DEFAULT_SECOND_PRISM_ENABLED = false;
+
+			auto static const SwitchSecondPrismControls = [&](auto const enabled)
 			{
-				auto const cellX = STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8;
-				auto const cellY = cellHeight / 2 + cellHeight * j;
+				auto& prism = m_Presentation->m_PrismRenderers[1];
+				auto& prismControl = m_PrismsControl[1];
 
-				control.Label = Label({ cellX, cellY, subcellWidth, subcellHeight }, j == 0 ? L"Первая призма" : L"Вторая призма", LabelFlags::CenterAlignment, TextSize::NotSoLarge);
-			};
-			auto static const InitializePrismEnabledButton = [this](Prism& prism, PrismsControl& control, auto i, auto j)
-			{
-				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
-				auto const cellY = cellHeight / 2 + cellHeight * j;
-				auto const lowerSubcellY = cellY + cellHeight / 2;
+				prism.IsEnabled = enabled;
 
-				control.EnabledCheckbox = CheckBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, L"Выключена", [&](long disabled)
+				auto const firstWidgetPtr = reinterpret_cast<WindowWidgetPtr*>(&prismControl);
+				auto const lastWidgetPtr = firstWidgetPtr + sizeof prismControl / sizeof(WindowWidgetPtr);
+				for (auto widgetPtr = firstWidgetPtr; widgetPtr != lastWidgetPtr; ++widgetPtr)
 				{
-					prism.IsEnabled = !static_cast<bool>(disabled);
-					m_Presentation->m_AreRaysSynced = false;
+					(*widgetPtr)->Show(enabled);
+				}
+			};
+
+			{	// Initializing the layout switch button.
+				auto const cellX = CELL_CENTER_X;
+				auto const cellY = UpperSubcellY(0);
+				auto static secondPrismEnabled = DEFAULT_SECOND_PRISM_ENABLED;
+				auto static const LayoutCheckBoxText = [&]() { return secondPrismEnabled ? L"Две призмы" : L"Одна призма"; };
+				m_SwitchLayoutButton = Button({ cellX, cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }, LayoutCheckBoxText(), [&](long const)
+				{
+					secondPrismEnabled = !secondPrismEnabled;
+					SwitchSecondPrismControls(secondPrismEnabled);
+					m_SwitchLayoutButton->SetText(LayoutCheckBoxText());
 				});
-			};
-			auto static const InitializePrismCombobox = [this](Prism& prism, PrismsControl& control, auto i, auto j)
-			{
-				if (j == 0)
-					return;
+			}
 
-				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
-				auto const cellY = cellHeight / 2 + cellHeight * j;
-				auto const lowerSubcellY = cellY + cellHeight / 2;
-				
-				control.MaterialCombobox = CheckBox({ cellX, lowerSubcellY, subcellWidth, subcellHeight }, L"Аномальная дисперсия", [&](long enabled)
+			for (auto cnt = 0; cnt < m_Presentation->m_PrismRenderers.size(); ++cnt)
+			{
+#if _DEBUG
+				auto j = 4 * cnt;
+#else
+				auto j = 2 * cnt;
+#endif
+				auto const isSecondPrism = cnt != 0;
+
+				// Initializing the layout controls for prisms.
+				auto& prism = m_Presentation->m_PrismRenderers[cnt];
+				auto& prismControl = m_PrismsControl[cnt];
+
+				{	// Initializing the label of the prism control.
+					auto const cellX = CELL_CENTER_X;
+					auto const lowerSubcellY = LowerSubcellY(j++);
+					prismControl.Label = Label({ cellX, lowerSubcellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }
+						, isSecondPrism ? L"Вторая призма" : L"Первая призма"
+						, LabelFlags::CenterAlignment, TextSize::NotSoLarge);
+				}
+
+				if (isSecondPrism)
 				{
-					prism.Type = static_cast<PrismType>(enabled);
-					m_Presentation->m_AreRaysSynced = false;
-					if (j != 0)
+					// Initializing the norm-anom switch for second prism.
+					auto const cellX = CellX(0);
+					auto const lowerSubcellY = CellY(j++);
+					prismControl.AnomalousDispersionEnabled = CheckBox({ cellX, lowerSubcellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }
+						, L"Аномальная дисперсия"
+						, [this, isSecondPrism, &prism](long const enabled)
 					{
-						m_AnomImage->Hide(!enabled);
-						m_NormImage->Show(!enabled);
-					}
-				}, prism.Type == PrismType::Govno);
-			};
-			auto static const InitializeModifierControl = [this](ModifierControl& control, auto label, auto min, auto& value, auto max, auto delta, auto i, auto j)
-			{
-				auto const cellX = realCellWidth / 2 + realCellWidth * i + STANDART_DESKTOP_WIDTH * 3 / 4;
-				auto const cellY = cellHeight / 2 + cellHeight * j;
-				auto const lowerSubcellY = cellY + cellHeight / 4;
-				auto const upperSubcellY = cellY - cellHeight / 4;
+						prism.Type = static_cast<PrismType>(enabled);
+						m_Presentation->m_AreRaysSynced = false;
+						if (isSecondPrism)
+						{
+							m_AnomImage->Hide(!enabled);
+							m_NormImage->Show(!enabled);
+						}
+					}, prism.Type == PrismType::Govno);
+				}
+
+				auto static const InitializeModifierControl = [this](PrismsControl::ModifierControl& control
+					, wchar_t const* const label, auto min, auto& value, auto max, auto delta, auto i, auto j)
+				{
+					static_assert(std::is_same_v<decltype(min), std::remove_reference_t<decltype(value)>>
+						&& std::is_same_v<decltype(min), decltype(delta)>
+						&& std::is_same_v<decltype(min), decltype(max)>, "Different types of 'min', 'value', 'max' and 'delta' parameters.");
+
+					// Initializing the modifier controls.
+					auto const cellX = CellX(i);
+					auto const lowerSubcellY = LowerSubcellY(j);
+					auto const upperSubcellY = UpperSubcellY(j);
 				
-				auto static const buttonWidth = subcellHeight;
-				auto static const buttonHeight = subcellHeight / 2;
-				auto const minusButtonX = cellX - cellWidth / 2 + buttonWidth / 2;
-				auto const minusButtonY = lowerSubcellY + subcellHeight / 4;
-				auto const plusButtonX = minusButtonX;
-				auto const plusButtonY = lowerSubcellY - subcellHeight / 4;
-				auto static const textEditWidth = subcellWidth - buttonWidth;
-				auto static const textEditHeight = subcellHeight;
-				auto const textEditX = cellX + buttonWidth / 2;
-				auto const textEditY = lowerSubcellY;
+					auto static const BUTTON_WIDTH = SUBCELL_HEIGHT;
+					auto static const BUTTON_HEIGHT = SUBCELL_HEIGHT / 2;
+					auto const minusButtonX = cellX - CELL_WIDTH / 2 + BUTTON_WIDTH / 2;
+					auto const minusButtonY = lowerSubcellY + SUBCELL_HEIGHT / 4;
+					auto const plusButtonX = minusButtonX;
+					auto const plusButtonY = lowerSubcellY - SUBCELL_HEIGHT / 4;
+					
+					auto static const TEXTEDIT_WIDTH = SUBCELL_WIDTH - BUTTON_WIDTH;
+					auto static const TEXTEDIT_HEIGHT = SUBCELL_HEIGHT;
+					auto const textEditX = cellX + BUTTON_WIDTH / 2;
+					auto const textEditY = lowerSubcellY;
 
-				control.Label = Label({ cellX, upperSubcellY + subcellHeight / 2, subcellWidth, subcellHeight }, label);
-				control.MinusButton = Button({ minusButtonX, minusButtonY, buttonWidth, buttonHeight }, L"-", [this, min, &value, max, &control, delta](long)
-				{
-					value = dxm::clamp(value - delta, min, max);
-					control.ValueEdit->SetText(std::to_wstring(value).c_str());
-					m_Presentation->m_AreRaysSynced = false;
-				});
-				control.ValueEdit = TextEdit({ textEditX, lowerSubcellY, textEditWidth, textEditHeight }, std::to_wstring(value).c_str(), TextEditFlags::CenterAlignment);
-				control.PlusButton = Button({ plusButtonX, plusButtonY, buttonWidth, buttonHeight }, L"+", [this, min, &value, max, &control, delta](long)
-				{
-					value = dxm::clamp(value + delta, min, max);
-					control.ValueEdit->SetText(std::to_wstring(value).c_str());
-					m_Presentation->m_AreRaysSynced = false;
-				});
-			};
-
-			InitializePrismLabel(prismControl, j * 4);
-			InitializePrismEnabledButton(prism, prismControl, 0, j * 4);
-			InitializePrismCombobox(prism, prismControl, 1, j * 4);
-			InitializeModifierControl(prismControl.Angle,     L"Угол призмы",    prism.AngleMin,      prism.Angle,      prism.AngleMax,      0.05f, 1, 1 + j * 4);
-			InitializeModifierControl(prismControl.RotationZ, L"Поворот призмы", prism.RotationZMin,  prism.RotationZ,  prism.RotationZMax,  0.05f, 1, 2 + j * 4);
-			InitializeModifierControl(prismControl.PositionX, L"Координата (X)", prism.PositionMin.x, prism.Position.x, prism.PositionMax.x, 0.05f, 0, 1 + j * 4);
-			InitializeModifierControl(prismControl.PositionY, L"Координата (Y)", prism.PositionMin.y, prism.Position.y, prism.PositionMax.y, 0.05f, 0, 2 + j * 4);
-			InitializeModifierControl(prismControl.PositionZ, L"Координата (Z)", prism.PositionMin.z, prism.Position.z, prism.PositionMax.z, 0.05f, 0, 3 + j * 4);
+					control.Label = Label({ cellX, upperSubcellY + SUBCELL_HEIGHT / 2, SUBCELL_WIDTH, SUBCELL_HEIGHT }, label);
+					control.MinusButton = Button({ minusButtonX, minusButtonY, BUTTON_WIDTH, BUTTON_HEIGHT }, L"-", [this, min, &value, max, &control, delta](long)
+					{
+						value = dxm::clamp(value - delta, min, max);
+						control.ValueEdit->SetText(std::to_wstring(value).c_str());
+						m_Presentation->m_AreRaysSynced = false;
+					});
+					control.ValueEdit = TextEdit({ textEditX, lowerSubcellY, TEXTEDIT_WIDTH, TEXTEDIT_HEIGHT }, std::to_wstring(value).c_str(), TextEditFlags::CenterAlignment);
+					control.PlusButton = Button({ plusButtonX, plusButtonY, BUTTON_WIDTH, BUTTON_HEIGHT }, L"+", [this, min, &value, max, &control, delta](long)
+					{
+						value = dxm::clamp(value + delta, min, max);
+						control.ValueEdit->SetText(std::to_wstring(value).c_str());
+						m_Presentation->m_AreRaysSynced = false;
+					});
+				};
+				InitializeModifierControl(prismControl.Angle,    L"Угол призмы",    prism.AngleMin,     prism.Angle,     prism.AngleMax,     0.05f, 0, j);
+				InitializeModifierControl(prismControl.Rotation, L"Поворот призмы", prism.RotationXMin, prism.RotationX, prism.RotationXMax, 0.05f, 1, j);
+#if _DEBUG
+				j++;
+				InitializeModifierControl(prismControl.PositionX, L"Координата (X)", prism.PositionMin.x, prism.Position.x, prism.PositionMax.x, 0.05f, 0, j);
+				InitializeModifierControl(prismControl.PositionY, L"Координата (Y)", prism.PositionMin.y, prism.Position.y, prism.PositionMax.y, 0.05f, 1, j++);
+				InitializeModifierControl(prismControl.PositionZ, L"Координата (Z)", prism.PositionMin.z, prism.Position.z, prism.PositionMax.z, 0.05f, 0, j++);
+#endif
+			}
+			SwitchSecondPrismControls(DEFAULT_SECOND_PRISM_ENABLED);
 		}
 		// -----------------------
 		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4 - 10, 70 }, L"Назад", [](long)
@@ -303,11 +345,14 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 	{
 		while (true)
 		{
-			OutputDebugString(L"");
 			if (Presentation1::g_PresentationWindow != nullptr)
 			{
 				Presentation1::g_PresentationWindow->Update();
 				Presentation1::g_PresentationWindow->Render();
+			}
+			else
+			{
+				Sleep(100);
 			}
 		}
 	}).detach();

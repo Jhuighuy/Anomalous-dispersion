@@ -18,8 +18,11 @@
 #include <winuser.h>
 #include <commctrl.h>
 
-#define STANDART_DESKTOP_WIDTH 1920
-#define STANDART_DESKTOP_HEIGHT 1080
+enum
+{
+	STANDART_DESKTOP_WIDTH = 1920,
+	STANDART_DESKTOP_HEIGHT = 1080
+};
 
 namespace Presentation1
 {

@@ -142,7 +142,8 @@ namespace Presentation1
 		PrismType Type = PrismType::Air;
 		FLOAT Angle = F_PI / 3.0f, AngleMin = F_PI / 12.0f, AngleMax = F_PI / 2.0f;
 		dxm::vec3 Position, PositionMin, PositionMax;
-		FLOAT RotationZ = 0.0f, RotationZMin = -F_PI / 2, RotationZMax = F_PI / 2;
+		FLOAT RotationX = 0.0f, RotationXMin = -F_PI / 2, RotationXMax = F_PI / 2;
+		FLOAT RotationZ = 0.0f;
 
 	private:
 		TriangleMutableMeshRenderer<TRUE> m_PrismMesh;
@@ -176,7 +177,8 @@ namespace Presentation1
 			auto const absorptionIndexFunc = absorptionIndexFuncTable[static_cast<size_t>(Type)];;
 
 			auto const transformationMatrix = dxm::translate(Position)
-				* dxm::yawPitchRoll(0.0f, 0.0f, RotationZ) * dxm::scale(/*2.0f * */glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f)));
+				* dxm::toMat4(dxm::quat(dxm::vec3(RotationX, 0.0f, RotationZ))) 
+				* dxm::scale(glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f)));
 			{
 				auto const p1 = transformationMatrix * dxm::vec4(-0.1f, -0.1f, +0.0f, 1.0);
 				auto const p2 = transformationMatrix * dxm::vec4(+0.1f, -0.1f, +0.0f, 1.0);
@@ -215,6 +217,7 @@ namespace Presentation1
 
 			m_PrismMesh.Position = Position;
 			m_PrismMesh.Scale = glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f));
+			m_PrismMesh.Rotation.x = RotationX;
 			m_PrismMesh.Rotation.z = RotationZ;
 			m_PrismMesh.Render();
 		}
@@ -287,11 +290,11 @@ namespace Presentation1
 			LoadOBJ("../gfx/room.obj", m_RoomMesh);
 			LoadTexture(m_Device, L"../gfx/roomLightMap.png", &m_RoomRenderer.Texture);
 			m_RoomRenderer.Position.z = 2.0f;
-			m_RoomRenderer.Rotation.x = F_PI;
+			m_RoomRenderer.Rotation.y = F_PI;
 			LoadOBJ("../gfx/screen.obj", m_ScreenMesh);
 			LoadTexture(m_Device, L"../gfx/screenLightMap.png", &m_ScreenRenderer.Texture);
 			m_ScreenRenderer.Position.z = 2.0f;
-			m_ScreenRenderer.Rotation.x = F_PI;
+			m_ScreenRenderer.Rotation.y = F_PI;
 		
 			/* Setting up dynamic scene parameters. */
 			LoadOBJ("../gfx/prism.obj", m_PrismMesh, D3DCOLOR_ARGB(0xFF / 3, 0xFF / 3, 0xFF, 0xFF));
@@ -301,12 +304,11 @@ namespace Presentation1
 			
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
 			m_PrismRenderers.push_back({ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal });
-			m_PrismRenderers[0].Position = { 0.3f, 0.5f, 1.0f };
+			m_PrismRenderers[0].Position = { 0.0f, 0.75f, 1.0f };
 			m_PrismRenderers[0].PositionMin = { -1.05f, 0.5f, 0.4f };
-			m_PrismRenderers[0].PositionMax = { +1.05f, 1.0f, 1.6f};
-			m_PrismRenderers[1].Type = PrismType::Govno;
+			m_PrismRenderers[0].PositionMax = { +1.05f, 1.0f, 1.6f };
 			m_PrismRenderers[1].Angle = F_PI / 3.0f;
-			m_PrismRenderers[1].Position = { 0.35f, 0.8f, 2.0f };
+			m_PrismRenderers[1].Position = { 0.0f, 0.8f, 2.0f };
 			m_PrismRenderers[1].PositionMin = { -1.05f, 0.5f, 2.0f };
 			m_PrismRenderers[1].PositionMax = { +1.05f, 1.0f, 2.7f };
 			m_PrismRenderers[1].RotationZ = F_PI / 2;
@@ -381,8 +383,8 @@ namespace Presentation1
 			auto static const rayNormal = dxm::vec3(1.0, 0.0, 0.0f);
 			auto static const projectionNormal = dxm::vec3(0.0, 0.0, -1.0f);
 
-			auto const startCoord = dxm::vec3(0.0f, 1.5f, -2.0f);
-			auto const startDirection = (m_PrismRenderers[0].IsEnabled ? m_PrismRenderers[0].Position - startCoord : m_PrismRenderers[1].IsEnabled ? m_PrismRenderers[1].Position - startCoord : dxm::vec3(0,0,1));
+			auto const startCoord = dxm::vec3(0.0f, 0.75f, -2.0f);
+			auto const startDirection = dxm::vec3(0,0,1);
 			std::vector<SavedRay> savedRays(partitioning, { startCoord, startDirection });
 			for (auto i = 0u; i < partitioning; ++i)
 			{
