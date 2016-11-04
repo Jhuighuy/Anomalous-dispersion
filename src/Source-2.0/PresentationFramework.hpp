@@ -7,6 +7,9 @@
 #ifndef _WIN32
 #error This application supports Windows-based platforms only.
 #endif // ifndef _WIN32
+#ifdef _WINDOWS_
+#error Please, include <Windows.h> before this header.
+#endif	// ifdef _WINDOWS_
 
 #ifndef WIN32_LEAN_AND_MEAN 
 #define WIN32_LEAN_AND_MEAN 1
@@ -14,27 +17,76 @@
 #ifndef VC_EXTRALEAN 
 #define VC_EXTRALEAN 1
 #endif	// ifndef VC_EXTRALEAN 
+#ifndef NOMINMAX 
+#define NOMINMAX 1
+#endif	// ifndef NOMINMAX 
 #include <d3d9.h>
 
-#include <vector>
 #include <memory>
+#include <vector>
+#include <atomic>
 #include <cassert>
+#include <algorithm>
 #include <functional>
 
 #define ADAPI
 #define ADINL
 #define ADINT
+#define SUPPORT_LOADING_FROM_FILE !_DEBUG
+#pragma warning(disable : 4505)
 
 namespace Presentation2
 {
+	enum LoadFromMemory_t { LoadFromMemory };
+
+	struct INonCopyable
+	{
+		ADINT INonCopyable() = default;
+		ADINT INonCopyable(INonCopyable&&) = delete;
+		ADINT INonCopyable(INonCopyable const&) = delete;
+		ADINT INonCopyable& operator=(INonCopyable&&) = delete;
+		ADINT INonCopyable& operator=(INonCopyable const&) = delete;
+	};	// struct INonCopyable
+
+	struct IUpdatable : INonCopyable
+	{
+		ADINT virtual ~IUpdatable() = default;
+		ADAPI virtual void Update() const = 0;
+	};	// struct IUpdatable
+
+	struct IRenderable : public IUpdatable
+	{
+		ADAPI virtual void Render() const = 0;
+	};	// struct IRenderable
+
 	namespace Utils
 	{
 		template<typename T>
-		static T clamp(T const value, T const min, T const max)
+		ADINL static T Clamp(T const value, T const min, T const max)
 		{
 			return value < min ? min : value > max ? max : value;
 		}
-	}
+
+		template<typename T>
+		ADINL static void RuntimeCheck(T const value)
+		{
+			if (!value)
+			{
+				throw std::runtime_error("Fuck this shit.");
+			}
+		}
+		ADINL static void RuntimeCheckH(HRESULT const value)
+		{
+			RuntimeCheck(SUCCEEDED(value));
+		}
+		template<typename T>
+		ADINL static T* RuntimeCheck(T* const value)
+		{
+			Utils::RuntimeCheck(value != nullptr && value != INVALID_HANDLE_VALUE);
+			return value;
+		}
+
+	}	// namespace Utils
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 	// Rectangles and monitors geometry.
@@ -49,47 +101,41 @@ namespace Presentation2
 			DEFAULT_DESKTOP_HEIGHT = 1080,
 		};	// enum DefaultDesktopResolution_t
 
-		ADINT static void GetResolution(int& width, int& height)
-		{
-			RECT static resulution = {};
-			if (resulution.right != 0)
-			{
-				GetWindowRect(GetDesktopWindow(), &resulution);
-			}
-			width = resulution.right - resulution.left;
-			height = resulution.bottom - resulution.top;
-		}
+		ADINT static void GetResolution(INT& width, INT& height);
 
 	public:
-		ADINT static int GetWidth()
+		// -----------------------
+		ADINT static auto GetWidth()
 		{
-			int w, h;
+			INT w, h;
 			GetResolution(w, h);
 			return w;
 		}
-		ADINT static int GetHeight()
+		ADINT static auto GetHeight()
 		{
-			int w, h;
+			INT w, h;
 			GetResolution(w, h);
 			return h;
 		}
 
-		ADINL static int UpscaleX(int const width)
+		// -----------------------
+		ADINL static auto UpscaleX(INT const width)
 		{
 			return width * GetWidth() / DEFAULT_DESKTOP_WIDTH;
 		}
-		ADINL static int UpscaleY(int const height)
+		ADINL static auto UpscaleY(INT const height)
 		{
 			return height * GetHeight() / DEFAULT_DESKTOP_HEIGHT;
 		}
 
-		ADINL static int UpscaleWidth(int const width)
+		// -----------------------
+		ADINL static auto UpscaleWidth(INT const width)
 		{
-			return max(1, UpscaleX(width));
+			return std::max(1, UpscaleX(width));
 		}
-		ADINL static int UpscaleHeight(int const height)
+		ADINL static auto UpscaleHeight(INT const height)
 		{
-			return max(1, UpscaleY(height));
+			return std::max(1, UpscaleY(height));
 		}
 	};	// class Monitor
 
@@ -101,11 +147,12 @@ namespace Presentation2
 	
 	enum NoScaling_t { NoScaling };
 
-	/** Scalable window rectangle. */
+	/*************** 
+	 * Scalable window rectangle. */
 	struct Rect final
 	{
-		int X, Y;
-		int Width, Height;
+		INT X, Y;
+		INT Width, Height;
 
 	public:
 		ADINL Rect() : X(0), Y(0), Width(0), Height(0) {}
@@ -151,7 +198,8 @@ namespace Presentation2
 	// Basic window widget.
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 
-	typedef std::shared_ptr<class WindowWidget> WindowWidgetPtr;
+	using WindowWidgetPtr = std::shared_ptr<class WindowWidget>;
+	ADAPI bool extern g_IsExitting;
 	
 	enum class TextSize : DWORD
 	{
@@ -159,34 +207,23 @@ namespace Presentation2
 		NotSoLarge,
 		Large,
 		VeryLarge,
-		_Count,
+		COUNT,
 	};	// enum class TextSize
 
-	/** Simple wrapper around raw WinAPI HWND handle. */
+	/***************
+	 * Simple wrapper around raw WinAPI HWND handle. */
 	class WindowWidget
 	{
-		friend class Window;
-	private:
+	protected:
 		HWND m_Hwnd;
 
 	public:
+		// -----------------------
 		ADINL WindowWidget() : m_Hwnd(nullptr) {}
 		ADAPI explicit WindowWidget(HWND const hwnd, TextSize const textSize = TextSize::Default)
 			: m_Hwnd(hwnd)
 		{
-			assert(hwnd != nullptr);
-			assert(textSize < TextSize::_Count);
-
-			// Setting up font size of the widget.
-			struct { int Height; HFONT Handle; } static FontsCache[static_cast<size_t>(TextSize::_Count)] = { {20}, {30}, {40}, {75} };
-			auto& font = FontsCache[static_cast<size_t>(textSize)];
-			if (font.Handle != nullptr)
-			{
-				// Lazily loading the system font.
-				font.Handle = CreateFontW(Monitor::UpscaleHeight(font.Height), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
-					, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Consolas");
-			}
-			SendMessage(m_Hwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font.Handle), TRUE);
+			SetTextSize(textSize);
 		}
 		// -----------------------
 		ADAPI virtual ~WindowWidget()
@@ -196,12 +233,9 @@ namespace Presentation2
 
 	public:
 		// -----------------------
-		ADINL std::wstring GetText() const
-		{
-			std::wstring text(GetWindowTextLengthW(m_Hwnd) + 1, L'\0');
-			GetWindowTextW(m_Hwnd, &text[0], text.size() + 1);
-			return text;
-		}
+		ADAPI void SetTextSize(TextSize const textSize = TextSize::Default) const;
+
+		// -----------------------
 		ADINL void SetText(wchar_t const* const text) const
 		{
 			SetWindowTextW(m_Hwnd, text);
@@ -218,6 +252,10 @@ namespace Presentation2
 		}
 	};	// class WindowWidget
 
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
+	// Window widgets and controls.
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
+
 	enum class LabelFlags : DWORD
 	{
 		LeftAlignment = SS_LEFT,
@@ -225,6 +263,10 @@ namespace Presentation2
 		CenterAlignment = SS_CENTER,
 		RightAlignment = SS_RIGHT,
 	}; // enum LabelFlags
+
+	using HorizontalSeparatorPtr = WindowWidgetPtr;
+	using LabelPtr = WindowWidgetPtr;
+	using ImagePtr = WindowWidgetPtr;
 
 	enum class TextEditFlags : DWORD
 	{
@@ -243,190 +285,78 @@ namespace Presentation2
 		WantReturn = ES_WANTRETURN,
 	}; // enum class TextEditFlags
 
-	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
-	// Window widgets and controls.
-	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
+	using TextEditPtr = WindowWidgetPtr;
 
-	typedef std::shared_ptr<class D3DWidget> D3DWidgetPtr;
-	typedef std::shared_ptr<class Window> WindowPtr;
-	typedef std::function<void(long)> WindowWidgetCallback;
+	using ButtonPtr = WindowWidgetPtr;
+	using CheckBoxPtr = WindowWidgetPtr;
 
-	/** Simple wrapper around raw WinAPI Direct3D 9 device handle. */
-	class D3DWidget : public WindowWidget
+	using D3DWidgetPtr = std::shared_ptr<class D3DWidget>;
+	using WindowPtr = std::shared_ptr<class Window>;
+	using WindowWidgetCallback = std::function<void(long)>;
+
+	/*************** 
+	 * Simple wrapper around raw WinAPI Direct3D 9 device handle. */
+	class D3DWidget : public WindowWidget, public IRenderable
 	{
 	public:
-		IDirect3DDevice9* m_Device;
+		IDirect3DDevice9* const m_Device;
 		explicit D3DWidget(HWND const hwnd, IDirect3DDevice9* const device) : WindowWidget(hwnd), m_Device(device) {}
 
-	public:
-		virtual void Update() = 0;
-		virtual void Render() = 0;
 	};	// class D3DWidget
 
-	/** Simple wrapper around raw WinAPI window. */
-	class Window : public WindowWidget
+	/*************** 
+	 * Simple wrapper around raw WinAPI window. */
+	class Window : public WindowWidget, public IUpdatable
 	{
 	private:
 		std::vector<WindowWidgetCallback> m_Callbacks;
 
 		// -----------------------
+		ADINT LRESULT static CALLBACK WindowProc(HWND const hWnd, UINT const message, WPARAM const wParam, LPARAM const lParam);
 		ADINT WORD GenID() const
 		{
 			return static_cast<WORD>(m_Callbacks.size());
 		}
-		ADINT LRESULT static CALLBACK WindowProc(HWND const hWnd, UINT const message, WPARAM const wParam, LPARAM const lParam)
-		{
-			if (message == WM_CLOSE)
-			{
-				PostQuitMessage(0);
-			}
-			else if (message == WM_CLOSE)
-			{
-				auto const self = reinterpret_cast<Window*>(GetWindowLongW(hWnd, GWLP_USERDATA));
-				if (self != nullptr)
-				{
-					auto const controlID = static_cast<WORD>(LOWORD(wParam));
-					if (self->m_Callbacks.size() < controlID)
-					{
-						auto const& controlCallback = self->m_Callbacks[controlID];
-						auto const isControlChecked = IsDlgButtonChecked(self->m_Hwnd, controlID);
-						controlCallback(isControlChecked);
-					}
-				}
-			}
-			return DefWindowProcW(hWnd, message, wParam, lParam);
-		}
 
 	public:
 		// -----------------------
-		ADAPI explicit Window(Rect const& rect, wchar_t const* const caption = nullptr, bool const fullscreen = false)
-		{
-			WNDCLASSEX static windowClass = {};
-			if (windowClass.cbSize == 0)
-			{
-				windowClass.cbSize = sizeof(WNDCLASSEX);
-				windowClass.style = CS_HREDRAW | CS_VREDRAW;
-				windowClass.lpfnWndProc = WindowProc;
-				windowClass.hInstance = GetModuleHandleW(nullptr);
-				windowClass.hbrBackground = GetSysColorBrush(COLOR_3DFACE);
-				windowClass.lpszClassName = L"PresentationWindowClass1";
-				RegisterClassEx(&windowClass);
-			}
+		ADAPI explicit Window(Rect const& rect, wchar_t const* const caption = nullptr, bool const fullscreen = false);
 
-			auto static const hInstance = GetModuleHandleW(nullptr);
-			if (fullscreen)
-			{
-				// Initializing fullscreen window as normal one, scaled to fullscreen.
-				m_Hwnd = CreateWindowEx(0, windowClass.lpszClassName, caption
-					, WS_POPUP | WS_VISIBLE | WS_OVERLAPPED
-					, 0, 0, Monitor::GetWidth(), Monitor::GetHeight()
-					, m_Hwnd, nullptr, hInstance, nullptr
-					);
-			}
-			else
-			{
-				// Initializing normal window.
-				m_Hwnd = CreateWindowEx(0, windowClass.lpszClassName, caption
-					, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
-					, rect.X, rect.Y, rect.Width, rect.Height
-					, nullptr, nullptr, hInstance, nullptr
-					);
-			}
-			SetWindowLongW(m_Hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-			Hide();
-		}
+		// -----------------------
+		ADAPI void Update() const override;
 
-	public:
 		// ***********************************************************************************************
 		// Static controls.
 		// ***********************************************************************************************
 
 		// -----------------------
-		ADAPI WindowWidgetPtr HorizontalSeparator(Rect const& rect) const
-		{
-			assert(rect.Width != 0 && rect.Height != 0);
-
-			auto const handle = CreateWindowW(L"Static", nullptr, WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ
-				, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr);
-			return std::make_shared<WindowWidget>(handle);
-		}
+		ADAPI HorizontalSeparatorPtr HorizontalSeparator(Rect const& rect) const;
 
 		// -----------------------
-		ADAPI WindowWidgetPtr Label(Rect const& rect, wchar_t const* const text, LabelFlags const flags = LabelFlags::LeftAlignment, TextSize const textSize = TextSize::Default) const
-		{
-			assert(rect.Width != 0 && rect.Height != 0);
-			assert(text != nullptr);
-
-			auto const handle = CreateWindowW(L"Static", text, WS_CHILD | WS_VISIBLE | static_cast<DWORD>(flags)
-				, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr);
-			return std::make_shared<WindowWidget>(handle, textSize);
-		}
+		ADAPI LabelPtr Label(Rect const& rect, wchar_t const* const text, LabelFlags const flags = LabelFlags::LeftAlignment, TextSize const textSize = TextSize::Default) const;
 
 		// -----------------------
-		ADAPI WindowWidgetPtr Image(Rect const& rect, wchar_t const* const path) const
-		{
-			assert(rect.Width != 0 && rect.Height != 0);
-			assert(path != nullptr);
-
-			auto const handle = CreateWindowW(L"Static", nullptr, WS_CHILD | WS_VISIBLE | SS_BITMAP
-				, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr);
-			if (handle != nullptr)
-			{
-				auto const bitmap = LoadImageW(nullptr, path, IMAGE_BITMAP, rect.Width, rect.Height, LR_LOADFROMFILE | LR_DEFAULTSIZE);
-				if (bitmap != nullptr)
-				{
-					SendMessageW(handle, STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(bitmap));
-				}
-			}
-			return std::make_shared<WindowWidget>(handle);
-		}
+#ifdef SUPPORT_LOADING_FROM_FILE
+		ADAPI ImagePtr Image(Rect const& rect, wchar_t const* const path) const;
+#endif	// ifdef SUPPORT_LOADING_FROM_FILE
+		ADAPI ImagePtr Image(Rect const& rect, LoadFromMemory_t, void const* const data) const;
 
 		// ***********************************************************************************************
 		// Inputs.
 		// ***********************************************************************************************
 
 		// -----------------------
-		ADAPI WindowWidgetPtr TextEdit(Rect const& rect, wchar_t const* const text = nullptr, TextEditFlags const flags = TextEditFlags::None, TextSize const textSize = TextSize::Default) const
-		{
-			assert(rect.Width != 0 && rect.Height != 0);
-
-			auto const handle = CreateWindowW(L"Edit", text, WS_CHILD | WS_VISIBLE | static_cast<DWORD>(flags)
-				, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr);
-			return std::make_shared<WindowWidget>(handle, textSize);
-		}
+		ADAPI TextEditPtr TextEdit(Rect const& rect, wchar_t const* const text = nullptr, TextEditFlags const flags = TextEditFlags::None, TextSize const textSize = TextSize::Default) const;
 
 		// ***********************************************************************************************
 		// Buttons.
 		// ***********************************************************************************************
 
 		// -----------------------
-		ADAPI WindowWidgetPtr CheckBox(Rect const& rect, wchar_t const* const text, WindowWidgetCallback&& callback, bool const enabled = false, TextSize const textSize = TextSize::Default)
-		{
-			assert(rect.Width != 0 && rect.Height != 0);
-			assert(text != nullptr);
-
-			auto const id = GenID();
-			m_Callbacks[id] = callback;
-
-			auto const handle = CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE | BS_CHECKBOX
-				, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, reinterpret_cast<HMENU>(id), nullptr, nullptr);
-			CheckDlgButton(m_Hwnd, id, enabled ? BST_CHECKED : BST_UNCHECKED);
-			return std::make_shared<WindowWidget>(handle, textSize);
-		}
+		ADAPI ButtonPtr Button(Rect const& rect, wchar_t const* const text, WindowWidgetCallback&& callback, TextSize const textSize = TextSize::Default);
 
 		// -----------------------
-		ADAPI WindowWidgetPtr Button(Rect const& rect, wchar_t const* const text, WindowWidgetCallback&& callback, TextSize const textSize = TextSize::Default)
-		{
-			assert(rect.Width != 0 && rect.Height != 0);
-			assert(text != nullptr);
-
-			auto const id = GenID();
-			m_Callbacks[id] = callback;
-
-			auto const handle = CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE
-				, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, reinterpret_cast<HMENU>(id), nullptr, nullptr);
-			return std::make_shared<WindowWidget>(handle, textSize);
-		}
+		ADAPI CheckBoxPtr CheckBox(Rect const& rect, wchar_t const* const text, WindowWidgetCallback&& callback, bool const enabled = false, TextSize const textSize = TextSize::Default);
 
 		// ***********************************************************************************************
 		// Direct3D 9.
@@ -434,35 +364,10 @@ namespace Presentation2
 
 		// -----------------------
 		template<typename D3DWidget_t = D3DWidget, typename D3DWidgetPtr_t = std::shared_ptr<D3DWidget_t>>
-		ADAPI D3DWidgetPtr_t Direct3D9(Rect const& rect) const
-		{
-			static_assert(std::is_base_of_v<D3DWidget, D3DWidget_t>, "Invalid 'D3DWidget_t' template parameter type.");
-			assert(rect.Width != 0 && rect.Height != 0);
-
-			// Initializing the Direct3D 9 driver.
-			auto static const direct3D = Direct3DCreate9(D3D_SDK_VERSION);
-
-			// Creating a static widget to render into it.
-			auto const handle = CreateWindowW(L"Static", nullptr, WS_CHILD | WS_VISIBLE
-				, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr);
-
-			// Creating the device.
-			D3DPRESENT_PARAMETERS presentParameters = {};
-			presentParameters.Windowed = TRUE;
-			presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
-			presentParameters.hDeviceWindow = handle;
-			presentParameters.BackBufferFormat = D3DFMT_X8R8G8B8;
-			presentParameters.BackBufferWidth = rect.Width;
-			presentParameters.BackBufferHeight = rect.Height;
-			presentParameters.EnableAutoDepthStencil = TRUE;
-			presentParameters.AutoDepthStencilFormat = D3DFMT_D16;
-			presentParameters.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
-
-			LPDIRECT3DDEVICE9 device = nullptr;
-			direct3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, handle, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &presentParameters, &device);
-			return std::make_shared<D3DWidget_t>(handle, device, rect);
-		}
+		ADAPI D3DWidgetPtr_t Direct3D9(Rect const& rect) const;
 
 	};	// class Window
 
 }	// namespace Presentation2
+
+#include "PresentationFramework.inl"

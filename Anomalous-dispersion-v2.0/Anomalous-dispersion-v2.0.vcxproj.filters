@@ -9,10 +9,27 @@
     <ClCompile Include="..\src\Source-2.0\Program.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Source-2.0\PresentationFramework.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Source-2.0\PresentationEngine.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Source-2.0\PresentationFramework.hpp">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Source-2.0\PresentationEngine.hpp">
+      <Filter>Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\Source-2.0\PresentationFramework.inl">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\src\Source-2.0\PresentationEngine.inl">
+      <Filter>Source</Filter>
+    </None>
   </ItemGroup>
 </Project>
