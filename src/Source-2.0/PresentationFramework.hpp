@@ -174,19 +174,19 @@ namespace Presentation2
 		{}
 		// -----------------------
 		ADINL Rect(UpperLeftPivot_t, int const x, int const y, int const w, int const h)
-			: Rect(UpperLeftPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleX(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
+			: Rect(UpperLeftPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleY(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
 		{}
 		ADINL Rect(UpperRightPivot_t, int const x, int const y, int const w, int const h)
-			: Rect(UpperRightPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleX(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
+			: Rect(UpperRightPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleY(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
 		{}
 		ADINL Rect(LowerLeftPivot_t, int const x, int const y, int const w, int const h)
-			: Rect(LowerLeftPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleX(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
+			: Rect(LowerLeftPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleY(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
 		{}
 		ADINL Rect(LowerRightPivot_t, int const x, int const y, int const w, int const h)
-			: Rect(LowerRightPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleX(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
+			: Rect(LowerRightPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleY(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
 		{}
 		ADINL Rect(CenterPivot_t, int const x, int const y, int const w, int const h)
-			: Rect(CenterPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleX(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
+			: Rect(CenterPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleY(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
 		{}
 		// -----------------------
 		ADINL Rect(int const x, int const y, int const w, int const h)
