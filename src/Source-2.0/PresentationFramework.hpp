@@ -199,7 +199,7 @@ namespace Presentation2
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 
 	using WindowWidgetPtr = std::shared_ptr<class WindowWidget>;
-	ADAPI bool extern g_IsExitting;
+	ADAPI bool extern g_IsExitRequested;
 	
 	enum class TextSize : DWORD
 	{
@@ -214,7 +214,7 @@ namespace Presentation2
 	 * Simple wrapper around raw WinAPI HWND handle. */
 	class WindowWidget
 	{
-	protected:
+	public:
 		HWND m_Hwnd;
 
 	public:
@@ -309,13 +309,18 @@ namespace Presentation2
 	class Window : public WindowWidget, public IUpdatable
 	{
 	private:
+		WORD static const s_idOffset = 13;
 		std::vector<WindowWidgetCallback> m_Callbacks;
 
 		// -----------------------
 		ADINT LRESULT static CALLBACK WindowProc(HWND const hWnd, UINT const message, WPARAM const wParam, LPARAM const lParam);
 		ADINT WORD GenID() const
 		{
-			return static_cast<WORD>(m_Callbacks.size());
+			return static_cast<WORD>(m_Callbacks.size() + s_idOffset);
+		}
+		ADINT bool CheckID(WORD const id) const
+		{
+			return id - s_idOffset < m_Callbacks.size();
 		}
 
 	public:

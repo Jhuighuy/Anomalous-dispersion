@@ -18,6 +18,12 @@
 #include <glm/glm.hpp>
 #pragma warning(pop)
 
+#pragma warning(push, 0)
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/transform.hpp>
+#pragma warning(pop)
+
 namespace Presentation2
 {
 	/** A small naming fix for the OpenGL Mathematics library. */
@@ -45,19 +51,28 @@ namespace Presentation2
 	// Camera setup.
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 
-	/** Describes a base camera. */
+	/*************** 
+	 * Describes a base camera. */
 	struct Camera : public IUpdatable
 	{
 	public:
-		FLOAT FieldOfView = F_PI / 3.0f;
+		FLOAT FieldOfView = F_PI / 1.5f;
 		FLOAT NearClippingPlane = 0.01f, FarClippingPlane = 100.0f;
 		dxm::vec3 Position;
 		dxm::vec3 Rotation;
 	protected:
 		IDirect3DDevice9* const m_Device;
-	private:
-		FLOAT m_Width;
-		FLOAT m_Height;
+		RECT m_Rect;
+
+		// -----------------------
+		ADINL auto GetContextWidth() const
+		{
+			return static_cast<FLOAT>(m_Rect.right - m_Rect.left);
+		}
+		ADINL auto GetContextHeight() const
+		{
+			return static_cast<FLOAT>(m_Rect.bottom - m_Rect.top);
+		}
 
 	public:
 
@@ -69,23 +84,32 @@ namespace Presentation2
 
 	};	// struct Camera
 
-	/** Describes an orbital mouse-controlled camera. */
+	/*************** 
+	 * Describes an orbital mouse-controlled camera. */
 	struct OrbitalCamera final : public Camera
 	{
+	private:
+		FLOAT mutable m_CameraRotationYaw = -F_PI / 2.0f;	/// @todo Calibrate value here.
+		FLOAT mutable m_CameraRotationPitch = 0.0f;
+		POINT mutable m_PrevMousePosition = {};
+		dxm::mat4 mutable m_ProjectionMatrix;
+		dxm::mat4 mutable m_ViewMatrix;
 	public:
-		FLOAT FieldOfView = F_PI / 3.0f;
-		FLOAT NearClippingPlane = 0.01f, FarClippingPlane = 100.0f;
-		dxm::vec3 Position;
-		dxm::vec3 Rotation;
-
-	public:
+		dxm::vec3 const RotationCenter = { 0.0f, 1.2f, 2.0f };	/// @todo And here.
+		dxm::vec3 const CenterOffset = { 0.0f, 0.0f, -1.8f };
+		dxm::vec3 const Up = { 0.0f, 1.0f, 0.0f };
 
 		// -----------------------
-		ADAPI explicit OrbitalCamera(IDirect3DDevice9* const device);
+		ADAPI explicit OrbitalCamera(IDirect3DDevice9* const device)
+			: Camera(device)
+		{
+			m_ProjectionMatrix = dxm::perspectiveFovLH(F_PI / 3.0f, GetContextWidth(), GetContextHeight(), 0.01f, 100.0f);
+			Update(true);
+		}
 
 		// -----------------------
-		ADAPI void Update() const override;
-
+		ADINL void Update() const override { Update(false); }
+		ADAPI void Update(bool const forceUpdate) const;
 	};	// struct OrbitalCamera
 
 	using CameraPtr = std::shared_ptr<Camera>;
@@ -95,7 +119,8 @@ namespace Presentation2
 	// Mesh setup.
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 
-	/** Describes a single colored line vertex. */
+	/*************** 
+	 * Describes a single colored line vertex. */
 	struct LineVertex final
 	{
 		DWORD static const FVF = D3DFVF_XYZ | D3DFVF_DIFFUSE;
@@ -108,7 +133,8 @@ namespace Presentation2
 		{}
 	};	// struct LineVertex
 
-	/** Describes a single colored textured triangle vertex with a normal. */
+	/*************** 
+	 * Describes a single colored textured triangle vertex with a normal. */
 	struct TriangleVertex final
 	{
 		DWORD static const FVF = D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1;
@@ -123,7 +149,8 @@ namespace Presentation2
 		{}
 	};	// struct TriangleVertex
 
-	/** Describes a template immutable mesh. */
+	/*************** 
+	 * Describes a template immutable mesh. */
 	template<typename TVertex, D3DPRIMITIVETYPE TPrimitiveType>
 	struct Mesh : public INonCopyable
 	{
@@ -138,7 +165,7 @@ namespace Presentation2
 		UINT mutable m_PrimitivesCount = 0;
 
 	protected:
-		ADINT void Update(Vertex const* const vertices, UINT const verticesCount) const;
+		ADINT void UpdateVertexBuffer(Vertex const* const vertices, UINT const verticesCount) const;
 
 	public:
 
@@ -151,7 +178,7 @@ namespace Presentation2
 		ADINL Mesh(IDirect3DDevice9* const device, Vertex const* const vertices, UINT const verticesCount) 
 			: Mesh(device)
 		{
-			this->Update(device, vertices, verticesCount);
+			this->UpdateVertexBuffer(device, vertices, verticesCount);
 		}
 		ADINL virtual ~Mesh()
 		{
@@ -162,11 +189,11 @@ namespace Presentation2
 		}
 
 		// -----------------------
-		ADINL virtual auto GetVertexBuffer() const
+		ADINL virtual IDirect3DVertexBuffer9* GetVertexBuffer() const
 		{
 			return m_VertexBuffer;
 		}
-		ADINL virtual auto GetPrimitivesCount() const
+		ADINL virtual UINT GetPrimitivesCount() const
 		{
 			return m_PrimitivesCount;
 		}
@@ -178,9 +205,10 @@ namespace Presentation2
 	using TriangleMeshPtr = std::shared_ptr<TriangleMesh>;
 	using LineMeshPtr = std::shared_ptr<LineMesh>;
 	
-	/** Describes a template mutable mesh. */
+	/*************** 
+	 * Describes a template mutable mesh. */
 	template<typename TVertex = TriangleVertex, D3DPRIMITIVETYPE TPrimitiveType = D3DPT_TRIANGLELIST>
-	struct MutableMesh final : public Mesh<TVertex, TPrimitiveType>, public IRenderable
+	struct MutableMesh final : public Mesh<TVertex, TPrimitiveType>
 	{
 		auto static const PrimitiveType = TPrimitiveType;
 		using Vertex = TVertex;
@@ -189,53 +217,42 @@ namespace Presentation2
 	private:
 		std::vector<Vertex> m_VertexAccumulator;
 		std::mutex mutable m_Lock;
-		bool mutable m_IsSynced = false;
-
-	protected:
-		// -----------------------
-		ADINL void Update() const override
-		{
-			/* Locking the object until vertex buffer hasn't been fully regenereated. */
-			std::lock_guard<std::mutex> lock(m_Lock);
-			this->Base::Update(m_VertexAccumulator.data(), m_VertexAccumulator.size());
-		}
-		ADINL void Render() const override;
 
 	public:
 		// -----------------------
-		ADINL explicit MutableMesh(IDirect3DDevice9* const device) : Mesh(device) {}
+		ADINL explicit MutableMesh(IDirect3DDevice9* const device) 
+			: Mesh(device) {}
 
 		// -----------------------
+		ADINL void BeginUpdateVertices()
+		{
+			m_Lock.lock();
+			m_VertexAccumulator.clear();
+		}
 		ADINL void AddVertex(Vertex const& vertex)
 		{
 			m_VertexAccumulator.push_back(vertex);
-			m_IsSynced = false;
 		}
-		ADINL void ClearVertices()
+		ADINL void EndUpdateVertices()
 		{
-			m_VertexAccumulator.clear();
-			m_IsSynced = false;
+			this->Base::UpdateVertexBuffer(m_VertexAccumulator.data(), m_VertexAccumulator.size());
+			m_Lock.unlock();
 		}
 
 		// -----------------------
-		ADINL auto GetVertexBuffer() const override
+		ADINL IDirect3DVertexBuffer9* GetVertexBuffer() const override
 		{
-			if (!m_IsSynced)
-			{
-				Update();
-				m_IsSynced = true;
-			}
-			return this->Base::GetVertexBuffer();
+			/* If we can lock the mesh - it is not being updated - can return the real vertex buffer. */
+			std::unique_lock<std::mutex> lock(m_Lock, std::try_to_lock);
+			return lock.owns_lock() ? this->Base::GetVertexBuffer() : nullptr;
 		}
-		ADINL auto GetPrimitivesCount() const override
+		ADINL UINT GetPrimitivesCount() const override
 		{
-			if (!m_IsSynced)
-			{
-				Update();
-				m_IsSynced = true;
-			}
-			return this->Base::GetPrimitivesCount();
+			/* If we can lock the mesh - it is not being updated - can return the real primitives count. */
+			std::unique_lock<std::mutex> lock(m_Lock, std::try_to_lock);
+			return lock.owns_lock() ? this->Base::GetPrimitivesCount() : 0;
 		}
+
 	};	// struct MutableMesh
 
 	using TriangleMutableMesh = MutableMesh<TriangleVertex, D3DPT_TRIANGLELIST>;
@@ -244,7 +261,8 @@ namespace Presentation2
 	using TriangleMutableMeshPtr = std::shared_ptr<TriangleMutableMesh>;
 	using LineMutableMeshPtr = std::shared_ptr<LineMutableMesh>;
 
-	/** Describes a template mesh renderer. */
+	/*************** 
+	 * Describes a template mesh renderer. */
 	template<typename TMesh = TriangleMutableMesh, BOOL TIsTransparent = FALSE, BOOL TIsLit = FALSE>
 	struct MeshRenderer final : public IRenderable
 	{
@@ -255,6 +273,7 @@ namespace Presentation2
 		auto static const PrimitiveType = Mesh::PrimitiveType;
 
 	public:
+		dxm::vec3 PositionOffset;
 		dxm::vec3 Position;
 		dxm::vec3 Rotation;
 		dxm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
@@ -307,20 +326,20 @@ namespace Presentation2
 
 	// -----------------------
 #ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI static void LoadOBJ(wchar_t const* const path, TriangleMutableMesh& mesh, dxm::argb const color = 0xFFFFFFFF);
+	ADAPI extern void LoadOBJ(wchar_t const* const path, TriangleMutableMeshPtr const& mesh, dxm::argb const color = ~0);
 #endif	// ifdef SUPPORT_LOADING_FROM_FILE
 
 	// -----------------------
 #ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI static void LoadTexture(IDirect3DDevice9* const device, wchar_t const* const path, IDirect3DTexture9** const texturePtr);
+	ADAPI extern void LoadTexture(IDirect3DDevice9* const device, wchar_t const* const path, IDirect3DTexture9** const texturePtr);
 #endif	// ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI static void LoadTexture(IDirect3DDevice9* const device, LoadFromMemory_t, void const* const compiledData, UINT const width, UINT const height, IDirect3DTexture9** const texturePtr);
+	ADAPI extern void LoadTexture(IDirect3DDevice9* const device, LoadFromMemory_t, void const* const compiledData, UINT const width, UINT const height, IDirect3DTexture9** const texturePtr);
 
 	// -----------------------
 #ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI static void LoadPixelShader(IDirect3DDevice9* const device, wchar_t const* path, IDirect3DPixelShader9** const pixelShaderPtr);
+	ADAPI extern void LoadPixelShader(IDirect3DDevice9* const device, wchar_t const* path, IDirect3DPixelShader9** const pixelShaderPtr);
 #endif	// ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI static void LoadPixelShader(IDirect3DDevice9* const device, LoadFromMemory_t, void const* const data, IDirect3DPixelShader9** const pixelShaderPtr);
+	ADAPI extern void LoadPixelShader(IDirect3DDevice9* const device, LoadFromMemory_t, void const* const data, IDirect3DPixelShader9** const pixelShaderPtr);
 
 }	// namespace Presentation2
 

@@ -20,15 +20,13 @@ namespace Presentation2
 
 	// -----------------------
 	template<typename TVertex, D3DPRIMITIVETYPE TPrimitiveType>
-	ADINT void Mesh<TVertex, TPrimitiveType>::Update(Vertex const* const vertices, UINT const verticesCount) const
+	ADINT void Mesh<TVertex, TPrimitiveType>::UpdateVertexBuffer(Vertex const* const vertices, UINT const verticesCount) const
 	{
-		assert(!((vertices == nullptr) ^ (verticesCount == 0)));
-
 		auto const verticesSize = verticesCount * sizeof(Vertex);
 		if (m_VertexBuffer != nullptr)
 		{
 			/* Buffer already exists, but we can upload new data only if
-			* buffer size is equal or large than data size. */
+			 * buffer size is equal or large than data size. */
 			D3DVERTEXBUFFER_DESC vertexBufferDesc = {};
 			Utils::RuntimeCheckH(m_VertexBuffer->GetDesc(&vertexBufferDesc));
 			if (vertexBufferDesc.Size < verticesSize)
@@ -43,7 +41,7 @@ namespace Presentation2
 			if (m_VertexBuffer == nullptr)
 			{
 				/* Buffer does not exist. We need to create the new of the
-				* corresponding size. */
+				 * corresponding size. */
 				Utils::RuntimeCheckH(m_Device->CreateVertexBuffer(verticesSize, 0, Vertex::FVF, D3DPOOL_MANAGED, &m_VertexBuffer, nullptr));
 			}
 			assert(vertices != nullptr);
@@ -57,26 +55,13 @@ namespace Presentation2
 	}
 
 	// -----------------------
-	template<typename TVertex, D3DPRIMITIVETYPE TPrimitiveType>
-	ADAPI void MutableMesh<TVertex, TPrimitiveType>::Render() const
-	{
-		if (m_Lock.try_lock())
-		{
-			/* Nothing locks the vertex buffer, we can safely render. */
-			Utils::RuntimeCheckH(this->m_Device->SetFVF(Base::FVF));
-			Utils::RuntimeCheckH(this->m_Device->SetStreamSource(0, GetVertexBuffer(), 0, sizeof(Vertex)));
-			Utils::RuntimeCheckH(this->m_Device->DrawPrimitive(PrimitiveType, 0, GetPrimitivesCount()));
-			m_Lock.unlock();
-		}
-	}
-
-	// -----------------------
 	template<typename TMesh, BOOL TIsTransparent, BOOL TIsLit>
 	ADAPI void MeshRenderer<TMesh, TIsTransparent, TIsLit>::Render() const
 	{
 		/* Setting up the transformations. */
 		auto const matrix = dxm::translate(Position)
 			* dxm::toMat4(dxm::quat(dxm::vec3(Rotation.x, Rotation.y, Rotation.z)))
+			* dxm::translate(PositionOffset)
 			* dxm::scale(Scale);
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_WORLD, dxm::ptr(matrix)));
 
@@ -91,8 +76,10 @@ namespace Presentation2
 		Utils::RuntimeCheckH(m_Device->SetTexture(0, Texture));
 		Utils::RuntimeCheckH(m_Device->SetPixelShader(PixelShader));
 
-		/* Renderin the mesh data. */
-		m_Mesh->Render();
+		/* Setting up and rendering the mesh data. */
+		Utils::RuntimeCheckH(m_Device->SetFVF(FVF));
+		Utils::RuntimeCheckH(m_Device->SetStreamSource(0, m_Mesh->GetVertexBuffer(), 0, sizeof(Vertex)));
+		Utils::RuntimeCheckH(m_Device->DrawPrimitive(PrimitiveType, 0, m_Mesh->GetPrimitivesCount()));
 	}
 
 }	// namespace Presentation2

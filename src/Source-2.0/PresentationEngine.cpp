@@ -17,29 +17,53 @@ namespace Presentation2
 
 	// -----------------------
 	ADAPI Camera::Camera(IDirect3DDevice9* const device) 
-		: m_Device(device), m_Width(0.0f), m_Height(0.0f)
+		: m_Device(device), m_Rect{}
 	{
 		assert(m_Device != nullptr);
 
 		D3DDEVICE_CREATION_PARAMETERS deviceCreationParameters = {};
 		Utils::RuntimeCheckH(m_Device->GetCreationParameters(&deviceCreationParameters));
+		Utils::RuntimeCheck(GetWindowRect(deviceCreationParameters.hFocusWindow, &m_Rect));
 
-		RECT deviceContextRect = {};
-		Utils::RuntimeCheck(GetWindowRect(deviceCreationParameters.hFocusWindow, &deviceContextRect));
-		m_Width = static_cast<float>(deviceContextRect.right - deviceContextRect.left);
-		m_Height = static_cast<float>(deviceContextRect.bottom - deviceContextRect.top);
-
-		Update();
+		Camera::Update();
 	}
 
 	// -----------------------
 	ADAPI void Camera::Update() const
 	{
-		auto const projectionMatrix = dxm::perspectiveFovLH(FieldOfView, m_Width, m_Height, NearClippingPlane, FarClippingPlane);
+		auto const projectionMatrix = dxm::perspectiveFovLH<FLOAT>(FieldOfView, GetContextWidth(), GetContextHeight(), NearClippingPlane, FarClippingPlane);
 		auto const viewMatrix = dxm::inverse(dxm::translate(Position) * dxm::toMat4(dxm::quat(dxm::vec3(Rotation.x, Rotation.y, Rotation.z))));
 
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_PROJECTION, dxm::ptr(projectionMatrix)));
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_VIEW, dxm::ptr(viewMatrix)));
+	}
+
+	// -----------------------
+	ADAPI void OrbitalCamera::Update(bool const forceUpdate) const
+	{
+		if (GetAsyncKeyState(VK_LBUTTON) != 0 || forceUpdate)
+		{
+			POINT mouseCurrentPosition = { };
+			GetCursorPos(&mouseCurrentPosition);
+			if (PtInRect(&m_Rect, mouseCurrentPosition) || forceUpdate)
+			{
+				/* Mouse has been moved inside the context rect while left button has been pressed. */
+				auto const deltaYaw = forceUpdate ? 0.0f : static_cast<FLOAT>(mouseCurrentPosition.y - m_PrevMousePosition.y) / GetContextWidth();
+				auto const deltaPitch = forceUpdate ? 0.0f : static_cast<FLOAT>(mouseCurrentPosition.x - m_PrevMousePosition.x) / GetContextHeight();
+
+				m_CameraRotationYaw += deltaPitch;
+				m_CameraRotationPitch = dxm::clamp(m_CameraRotationPitch + deltaYaw, -F_PI / 12.0f, F_PI / 7.5f);
+
+				auto const translation = dxm::translate(glm::vec3(RotationCenter));
+				auto const cameraRotation = dxm::yawPitchRoll(m_CameraRotationYaw, m_CameraRotationPitch, 0.0f);
+				m_ViewMatrix = dxm::lookAtLH(dxm::vec3(translation * cameraRotation * dxm::vec4(CenterOffset, 1.0f))
+					, RotationCenter, dxm::vec3(cameraRotation * dxm::vec4(Up, 1.0f)));
+			}
+		}
+		GetCursorPos(&m_PrevMousePosition);
+
+		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_VIEW, dxm::ptr(m_ViewMatrix)));
+		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_PROJECTION, dxm::ptr(m_ProjectionMatrix)));
 	}
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
@@ -48,7 +72,7 @@ namespace Presentation2
 
 	// -----------------------
 #ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI static void LoadOBJ(wchar_t const* const path, TriangleMutableMesh& mesh, dxm::argb const color)
+	ADAPI void LoadOBJ(wchar_t const* const path, TriangleMutableMeshPtr const& mesh, dxm::argb const color)
 	{
 		assert(path != nullptr);
 
@@ -62,18 +86,12 @@ namespace Presentation2
 		std::vector<dxm::vec3> normalBuffer;
 
 		FILE* file = nullptr;
-		Utils::RuntimeCheck(_wfopen_s(&file, path, L"r"));
+		Utils::RuntimeCheck(_wfopen_s(&file, path, L"r") == 0);
 
 		/* Reading the file.. */
-		while (true)
+		for (char lineHeader[16] = {}; fscanf_s(file, "%s", lineHeader, dxm::countof(lineHeader)) != EOF;)
 		{
-			char lineHeader[16] = {};
-			if (fscanf_s(file, "%s", lineHeader, dxm::countof(lineHeader)) == EOF)
-			{
-				/* Reading first word of the line.. */
-				break;
-			}
-
+			/* Reading first word of the line.. */
 			if (lineHeader[0] == 'v' && lineHeader[1] == '\0')
 			{
 				/* .. It is a vertex coord. */
@@ -99,13 +117,12 @@ namespace Presentation2
 			{
 				/* .. It is a face. */
 				vertexIndices.resize(vertexIndices.size() + 3);
-				texCoordIndices.resize(vertexIndices.size() + 3);
-				normalIndices.resize(vertexIndices.size() + 3);
-
+				texCoordIndices.resize(texCoordIndices.size() + 3);
+				normalIndices.resize(normalIndices.size() + 3);
 				Utils::RuntimeCheck(fscanf_s(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n"
 					, &vertexIndices[vertexIndices.size() - 3], &texCoordIndices[texCoordIndices.size() - 3], &normalIndices[normalIndices.size() - 3]
 					, &vertexIndices[vertexIndices.size() - 2], &texCoordIndices[texCoordIndices.size() - 2], &normalIndices[normalIndices.size() - 2]
-					, &vertexIndices[vertexIndices.size() - 1], &texCoordIndices[texCoordIndices.size() - 1], &normalIndices[normalIndices.size() - 1]) != 9);
+					, &vertexIndices[vertexIndices.size() - 1], &texCoordIndices[texCoordIndices.size() - 1], &normalIndices[normalIndices.size() - 1]) == 9);
 			}
 			else
 			{
@@ -118,20 +135,22 @@ namespace Presentation2
 		_fclose_nolock(file);
 
 		/* Unwrapping internal OBJ format.. */
+		mesh->BeginUpdateVertices();
 		for (auto cnt = 0u; cnt < vertexIndices.size(); ++cnt)
 		{
 			auto const& vertex = vertexBuffer[vertexIndices[cnt] - 1];
 			auto const& texCoord = texCoordBuffer[texCoordIndices[cnt] - 1];
 			auto const& normal = normalBuffer[normalIndices[cnt] - 1];
 
-			mesh.AddVertex({ vertex, normal, color, texCoord });
+			mesh->AddVertex({ vertex, normal, color, texCoord });
 		}
+		mesh->EndUpdateVertices();
 	}
 #endif	// ifdef SUPPORT_LOADING_FROM_FILE
 
 	// -----------------------
 #ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI static void LoadTexture(IDirect3DDevice9* const device, wchar_t const* const path, IDirect3DTexture9** const texturePtr)
+	ADAPI void LoadTexture(IDirect3DDevice9* const device, wchar_t const* const path, IDirect3DTexture9** const texturePtr)
 	{
 		assert(device != nullptr);
 		assert(path != nullptr);
@@ -144,7 +163,7 @@ namespace Presentation2
 		Utils::RuntimeCheckH(D3DXCreateTextureFromFileW(device, path, texturePtr));
 	}
 #endif	// ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI static void LoadTexture(IDirect3DDevice9* const device, LoadFromMemory_t, void const* const data, UINT const width, UINT const height, IDirect3DTexture9** const texturePtr)
+	ADAPI void LoadTexture(IDirect3DDevice9* const device, LoadFromMemory_t, void const* const data, UINT const width, UINT const height, IDirect3DTexture9** const texturePtr)
 	{
 		assert(device != nullptr);
 		assert(data != nullptr);
@@ -171,7 +190,7 @@ namespace Presentation2
 
 	// -----------------------
 #ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI static void LoadPixelShader(IDirect3DDevice9* const device, wchar_t const* const path, IDirect3DPixelShader9** const pixelShaderPtr)
+	ADAPI void LoadPixelShader(IDirect3DDevice9* const device, wchar_t const* const path, IDirect3DPixelShader9** const pixelShaderPtr)
 	{
 		assert(device != nullptr);
 		assert(path != nullptr);
@@ -191,7 +210,7 @@ namespace Presentation2
 		LoadPixelShader(device, LoadFromMemory, pixelShaderCode->GetBufferPointer(), pixelShaderPtr);
 	}
 #endif	// ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI static void LoadPixelShader(IDirect3DDevice9* const device, LoadFromMemory_t, void const* const compiledData, IDirect3DPixelShader9** const pixelShaderPtr)
+	ADAPI void LoadPixelShader(IDirect3DDevice9* const device, LoadFromMemory_t, void const* const compiledData, IDirect3DPixelShader9** const pixelShaderPtr)
 	{
 		assert(device != nullptr);
 		assert(compiledData != nullptr);

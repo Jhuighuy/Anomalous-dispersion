@@ -15,9 +15,10 @@ namespace Presentation2
 	ADINT void Monitor::GetResolution(INT& width, INT& height)
 	{
 		RECT static resolution = {};
-		if (resolution.right != 0)
+		if (resolution.right == 0)
 		{
-			Utils::RuntimeCheck(GetWindowRect(Utils::RuntimeCheck(GetDesktopWindow()), &resolution));
+			auto const desktopWindow = Utils::RuntimeCheck(GetDesktopWindow());
+			Utils::RuntimeCheck(GetWindowRect(desktopWindow, &resolution));
 		}
 		width = resolution.right - resolution.left;
 		height = resolution.bottom - resolution.top;
@@ -39,7 +40,7 @@ namespace Presentation2
 			HFONT Handle;
 		} static FontsCache[static_cast<size_t>(TextSize::COUNT)] = { { 20 }, { 30 }, { 40 }, { 75 } };
 		auto& font = FontsCache[static_cast<size_t>(textSize)];
-		if (font.Handle != nullptr)
+		if (font.Handle == nullptr)
 		{
 			/* Lazily loading the system font. */
 			font.Handle = Utils::RuntimeCheck(CreateFontW(Monitor::UpscaleHeight(font.Height), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
@@ -52,7 +53,7 @@ namespace Presentation2
 	// Window widgets and controls.
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 
-	ADAPI bool g_IsExitting = false;
+	ADAPI bool g_IsExitRequested = false;
 
 	// -----------------------
 	ADINT LRESULT CALLBACK Window::WindowProc(HWND const hWnd, UINT const message, WPARAM const wParam, LPARAM const lParam)
@@ -60,7 +61,7 @@ namespace Presentation2
 		if (message == WM_CLOSE)
 		{
 			PostQuitMessage(0);
-			g_IsExitting = true;
+			g_IsExitRequested = true;
 		}
 		else if (message == WM_COMMAND)
 		{
@@ -69,11 +70,12 @@ namespace Presentation2
 			if (self != nullptr)
 			{
 				auto const controlID = static_cast<WORD>(LOWORD(wParam));
-				if (self->m_Callbacks.size() < controlID)
+				if (self->CheckID(controlID))
 				{
-					auto const& controlCallback = self->m_Callbacks[controlID];
+					auto const& controlCallback = self->m_Callbacks[controlID - s_idOffset];
 					auto const isControlChecked = IsDlgButtonChecked(self->m_Hwnd, controlID);
-					controlCallback(isControlChecked);
+					CheckDlgButton(self->m_Hwnd, controlID, !isControlChecked ? BST_CHECKED : BST_UNCHECKED);
+					controlCallback(!isControlChecked);
 				}
 			}
 		}
@@ -102,7 +104,7 @@ namespace Presentation2
 			m_Hwnd = Utils::RuntimeCheck(CreateWindowExW(0, windowClass.lpszClassName, caption
 			    , WS_POPUP | WS_VISIBLE | WS_OVERLAPPED
 			    , 0, 0, Monitor::GetWidth(), Monitor::GetHeight()
-			    , m_Hwnd, nullptr, hInstance, nullptr
+			    , nullptr, nullptr, hInstance, nullptr
 				));
 		}
 		else
@@ -114,19 +116,14 @@ namespace Presentation2
 			    , nullptr, nullptr, hInstance, nullptr
 				));
 		}
-		Utils::RuntimeCheck(SetWindowLongW(m_Hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this)));
+		SetWindowLongW(m_Hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 		Hide();
 	}
 
 	// -----------------------
 	ADAPI void Window::Update() const
 	{
-		MSG msg;
-		while (GetMessage(&msg, m_Hwnd, 0, 0))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+		
 	}
 
 	// ***********************************************************************************************

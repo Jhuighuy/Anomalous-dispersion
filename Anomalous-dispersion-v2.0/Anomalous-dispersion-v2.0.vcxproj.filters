@@ -23,6 +23,9 @@
     <ClInclude Include="..\src\Source-2.0\PresentationEngine.hpp">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Source-2.0\PresentationWidget.hpp">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\Source-2.0\PresentationFramework.inl">

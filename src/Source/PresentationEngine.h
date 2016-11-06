@@ -369,7 +369,6 @@ namespace Presentation1
 		/// @todo Load from compiled data here.
 		ID3DXBuffer* pixelShaderCode = nullptr;
 		ID3DXBuffer* pixelShaderErrors = nullptr;
-		ID3DXConstantTable* constantTable = nullptr;
 		if (FAILED(D3DXCompileShaderFromFile(path, nullptr, nullptr, "main", "ps_2_0", 0, &pixelShaderCode, &pixelShaderErrors, nullptr)))
 		{
 			MessageBoxA(nullptr, static_cast<char const*>(pixelShaderErrors->GetBufferPointer()), "Error", MB_OK);

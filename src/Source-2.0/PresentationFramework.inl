@@ -27,7 +27,7 @@ namespace Presentation2
 		presentParameters.Windowed = TRUE;
 		presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
 		presentParameters.hDeviceWindow = handle;
-		presentParameters.BackBufferFormat = D3DFMT_A8R8G8B8;
+		presentParameters.BackBufferFormat = D3DFMT_X8R8G8B8;
 		presentParameters.BackBufferWidth = rect.Width;
 		presentParameters.BackBufferHeight = rect.Height;
 		presentParameters.EnableAutoDepthStencil = TRUE;

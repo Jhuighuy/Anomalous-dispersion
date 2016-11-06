@@ -3,7 +3,7 @@
 // Computational Methods @ Computational Mathematics & Cybernetics, MSU.
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 #pragma once
-#include "PresentationEngine.h"
+#include "PresentationEngine.hpp"
 
 #include <ctime>
 #define USE_RAYS_RENDERING 1
@@ -15,7 +15,78 @@
 #include <glm/gtx/rotate_vector.hpp>
 #pragma warning(pop)
 
-namespace Presentation1
+#include <array>
+typedef std::array<double, 3> Rgb;
+
+inline Rgb cie1931WavelengthToXYZFit(double wavelength) {
+	double wave = wavelength;
+
+	double x;
+	{
+		double t1 = (wave - 442.0) * ((wave < 442.0) ? 0.0624 : 0.0374);
+		double t2 = (wave - 599.8) * ((wave < 599.8) ? 0.0264 : 0.0323);
+		double t3 = (wave - 501.1) * ((wave < 501.1) ? 0.0490 : 0.0382);
+
+		x = 0.362 * exp(-0.5 * t1 * t1)
+			+ 1.056 * exp(-0.5 * t2 * t2)
+			- 0.065 * exp(-0.5 * t3 * t3);
+	}
+
+	double y;
+	{
+		double t1 = (wave - 568.8) * ((wave < 568.8) ? 0.0213 : 0.0247);
+		double t2 = (wave - 530.9) * ((wave < 530.9) ? 0.0613 : 0.0322);
+
+		y = 0.821 * exp(-0.5 * t1 * t1)
+			+ 0.286 * exp(-0.5 * t2 * t2);
+	}
+
+	double z;
+	{
+		double t1 = (wave - 437.0) * ((wave < 437.0) ? 0.0845 : 0.0278);
+		double t2 = (wave - 459.0) * ((wave < 459.0) ? 0.0385 : 0.0725);
+
+		z = 1.217 * exp(-0.5 * t1 * t1)
+			+ 0.681 * exp(-0.5 * t2 * t2);
+	}
+
+	return Rgb{ x, y, z };
+}
+inline double srgbXYZ2RGBPostprocess(double c) {
+	// clip if c is out of range
+	c = c > 1 ? 1 : (c < 0 ? 0 : c);
+
+	// apply the color component transfer function
+	c = c <= 0.0031308 ? c * 12.92 : 1.055 * pow(c, 1. / 2.4) - 0.055;
+
+	return c;
+}
+inline Rgb srgbXYZ2RGB(Rgb xyz) {
+	double x = xyz[0];
+	double y = xyz[1];
+	double z = xyz[2];
+
+	double rl = 3.2406255 * x + -1.537208  * y + -0.4986286 * z;
+	double gl = -0.9689307 * x + 1.8757561 * y + 0.0415175 * z;
+	double bl = 0.0557101 * x + -0.2040211 * y + 1.0569959 * z;
+
+	return {
+			srgbXYZ2RGBPostprocess(rl),
+			srgbXYZ2RGBPostprocess(gl),
+			srgbXYZ2RGBPostprocess(bl)
+	};
+}
+inline D3DCOLOR wavelengthToRGB(double wavelength) {
+	Rgb xyz = cie1931WavelengthToXYZFit(wavelength);
+	Rgb rgb = srgbXYZ2RGB(xyz);
+
+	D3DCOLOR co = D3DCOLOR_ARGB(0xFF / 8,
+		(D3DCOLOR)(rgb[0] * 0xFF), (D3DCOLOR)(rgb[1] * 0xFF), (D3DCOLOR)(rgb[2] * 0xFF)
+	);
+	return co;
+}
+
+namespace Presentation2
 {
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -150,14 +221,18 @@ namespace Presentation1
 		FLOAT RotationZ = 0.0f;
 
 	private:
-		TriangleMutableMeshRenderer<TRUE, TRUE> m_PrismMesh;
-		TriangleMutableMeshRenderer<FALSE, TRUE> m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal;
+		TriangleMutableMeshRendererPtr<TRUE, TRUE> m_PrismMesh;
+		TriangleMutableMeshRendererPtr<FALSE, TRUE> m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal;
 
 	public:
-		Prism(IDirect3DDevice9* const device, TriangleMutableMesh const& prismMesh
-			, TriangleMutableMesh const& prismHolderBase, TriangleMutableMesh const& prismHolderLeg, TriangleMutableMesh const& prismHolderGimbal)
-			: m_PrismMesh(device, prismMesh)
-			, m_PrismHolderBase(device, prismHolderBase), m_PrismHolderLeg(device, prismHolderLeg), m_PrismHolderGimbal(device, prismHolderGimbal)
+		Prism(IDirect3DDevice9* const device, TriangleMutableMeshPtr const& prismMesh
+			, TriangleMutableMeshPtr const& prismHolderBase, TriangleMutableMeshPtr const& prismHolderLeg, TriangleMutableMeshPtr const& prismHolderGimbal)
+			// -----------------------
+			: m_PrismMesh(std::make_shared<TriangleMutableMeshRenderer<TRUE, TRUE>>(device, prismMesh))
+			// -----------------------
+			, m_PrismHolderBase(std::make_shared<TriangleMutableMeshRenderer<FALSE, TRUE>>(device, prismHolderBase))
+			, m_PrismHolderLeg(std::make_shared<TriangleMutableMeshRenderer<FALSE, TRUE>>(device, prismHolderLeg))
+			, m_PrismHolderGimbal(std::make_shared<TriangleMutableMeshRenderer<FALSE, TRUE>>(device, prismHolderGimbal))
 		{
 		}
 
@@ -172,16 +247,17 @@ namespace Presentation1
 				{ &AirGovnoRefractiveIndex, &GovnoAirRefractiveIndex },
 			};
 
-			IndexFunc static const absorptionIndexFuncTable[] {
+			IndexFunc static const absorptionIndexFuncTable[]{
 				&DummyIndex,
 				&GovnoAbsorptionIndex
 			};
-			
+
 			auto const& refractiveIndexFuncs = refractiveIndexFuncsTable[static_cast<size_t>(Type)];
-			auto const absorptionIndexFunc = absorptionIndexFuncTable[static_cast<size_t>(Type)];;
+			auto const absorptionIndexFunc = absorptionIndexFuncTable[static_cast<size_t>(Type)];
 
 			auto const transformationMatrix = dxm::translate(Position)
-				* dxm::toMat4(dxm::quat(dxm::vec3(RotationX, 0.0f, RotationZ))) 
+				* dxm::toMat4(dxm::quat(dxm::vec3(RotationX, 0.0f, RotationZ)))
+				* dxm::translate(glm::vec3{ 0, -0.1f + 0.2f / 3, 0 })
 				* dxm::scale(glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f)));
 			{
 				auto const p1 = transformationMatrix * dxm::vec4(-0.1f, -0.1f, +0.0f, 1.0);
@@ -201,7 +277,7 @@ namespace Presentation1
 		}
 
 		// -----------------------
-		void Update() 
+		void Update()
 		{
 			if (!IsEnabled)
 				return;
@@ -209,21 +285,22 @@ namespace Presentation1
 			auto static const LegHeight = 1.5f;
 			auto static const GimbalHeight = 0.2f;
 
-			m_PrismHolderBase.Position = { Position.x, 0.0f, Position.z };
-			m_PrismHolderBase.Render();
+			m_PrismHolderBase->Position = { Position.x, 0.0f, Position.z };
+			m_PrismHolderBase->Render();
 
-			m_PrismHolderLeg.Position = { Position.x, Position.y - LegHeight - GimbalHeight, Position.z };
-			m_PrismHolderLeg.Render();
-			
-			m_PrismHolderGimbal.Position = { Position.x, Position.y, Position.z };
-			m_PrismHolderGimbal.Rotation.z = RotationZ;
-			m_PrismHolderGimbal.Render();
+			m_PrismHolderLeg->Position = { Position.x, Position.y - LegHeight - GimbalHeight, Position.z };
+			m_PrismHolderLeg->Render();
 
-			m_PrismMesh.Position = Position;
-			m_PrismMesh.Scale = glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f));
-			m_PrismMesh.Rotation.x = RotationX;
-			m_PrismMesh.Rotation.z = RotationZ;
-			m_PrismMesh.Render();
+			m_PrismHolderGimbal->Position = { Position.x, Position.y, Position.z };
+			m_PrismHolderGimbal->Rotation.z = RotationZ;
+			m_PrismHolderGimbal->Render();
+
+			m_PrismMesh->PositionOffset = {0, -0.1f+0.2f/3, 0};
+			m_PrismMesh->Position = Position;
+			m_PrismMesh->Scale = glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f));
+			m_PrismMesh->Rotation.x = RotationX;
+			m_PrismMesh->Rotation.z = RotationZ;
+			m_PrismMesh->Render();
 		}
 	};	// struct Prism
 
@@ -233,27 +310,27 @@ namespace Presentation1
 	public:
 		OrbitalCamera m_Camera;
 
-		TriangleMutableMesh m_RoomMesh;
-		TriangleMutableMeshRenderer<> m_RoomRenderer;
+		TriangleMutableMeshPtr m_RoomMesh;
+		TriangleMutableMeshRendererPtr<> m_RoomRenderer;
 
-		TriangleMutableMesh m_ScreenMesh;
-		TriangleMutableMeshRenderer<> m_ScreenRenderer;
+		TriangleMutableMeshPtr m_ScreenMesh;
+		TriangleMutableMeshRendererPtr<> m_ScreenRenderer;
 
-		std::atomic_bool m_AreRaysSynced = false;
+		std::atomic_bool mutable m_AreRaysSynced = false;
 #if USE_RAYS_RENDERING
-		LineMutableMesh m_RaysMesh;
-		LineMutableMeshRenderer<TRUE> m_RaysRenderer;
+		LineMutableMeshPtr m_RaysMesh;
+		LineMutableMeshRendererPtr<TRUE> m_RaysRenderer;
 #else
-		TriangleMutableMesh m_RaysMesh;
-		TriangleMutableMeshRenderer<TRUE> m_RaysRenderer;
+		TriangleMutableMeshPtr m_RaysMesh;
+		TriangleMutableMeshRendererPtr<TRUE> m_RaysRenderer;
 #endif
-		TriangleMutableMesh m_RaysProjectionMesh;
-		TriangleMutableMeshRenderer<TRUE> m_RaysProjectionRenderer;
+		TriangleMutableMeshPtr m_RaysProjectionMesh;
+		TriangleMutableMeshRendererPtr<TRUE> m_RaysProjectionRenderer;
 
-		TriangleMutableMesh m_PrismMesh;
-		TriangleMutableMesh m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal;
-		Prism m_PrismRenderers[2];
-		std::vector<Plane> m_PrismPlanes;
+		TriangleMutableMeshPtr m_PrismMesh;
+		TriangleMutableMeshPtr m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal;
+		Prism mutable m_PrismRenderers[2];
+		std::vector<Plane> mutable m_PrismPlanes;
 
 	public:
 		explicit PresentationWidget(HWND const hwnd, IDirect3DDevice9* const device, ...)
@@ -261,63 +338,59 @@ namespace Presentation1
 			// -----------------------
 			, m_Camera(device)
 			// -----------------------
-			, m_RoomMesh(device), m_RoomRenderer(device, m_RoomMesh)
+			, m_RoomMesh(std::make_shared<TriangleMutableMesh>(device)), m_RoomRenderer(std::make_shared<TriangleMutableMeshRenderer<>>(device, m_RoomMesh))
 			// -----------------------
-			, m_ScreenMesh(device), m_ScreenRenderer(device, m_ScreenMesh)
+			, m_ScreenMesh(std::make_shared<TriangleMutableMesh>(device)), m_ScreenRenderer(std::make_shared<TriangleMutableMeshRenderer<>>(device, m_ScreenMesh))
 			// -----------------------
-			, m_RaysMesh(device), m_RaysRenderer(device, m_RaysMesh)
-			, m_RaysProjectionMesh(device), m_RaysProjectionRenderer(device, m_RaysProjectionMesh)
+			, m_RaysMesh(std::make_shared<LineMutableMesh>(device)), m_RaysRenderer(std::make_shared<LineMutableMeshRenderer<TRUE>>(device, m_RaysMesh))
+			, m_RaysProjectionMesh(std::make_shared<TriangleMutableMesh>(device)), m_RaysProjectionRenderer(std::make_shared<TriangleMutableMeshRenderer<TRUE>>(device, m_RaysProjectionMesh))
 			// -----------------------
-			, m_PrismMesh(device)
-			, m_PrismHolderBase(device), m_PrismHolderLeg(device), m_PrismHolderGimbal(device)
-			, m_PrismRenderers { { m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal }
-				,{ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal } }
+			, m_PrismMesh(std::make_shared<TriangleMutableMesh>(device))
+			, m_PrismHolderBase(std::make_shared<TriangleMutableMesh>(device)), m_PrismHolderLeg(std::make_shared<TriangleMutableMesh>(device)), m_PrismHolderGimbal(std::make_shared<TriangleMutableMesh>(device))
+			, m_PrismRenderers{ { m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal }
+			,{ m_Device, m_PrismMesh, m_PrismHolderBase, m_PrismHolderLeg, m_PrismHolderGimbal } }
 		{
 			/* Setting up default alpha-blending. */
-			m_Device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-			m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-			m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-		//	m_Device->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+			Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD));
+			Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA));
+			Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE));
+		//	Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME));
 
 			/* Setting up default lights. */
-			m_Device->SetRenderState(D3DRS_AMBIENT, D3DCOLOR_XRGB(0x50, 0x50, 0x50));
-			D3DLIGHT9 spotLight = {};
-			spotLight.Type = D3DLIGHT_DIRECTIONAL;
-			spotLight.Diffuse = { 0.7f, 0.7f, 0.7f, 1.0f};
-			spotLight.Position = { 0.0f, 120.0f, -2.8f };
-			spotLight.Direction = { 0.0f, -0.3f, 1.0f };
-			spotLight.Range = 4.32f;
-			spotLight.Falloff = 1.0f;
-			spotLight.Theta = 4.0f / F_PI * 180.0f;
-			spotLight.Phi = 52.5f / F_PI * 180.0f;
-			spotLight.Attenuation1 = 0.1f;
-			m_Device->SetLight(0, &spotLight);
+			D3DLIGHT9 light = {};
+			light.Type = D3DLIGHT_DIRECTIONAL;
+			light.Diffuse = { 0.7f, 0.7f, 0.7f, 1.0f };
+			light.Direction = { 0.0f, -0.3f, 1.0f };
+			light.Attenuation1 = 0.1f;
+			Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_LIGHTING, TRUE));
+			Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_AMBIENT, D3DCOLOR_XRGB(0x50, 0x50, 0x50)));
+			Utils::RuntimeCheckH(m_Device->SetLight(0, &light));
 
 			/* Setting up default texture parameters. */
-			m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-			m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+			Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1));
+			Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE));
 
 			/* Setting up static scene parameters. */
-			LoadOBJ("../gfx/room.obj", m_RoomMesh);
-			LoadTexture(m_Device, L"../gfx/roomLightMap.png", &m_RoomRenderer.Texture);
-			m_RoomRenderer.Position.z = 2.0f;
-			m_RoomRenderer.Rotation.y = F_PI;
-			LoadOBJ("../gfx/screen.obj", m_ScreenMesh);
-			LoadTexture(m_Device, L"../gfx/screenLightMap.png", &m_ScreenRenderer.Texture);
-			m_ScreenRenderer.Position.z = 2.0f;
-			m_ScreenRenderer.Rotation.y = F_PI;
-		
+			LoadOBJ(L"../gfx/room.obj", m_RoomMesh);
+			LoadTexture(m_Device, L"../gfx/roomLightMap.png", &m_RoomRenderer->Texture);
+			m_RoomRenderer->Position.z = 2.0f;
+			m_RoomRenderer->Rotation.y = F_PI;
+			LoadOBJ(L"../gfx/screen.obj", m_ScreenMesh);
+			LoadTexture(m_Device, L"../gfx/screenLightMap.png", &m_ScreenRenderer->Texture);
+			m_ScreenRenderer->Position.z = 2.0f;
+			m_ScreenRenderer->Rotation.y = F_PI;
+
 			/* Setting up dynamic scene parameters. */
-			LoadOBJ("../gfx/prism.obj", m_PrismMesh, D3DCOLOR_ARGB(0xFF / 3, 0xFF / 3, 0xFF, 0xFF));
-			LoadOBJ("../gfx/holder_base.obj", m_PrismHolderBase);
-			LoadOBJ("../gfx/holder_leg.obj", m_PrismHolderLeg);
-			LoadOBJ("../gfx/holder_gimbal.obj", m_PrismHolderGimbal);
-			
+			LoadOBJ(L"../gfx/prism.obj", m_PrismMesh, D3DCOLOR_ARGB(0xFF / 3, 0xFF / 3, 0xFF, 0xFF));
+			LoadOBJ(L"../gfx/holder_base.obj", m_PrismHolderBase);
+			LoadOBJ(L"../gfx/holder_leg.obj", m_PrismHolderLeg);
+			LoadOBJ(L"../gfx/holder_gimbal.obj", m_PrismHolderGimbal);
+
 			SetDualPrismsLayout();
-			
+
 			/* Setting up some other shit. */
-			LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer.Texture);
-			LoadShader(m_Device, L"../gfx/ColoredTextureShader.hlsl", &m_RaysProjectionRenderer.PixelShader);
+			LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer->Texture);
+			LoadPixelShader(m_Device, L"../gfx/ColoredTextureShader.hlsl", &m_RaysProjectionRenderer->PixelShader);
 		}
 
 		// -----------------------
@@ -346,7 +419,7 @@ namespace Presentation1
 			m_PrismRenderers[1].Type = PrismType::Air;
 			m_PrismRenderers[1].IsEnabled = true;
 			m_PrismRenderers[1].Angle = F_PI / 3.0f - 0.1f;
-			m_PrismRenderers[1].Position = { 0.0f, 0.9f, 2.0f };
+			m_PrismRenderers[1].Position = { 0.0f, 1.0f, 2.0f };
 			m_PrismRenderers[1].PositionMin = { -1.05f, 0.5f, 2.0f };
 			m_PrismRenderers[1].PositionMax = { +1.05f, 1.0f, 2.7f };
 			m_PrismRenderers[1].RotationZ = F_PI / 2;
@@ -356,40 +429,38 @@ namespace Presentation1
 		}
 
 		// -----------------------
-		void Render()
+		void Render() const override
 		{
 			m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
 			m_Device->Clear(0, nullptr, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
 			m_Device->BeginScene();
 			{
 				/* Rendering scene. */
-				m_RoomRenderer.Render();
-				m_ScreenRenderer.Render();
+				m_RoomRenderer->Render();
+				m_ScreenRenderer->Render();
 
 				/* Rendering rays. */
-				m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-				m_RaysProjectionRenderer.Render();
-				m_RaysRenderer.Render();
-				m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+				m_RaysProjectionRenderer->Render();
+				m_RaysRenderer->Render();
 
 				/* Updating and rendering prisms and holders. */
-				m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-				m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+				Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA));
+				Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA));
 				for (auto& prism : m_PrismRenderers)
 				{
 					prism.Update();
 				}
-				m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-				m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+				Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA));
+				Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE));
 			}
 			m_Device->EndScene();
 			m_Device->Present(nullptr, nullptr, nullptr, nullptr);
 		}
 		// -----------------------
-		void Update()
+		void Update() const override
 		{
 			/* Updating camera first. */
-			m_Camera.Update();
+			((OrbitalCamera&)m_Camera).Update();
 
 			/* Updating rays. */
 			if (!m_AreRaysSynced)
@@ -399,8 +470,8 @@ namespace Presentation1
 				{
 					prism.UpdatePlanes(m_PrismPlanes);
 				}
-				m_PrismPlanes.push_back({ { -1.8f, 0.3f, 3.49f },{ 1.8f, 2.0f, 3.49f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
-				GenerateRaysMesh(USE_RAYS_RENDERING * 1000 + !USE_RAYS_RENDERING * 100);
+				m_PrismPlanes.push_back({ { -1.77f, 0.485f, 3.49f },{ 1.77f, 2.07f, 3.49f },{ 0.0f, 0.0f, 1.0f }, &DummyIndex, &DummyIndex });
+				((PresentationWidget*)this)->GenerateRaysMesh(USE_RAYS_RENDERING * 1000 + !USE_RAYS_RENDERING * 100);
 				m_AreRaysSynced = true;
 			}
 		}
@@ -408,32 +479,32 @@ namespace Presentation1
 		// -----------------------
 		void GenerateRaysMesh(UINT const partitioning)
 		{
-			m_RaysMesh.ClearVertices();
-			m_RaysProjectionMesh.ClearVertices();
+			m_RaysMesh->BeginUpdateVertices();
+			m_RaysProjectionMesh->BeginUpdateVertices();
 
 #if USE_RAYS_RENDERING
 			for (auto i = 0u; i < partitioning; ++i)
 			{
-				auto coord = dxm::vec3(0.0f, 1.5f, -2.0f);
-				auto direction = (m_PrismRenderers[0].IsEnabled? m_PrismRenderers[0].Position : m_PrismRenderers[1].Position) - coord;
+				auto coord = dxm::vec3(0.0f, 0.75f, -2.0f);
+				auto direction = dxm::vec3(0.0f, 0.0f, 1.0f);
 
 				auto static const violetWaveLength = 380.0;
 				auto static const redWaveLength = 740.0;
 				auto const waveLength = violetWaveLength + i * (redWaveLength - violetWaveLength) / partitioning;
-				auto color = ConvertWaveLengthToRGB(waveLength);
-				
+				auto color = wavelengthToRGB(waveLength);
+
 				for (auto j = 0u; j < m_PrismPlanes.size(); ++j)
 				{
 					auto& plane = m_PrismPlanes[j];
-					
+
 					auto const prevCoord = coord;
 					if (!plane.Intersect(coord, coord, direction))
 					{
 						coord = prevCoord;
 						continue;
 					}
-					m_RaysMesh.AddVertex({ prevCoord, color });
-					m_RaysMesh.AddVertex({ coord, j == m_PrismPlanes.size() - 1 ? color & 0x00FFFFFF : color });
+					m_RaysMesh->AddVertex({ prevCoord, color });
+					m_RaysMesh->AddVertex({ coord, j == m_PrismPlanes.size() - 1 ? color & 0x00FFFFFF : color });
 					if (!plane.Refract(direction, waveLength))
 						break;
 
@@ -456,7 +527,7 @@ namespace Presentation1
 						};
 						for (auto k = 0u; k < dxm::countof(triangleVert); ++k)
 						{
-							m_RaysProjectionMesh.AddVertex({ triangleVert[k] * scale + coord,{ 0.0, 0.0, -1.0f }, color, triangleVert[k] + uvOffset });
+							m_RaysProjectionMesh->AddVertex({ triangleVert[k] * scale + coord,{ 0.0, 0.0, -1.0f }, color, triangleVert[k] + uvOffset });
 						}
 					}
 				}
@@ -476,7 +547,7 @@ namespace Presentation1
 			auto static const projectionNormal = dxm::vec3(0.0, 0.0, -1.0f);
 
 			auto const startCoord = dxm::vec3(0.0f, 0.75f, -2.0f);
-			auto const startDirection = dxm::vec3(0,0,1);
+			auto const startDirection = dxm::vec3(0, 0, 1);
 			std::vector<SavedRay> savedRays(partitioning, { startCoord, startDirection });
 			for (auto i = 0u; i < partitioning; ++i)
 			{
@@ -486,7 +557,7 @@ namespace Presentation1
 				auto color = ConvertWaveLengthToRGB(waveLength);
 				savedRays[i].Color = color;
 			}
-			
+
 			for (auto j = 0u; j < m_PrismPlanes.size(); ++j)
 			{
 				auto& plane = m_PrismPlanes[j];
@@ -505,12 +576,12 @@ namespace Presentation1
 
 					prevCoord = coord;
 					prevColor = color;
-					if (!plane.Intersect(coord, coord, direction) && m_PrismPlanes.size() -1 != j)
+					if (!plane.Intersect(coord, coord, direction) && m_PrismPlanes.size() - 1 != j)
 					{
 						coord = prevCoord;
 						break;
 					}
-					
+
 					auto const finalColor = j == m_PrismPlanes.size() - 1 ? color & 0x00FFFFFF : color;
 					if (i != 0)
 					{
@@ -555,6 +626,9 @@ namespace Presentation1
 				}
 			}
 #endif
+
+			m_RaysMesh->EndUpdateVertices();
+			m_RaysProjectionMesh->EndUpdateVertices();
 			m_AreRaysSynced = true;
 		}
 
@@ -574,7 +648,6 @@ namespace Presentation1
 			/*auto static const violetWaveLength = 380.0;
 			auto static const redWaveLength = 740.0;
 			waveLength = (waveLength - violetWaveLength) / (redWaveLength - violetWaveLength);
-
 			auto static const funcVioletWaveLength = 380.0;
 			auto static const funcRedWaveLength = 781.0;
 			waveLength = funcVioletWaveLength + waveLength * (funcRedWaveLength - funcVioletWaveLength);*/
@@ -619,7 +692,7 @@ namespace Presentation1
 				green = 0.0;
 				blue = 0.0;
 			}
-			else 
+			else
 			{
 				red = 0.0;
 				green = 0.0;
@@ -640,7 +713,7 @@ namespace Presentation1
 			{
 				factor = 0.3 + 0.7 * (780.0 - waveLength) / (780.0 - 700.0);
 			}
-			else 
+			else
 			{
 				factor = 0.0;
 			}
