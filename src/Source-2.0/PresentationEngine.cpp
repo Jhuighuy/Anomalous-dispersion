@@ -32,19 +32,18 @@ namespace Presentation2
 	ADAPI void Camera::Update() const
 	{
 		auto const projectionMatrix = dxm::perspectiveFovLH<FLOAT>(FieldOfView, GetContextWidth(), GetContextHeight(), NearClippingPlane, FarClippingPlane);
-		auto const viewMatrix = dxm::inverse(dxm::translate(Position) * dxm::toMat4(dxm::quat(dxm::vec3(Rotation.x, Rotation.y, Rotation.z))));
-
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_PROJECTION, dxm::ptr(projectionMatrix)));
-		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_VIEW, dxm::ptr(viewMatrix)));
 	}
 
 	// -----------------------
 	ADAPI void OrbitalCamera::Update(bool const forceUpdate) const
 	{
+		Camera::Update();
+
 		if (GetAsyncKeyState(VK_LBUTTON) != 0 || forceUpdate)
 		{
 			POINT mouseCurrentPosition = { };
-			GetCursorPos(&mouseCurrentPosition);
+			Utils::RuntimeCheck(GetCursorPos(&mouseCurrentPosition));
 			if (PtInRect(&m_Rect, mouseCurrentPosition) || forceUpdate)
 			{
 				/* Mouse has been moved inside the context rect while left button has been pressed. */
@@ -61,9 +60,7 @@ namespace Presentation2
 			}
 		}
 		GetCursorPos(&m_PrevMousePosition);
-
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_VIEW, dxm::ptr(m_ViewMatrix)));
-		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_PROJECTION, dxm::ptr(m_ProjectionMatrix)));
 	}
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //

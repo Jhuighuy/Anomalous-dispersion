@@ -19,8 +19,6 @@
 #pragma warning(pop)
 
 #pragma warning(push, 0)
-#include <glm/gtx/euler_angles.hpp>
-#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 #pragma warning(pop)
 
@@ -58,8 +56,6 @@ namespace Presentation2
 	public:
 		FLOAT FieldOfView = F_PI / 1.5f;
 		FLOAT NearClippingPlane = 0.01f, FarClippingPlane = 100.0f;
-		dxm::vec3 Position;
-		dxm::vec3 Rotation;
 	protected:
 		IDirect3DDevice9* const m_Device;
 		RECT m_Rect;

@@ -5,6 +5,12 @@
 
 #include "PresentationFramework.hpp"
 
+#pragma warning(push, 0)
+#include <d2d1.h>	/* Doesn't compile without this. */
+#pragma warning(pop)
+#include <WinCodec.h>
+#pragma comment(lib, "WindowsCodecs.lib")
+
 namespace Presentation2
 {
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
@@ -72,7 +78,7 @@ namespace Presentation2
 				auto const controlID = static_cast<WORD>(LOWORD(wParam));
 				if (self->CheckID(controlID))
 				{
-					auto const& controlCallback = self->m_Callbacks[controlID - s_idOffset];
+					auto const& controlCallback = self->m_Callbacks[UnwrapID(controlID)];
 					auto const isControlChecked = IsDlgButtonChecked(self->m_Hwnd, controlID);
 					CheckDlgButton(self->m_Hwnd, controlID, !isControlChecked ? BST_CHECKED : BST_UNCHECKED);
 					controlCallback(!isControlChecked);
@@ -162,7 +168,37 @@ namespace Presentation2
 			, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr));
 		if (handle != nullptr)
 		{
-			auto const bitmap = LoadImageW(nullptr, path, IMAGE_BITMAP, rect.Width, rect.Height, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+			std::vector<BYTE> bitmapBits;
+			{	/* Resizing the bitmap using some interpolation methods. */
+				IWICImagingFactory static* imagingFactory = nullptr;
+				if (imagingFactory == nullptr)
+				{
+					Utils::RuntimeCheckH(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER
+						, IID_PPV_ARGS(&imagingFactory)));
+				}
+
+				IWICBitmapDecoder* bitmapDecoder = nullptr;
+				Utils::RuntimeCheckH(imagingFactory->CreateDecoderFromFilename(path, nullptr
+					, GENERIC_READ, WICDecodeMetadataCacheOnDemand, &bitmapDecoder));
+
+				IWICBitmapFrameDecode* bitmapFrameDecode = nullptr;
+				Utils::RuntimeCheckH(bitmapDecoder->GetFrame(0, &bitmapFrameDecode));
+
+				IWICBitmapScaler* bitmapScaler = nullptr;
+				Utils::RuntimeCheckH(imagingFactory->CreateBitmapScaler(&bitmapScaler));
+				Utils::RuntimeCheckH(bitmapScaler->Initialize(bitmapFrameDecode
+					, rect.Width, rect.Height, WICBitmapInterpolationModeFant));
+
+				/* Getting bits out of the rescaled bitmap. */
+				bitmapBits.resize(rect.Width * rect.Height * 4);
+				Utils::RuntimeCheckH(bitmapScaler->CopyPixels(nullptr, rect.Width * 4, bitmapBits.size(), bitmapBits.data()));
+
+				bitmapScaler->Release();
+				bitmapFrameDecode->Release();
+				bitmapDecoder->Release();
+			}
+
+			auto const bitmap = CreateBitmap(rect.Width, rect.Height, 1, 32, bitmapBits.data());
 			if (bitmap != nullptr)
 			{
 				SendMessageW(handle, STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(bitmap));

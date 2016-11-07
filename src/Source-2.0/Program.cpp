@@ -112,8 +112,8 @@ namespace Presentation2
 	MenuWindow::MenuWindow(wchar_t const* const caption)
 		: Window(Rect(), caption, true)
 	{
-		m_UniversityFacultyLogoCMC = Image({ 105, 105, 150, 150 }, L"../gfx/cmc1.bmp");
-		m_UniversityFacultyLogoPH = Image({ STANDART_DESKTOP_WIDTH - 105, 105, 150, 150 }, L"../gfx/fizfak.bmp");
+		m_UniversityFacultyLogoCMC = Image({ 105, 105, 150, 150 }, L"../gfx/cmc1.png");
+		m_UniversityFacultyLogoPH = Image({ STANDART_DESKTOP_WIDTH - 105, 105, 150, 150 }, L"../gfx/fizfak.png");
 		// -----------------------
 		m_UniversityNameLabel = Label({ STANDART_DESKTOP_WIDTH / 2, 40, 1500, 80 },
 			L"Московский Государственный Университет им. М.В. Ломоносова\r\n"
@@ -158,10 +158,10 @@ namespace Presentation2
 	AuthorsWindow::AuthorsWindow()
 		: MenuWindow(L"Авторы")
 	{
-		m_GlebaPhoto = Image({ STANDART_DESKTOP_WIDTH / 3, STANDART_DESKTOP_HEIGHT / 2, 500, 600 }, L"../gfx/gleba.bmp");
+		m_GlebaPhoto = Image({ STANDART_DESKTOP_WIDTH / 3, STANDART_DESKTOP_HEIGHT / 2, 500, 600 }, L"../gfx/gleba.png");
 		m_GlebaLabel = Label({ STANDART_DESKTOP_WIDTH / 3, STANDART_DESKTOP_HEIGHT / 2 + 350, 500, 80 }
 		, L"Плаксин Глеб\r\nМаксимович", LabelFlags::LeftAlignment, TextSize::Large);
-		m_OlejaPhoto = Image({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 3, STANDART_DESKTOP_HEIGHT / 2, 500, 600 }, L"../gfx/oleja.bmp");
+		m_OlejaPhoto = Image({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 3, STANDART_DESKTOP_HEIGHT / 2, 500, 600 }, L"../gfx/oleja.png");
 		m_OlejaLabel = Label({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 3, STANDART_DESKTOP_HEIGHT / 2 + 350, 500, 80 }
 		, L"Бутаков Олег\r\nБорисович", LabelFlags::RightAlignment, TextSize::Large);
 		// -----------------------
@@ -189,8 +189,8 @@ namespace Presentation2
 		// -----------------------
 		m_ImageLabel = Label({ STANDART_DESKTOP_WIDTH / 8, 85, 480, 40 }, L"Говно призмы от жопы", LabelFlags::CenterAlignment, TextSize::NotSoLarge);
 		Rect const imageRect = { STANDART_DESKTOP_WIDTH / 8, 270, 480, 330 };
-		m_NormImage = Image(imageRect, L"../gfx/norm-func.bmp");
-		m_AnomImage = Image(imageRect, L"../gfx/anom-func.bmp");
+		m_NormImage = Image(imageRect, L"../gfx/norm-func.png");
+		m_AnomImage = Image(imageRect, L"../gfx/anom-func.png");
 		m_AnomImage->Hide();
 		// -----------------------
 		{

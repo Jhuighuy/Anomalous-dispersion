@@ -314,13 +314,21 @@ namespace Presentation2
 
 		// -----------------------
 		ADINT LRESULT static CALLBACK WindowProc(HWND const hWnd, UINT const message, WPARAM const wParam, LPARAM const lParam);
+		ADINL static WORD WrapID(WORD const id)
+		{
+			return id + s_idOffset;
+		}
+		ADINL static WORD UnwrapID(WORD const id)
+		{
+			return id - s_idOffset;
+		}
 		ADINT WORD GenID() const
 		{
-			return static_cast<WORD>(m_Callbacks.size() + s_idOffset);
+			return WrapID(static_cast<WORD>(m_Callbacks.size()));
 		}
 		ADINT bool CheckID(WORD const id) const
 		{
-			return id - s_idOffset < m_Callbacks.size();
+			return UnwrapID(id) < m_Callbacks.size();
 		}
 
 	public:

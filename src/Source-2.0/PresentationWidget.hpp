@@ -512,9 +512,9 @@ namespace Presentation2
 
 					if (j == m_PrismPlanes.size() - 1)
 					{
-						AbsorbAlpha(color, 0.2);
+						AbsorbAlpha(color, m_PrismRenderers[1].Type == PrismType::Air ? 0.42 : 0.7);
 
-						auto const scale = 0.09f;
+						auto const scale = 0.3f;
 						dxm::vec3 static const uvOffset = { 0.5f, 0.5f, 0.0f };
 						dxm::vec3 static const triangleVert[] = {
 							{ -0.5f, +0.5f, 0.0f },
