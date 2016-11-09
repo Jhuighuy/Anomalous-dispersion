@@ -11,6 +11,7 @@
 #error Please, include <Windows.h> before this header.
 #endif	// ifdef _WINDOWS_
 
+/* Loading the minimized version of the WinAPI. */
 #ifndef WIN32_LEAN_AND_MEAN 
 #define WIN32_LEAN_AND_MEAN 1
 #endif	// ifndef WIN32_LEAN_AND_MEAN 
@@ -20,7 +21,8 @@
 #ifndef NOMINMAX 
 #define NOMINMAX 1
 #endif	// ifndef NOMINMAX 
-#include <d3d9.h>
+#include <Windows.h>
+#include <D3D9.h>
 
 #include <memory>
 #include <vector>
@@ -30,20 +32,24 @@
 #include <functional>
 
 #define ADAPI
-#define ADINL
 #define ADINT
-#define SUPPORT_LOADING_FROM_FILE !_DEBUG
-#pragma warning(disable : 4505)
+#define ADINL __forceinline
+#pragma warning(disable : 4714) // function 'function' marked as __forceinline not inlined
+
+/* We want to have resources being compiled into the exe */
+#define SUPPORT_LOADING_FROM_FILE /*_DEBUG*/1
 
 namespace Presentation2
 {
 	enum LoadFromMemory_t { LoadFromMemory };
 
+	ADAPI bool extern g_IsExitRequested;
 	ADAPI extern std::thread::id g_MainThreadID;
 	ADAPI extern std::thread::id g_RenderingThreadID;
 
 	struct INonCopyable
 	{
+	protected:
 		ADINT INonCopyable() = default;
 		ADINT INonCopyable(INonCopyable&&) = delete;
 		ADINT INonCopyable(INonCopyable const&) = delete;
@@ -54,7 +60,10 @@ namespace Presentation2
 	struct IUpdatable : INonCopyable
 	{
 		ADINT virtual ~IUpdatable() = default;
-		ADAPI virtual void Update() const = 0;
+		ADAPI virtual void Update() = 0
+		{
+			assert(std::this_thread::get_id() == g_MainThreadID);
+		}
 	};	// struct IUpdatable
 
 	struct IRenderable : public IUpdatable
@@ -98,7 +107,8 @@ namespace Presentation2
 	// Rectangles and monitors geometry.
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 
-	/** Monitor resolution API. */
+	/***************
+	 * Monitor resolution API. */
 	class Monitor final
 	{
 		enum DefaultDesktopResolution_t
@@ -163,39 +173,39 @@ namespace Presentation2
 	public:
 		ADINL Rect() : X(0), Y(0), Width(0), Height(0) {}
 		// -----------------------
-		ADINL Rect(UpperLeftPivot_t, NoScaling_t, int const x, int const y, int const w, int const h)
+		ADINL Rect(UpperLeftPivot_t, NoScaling_t, INT const x, INT const y, INT const w, INT const h)
 			: X(x), Y(y), Width(w), Height(h)
 		{}
-		ADINL Rect(UpperRightPivot_t, NoScaling_t, int const x, int const y, int const w, int const h)
+		ADINL Rect(UpperRightPivot_t, NoScaling_t, INT const x, INT const y, INT const w, INT const h)
 			: X(x - w), Y(y), Width(w), Height(h)
 		{}
-		ADINL Rect(LowerLeftPivot_t, NoScaling_t, int const x, int const y, int const w, int const h)
+		ADINL Rect(LowerLeftPivot_t, NoScaling_t, INT const x, INT const y, INT const w, INT const h)
 			: X(x), Y(y - h), Width(w), Height(h)
 		{}
-		ADINL Rect(LowerRightPivot_t, NoScaling_t, int const x, int const y, int const w, int const h)
+		ADINL Rect(LowerRightPivot_t, NoScaling_t, INT const x, INT const y, INT const w, INT const h)
 			: X(x - w), Y(y - h), Width(w), Height(h)
 		{}
-		ADINL Rect(CenterPivot_t, NoScaling_t, int const x, int const y, int const w, int const h)
+		ADINL Rect(CenterPivot_t, NoScaling_t, INT const x, INT const y, INT const w, INT const h)
 			: X(x - w / 2), Y(y - h / 2), Width(w), Height(h)
 		{}
 		// -----------------------
-		ADINL Rect(UpperLeftPivot_t, int const x, int const y, int const w, int const h)
+		ADINL Rect(UpperLeftPivot_t, INT const x, INT const y, INT const w, INT const h)
 			: Rect(UpperLeftPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleY(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
 		{}
-		ADINL Rect(UpperRightPivot_t, int const x, int const y, int const w, int const h)
+		ADINL Rect(UpperRightPivot_t, INT const x, INT const y, INT const w, INT const h)
 			: Rect(UpperRightPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleY(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
 		{}
-		ADINL Rect(LowerLeftPivot_t, int const x, int const y, int const w, int const h)
+		ADINL Rect(LowerLeftPivot_t, INT const x, INT const y, INT const w, INT const h)
 			: Rect(LowerLeftPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleY(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
 		{}
-		ADINL Rect(LowerRightPivot_t, int const x, int const y, int const w, int const h)
+		ADINL Rect(LowerRightPivot_t, INT const x, INT const y, INT const w, INT const h)
 			: Rect(LowerRightPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleY(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
 		{}
-		ADINL Rect(CenterPivot_t, int const x, int const y, int const w, int const h)
+		ADINL Rect(CenterPivot_t, INT const x, INT const y, INT const w, INT const h)
 			: Rect(CenterPivot, NoScaling, Monitor::UpscaleX(x), Monitor::UpscaleY(y), Monitor::UpscaleWidth(w), Monitor::UpscaleHeight(h))
 		{}
 		// -----------------------
-		ADINL Rect(int const x, int const y, int const w, int const h)
+		ADINL Rect(INT const x, INT const y, INT const w, INT const h)
 			: Rect(CenterPivot, x, y, w, h)
 		{}
 	};	// struct Rect final
@@ -205,7 +215,6 @@ namespace Presentation2
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 
 	using WindowWidgetPtr = std::shared_ptr<class WindowWidget>;
-	ADAPI bool extern g_IsExitRequested;
 	
 	enum class TextSize : DWORD
 	{
@@ -221,16 +230,16 @@ namespace Presentation2
 	class WindowWidget
 	{
 	public:
-		HWND m_Hwnd;
+		HWND m_Handle;
 
 	public:
 		// -----------------------
-		ADINL WindowWidget() : m_Hwnd(nullptr) {}
+		ADINL WindowWidget() : m_Handle(nullptr) {}
 		ADAPI explicit WindowWidget(HWND const hwnd, TextSize const textSize = TextSize::Default);
 		// -----------------------
 		ADAPI virtual ~WindowWidget()
 		{
-			DestroyWindow(m_Hwnd);
+			DestroyWindow(m_Handle);
 		}
 
 	public:
@@ -238,17 +247,17 @@ namespace Presentation2
 		ADAPI void SetTextSize(TextSize const textSize = TextSize::Default) const;
 
 		// -----------------------
-		ADINL void SetText(wchar_t const* const text) const
+		ADINL void SetText(LPCWSTR const text) const
 		{
-			assert(m_Hwnd != nullptr);
-			SetWindowTextW(m_Hwnd, text);
+			assert(m_Handle != nullptr);
+			SetWindowTextW(m_Handle, text);
 		}
 
 		// -----------------------
 		ADINL void Show(bool const show = true) const
 		{
-			assert(m_Hwnd != nullptr);
-			ShowWindow(m_Hwnd, show ? SW_SHOW : SW_HIDE);
+			assert(m_Handle != nullptr);
+			ShowWindow(m_Handle, show ? SW_SHOW : SW_HIDE);
 		}
 		ADINL void Hide(bool const hide = true) const
 		{
@@ -288,20 +297,21 @@ namespace Presentation2
 	using ButtonPtr = WindowWidgetPtr;
 	using CheckBoxPtr = WindowWidgetPtr;
 
-	using D3DWidgetPtr = std::shared_ptr<class D3DWidget>;
+	using GraphicsWidgetPtr = std::shared_ptr<class GraphicsWidget>;
 
 	using WindowPtr = std::shared_ptr<class Window>;
 	using WindowWidgetCallback = std::function<void(long)>;
 
 	/*************** 
 	 * Simple wrapper around raw WinAPI Direct3D 9 device handle. */
-	class D3DWidget : public WindowWidget, public IRenderable
+	class GraphicsWidget : public WindowWidget, public IRenderable
 	{
 	public:
 		IDirect3DDevice9* const m_Device;
-		explicit D3DWidget(HWND const hwnd, IDirect3DDevice9* const device) : WindowWidget(hwnd), m_Device(device) {}
-
-	};	// class D3DWidget
+	public:
+		ADINL explicit GraphicsWidget(HWND const hwnd, IDirect3DDevice9* const device) 
+			: WindowWidget(hwnd), m_Device(device) {}
+	};	// class GraphicsWidget
 
 	/*************** 
 	 * Simple wrapper around raw WinAPI window. */
@@ -332,10 +342,10 @@ namespace Presentation2
 
 	public:
 		// -----------------------
-		ADAPI explicit Window(Rect const& rect, wchar_t const* const caption = nullptr, bool const fullscreen = false);
+		ADAPI explicit Window(Rect const& rect, LPCWSTR const caption = nullptr, bool const fullscreen = false);
 
 		// -----------------------
-		ADAPI void Update() const override;
+		ADAPI void Update() override;
 
 		// ***********************************************************************************************
 		// Static controls.
@@ -345,12 +355,12 @@ namespace Presentation2
 		ADAPI HorizontalSeparatorPtr HorizontalSeparator(Rect const& rect) const;
 
 		// -----------------------
-		ADAPI LabelPtr Label(Rect const& rect, wchar_t const* const text, LabelFlags const flags = LabelFlags::LeftAlignment, TextSize const textSize = TextSize::Default) const;
+		ADAPI LabelPtr Label(Rect const& rect, LPCWSTR const text, LabelFlags const flags = LabelFlags::LeftAlignment, TextSize const textSize = TextSize::Default) const;
 
 		// -----------------------
-#ifdef SUPPORT_LOADING_FROM_FILE
-		ADAPI ImagePtr Image(Rect const& rect, wchar_t const* const path) const;
-#endif	// ifdef SUPPORT_LOADING_FROM_FILE
+#if SUPPORT_LOADING_FROM_FILE
+		ADAPI ImagePtr Image(Rect const& rect, LPCWSTR const path) const;
+#endif	// if SUPPORT_LOADING_FROM_FILE
 		ADAPI ImagePtr Image(Rect const& rect, LoadFromMemory_t, void const* const data) const;
 
 		// ***********************************************************************************************
@@ -358,25 +368,25 @@ namespace Presentation2
 		// ***********************************************************************************************
 
 		// -----------------------
-		ADAPI TextEditPtr TextEdit(Rect const& rect, wchar_t const* const text = nullptr, TextEditFlags const flags = TextEditFlags::None, TextSize const textSize = TextSize::Default) const;
+		ADAPI TextEditPtr TextEdit(Rect const& rect, LPCWSTR const text = nullptr, TextEditFlags const flags = TextEditFlags::None, TextSize const textSize = TextSize::Default) const;
 
 		// ***********************************************************************************************
 		// Buttons.
 		// ***********************************************************************************************
 
 		// -----------------------
-		ADAPI ButtonPtr Button(Rect const& rect, wchar_t const* const text, WindowWidgetCallback&& callback, TextSize const textSize = TextSize::Default);
+		ADAPI ButtonPtr Button(Rect const& rect, LPCWSTR const text, WindowWidgetCallback&& callback, TextSize const textSize = TextSize::Default);
 
 		// -----------------------
-		ADAPI CheckBoxPtr CheckBox(Rect const& rect, wchar_t const* const text, WindowWidgetCallback&& callback, bool const enabled = false, TextSize const textSize = TextSize::Default);
+		ADAPI CheckBoxPtr CheckBox(Rect const& rect, LPCWSTR const text, WindowWidgetCallback&& callback, bool const enabled = false, TextSize const textSize = TextSize::Default);
 
 		// ***********************************************************************************************
-		// Direct3D 9.
+		// Graphics.
 		// ***********************************************************************************************
 
 		// -----------------------
-		template<typename D3DWidget_t = D3DWidget, typename D3DWidgetPtr_t = std::shared_ptr<D3DWidget_t>>
-		ADAPI D3DWidgetPtr_t Direct3D9(Rect const& rect) const;
+		template<typename TGraphicsWidget = GraphicsWidget, typename... TArgs>
+		ADAPI std::shared_ptr<TGraphicsWidget> Graphics(Rect const& rect, TArgs&&... args) const;
 
 	};	// class Window
 

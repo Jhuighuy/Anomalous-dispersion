@@ -305,7 +305,7 @@ namespace Presentation2
 	};	// struct Prism
 
 	typedef std::shared_ptr<class PresentationWidget> PresentationWidgetPtr;
-	class PresentationWidget final : public D3DWidget
+	class PresentationWidget final : public GraphicsWidget
 	{
 	public:
 		OrbitalCamera m_Camera;
@@ -334,11 +334,11 @@ namespace Presentation2
 
 	public:
 		explicit PresentationWidget(HWND const hwnd, IDirect3DDevice9* const device, ...)
-			: D3DWidget(hwnd, device)
+			: GraphicsWidget(hwnd, device)
 			// -----------------------
 			, m_Camera(device)
 			// -----------------------
-			, m_RoomMesh(std::make_shared<TriangleMutableMesh>(device)), m_RoomRenderer(std::make_shared<TriangleMutableMeshRenderer<>>(device, m_RoomMesh))
+			, m_RoomMesh(std::make_shared<TriangleMutableMesh>(device)), m_RoomRenderer(std::make_shared<TriangleMutableMeshRenderer<>>(device, m_RoomMesh, L"../gfx/roomLightMap.png"))
 			// -----------------------
 			, m_ScreenMesh(std::make_shared<TriangleMutableMesh>(device)), m_ScreenRenderer(std::make_shared<TriangleMutableMeshRenderer<>>(device, m_ScreenMesh))
 			// -----------------------
@@ -367,31 +367,32 @@ namespace Presentation2
 			Utils::RuntimeCheckH(m_Device->SetLight(0, &light));
 
 			/* Setting up default texture parameters. */
-			Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1));
+			Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE));
 			Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE));
+			Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE));
 
 			/* Setting up static scene parameters. */
-			LoadOBJ(L"../gfx/room.obj", m_RoomMesh);
-			LoadTexture(m_Device, L"../gfx/roomLightMap.png", &m_RoomRenderer->Texture);
+		//	LoadOBJ(L"../gfx/room.obj", m_RoomMesh);
+		//	LoadTexture(m_Device, L"../gfx/roomLightMap.png", &m_RoomRenderer->Texture);
 			m_RoomRenderer->Position.z = 2.0f;
 			m_RoomRenderer->Rotation.y = F_PI;
-			LoadOBJ(L"../gfx/screen.obj", m_ScreenMesh);
-			LoadTexture(m_Device, L"../gfx/screenLightMap.png", &m_ScreenRenderer->Texture);
+		//	LoadOBJ(L"../gfx/screen.obj", m_ScreenMesh);
+		//	LoadTexture(m_Device, L"../gfx/screenLightMap.png", &m_ScreenRenderer->Texture);
 			m_ScreenRenderer->Position.z = 2.0f;
 			m_ScreenRenderer->Rotation.y = F_PI;
 
 			/* Setting up dynamic scene parameters. */
-			LoadOBJ(L"../gfx/prism.obj", m_PrismMesh, D3DCOLOR_ARGB(0xFF / 3, 0xFF / 3, 0xFF, 0xFF));
-			LoadOBJ(L"../gfx/holder_base.obj", m_PrismHolderBase);
-			LoadOBJ(L"../gfx/holder_leg.obj", m_PrismHolderLeg);
-			LoadOBJ(L"../gfx/holder_gimbal.obj", m_PrismHolderGimbal);
+		//	LoadOBJ(L"../gfx/prism.obj", m_PrismMesh, D3DCOLOR_ARGB(0xFF / 3, 0xFF / 3, 0xFF, 0xFF));
+		//	LoadOBJ(L"../gfx/holder_base.obj", m_PrismHolderBase);
+		//	LoadOBJ(L"../gfx/holder_leg.obj", m_PrismHolderLeg);
+		//	LoadOBJ(L"../gfx/holder_gimbal.obj", m_PrismHolderGimbal);
 
 			SetDualPrismsLayout();
 			SetSinglePrismLayout();
 
 			/* Setting up some other shit. */
-			LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer->Texture);
-			LoadPixelShader(m_Device, L"../gfx/ColoredTextureShader.hlsl", &m_RaysProjectionRenderer->PixelShader);
+		//	LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer->Texture);
+		//	LoadPixelShader(m_Device, L"../gfx/ColoredTextureShader.hlsl", &m_RaysProjectionRenderer->PixelShader);
 		}
 
 		// -----------------------
@@ -456,23 +457,23 @@ namespace Presentation2
 				m_RaysRenderer->Render();
 
 				/* Updating and rendering prisms and holders. */
-				Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA));
-				Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA));
+		//		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA));
+		//		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA));
 				for (auto& prism : m_PrismRenderers)
 				{
 					prism.Update();
 				}
-				Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA));
-				Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE));
+		//		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA));
+		//		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE));
 			}
 			m_Device->EndScene();
 			m_Device->Present(nullptr, nullptr, nullptr, nullptr);
 		}
 		// -----------------------
-		void Update() const override
+		void Update() override
 		{
 			/* Updating camera first. */
-			((OrbitalCamera&)m_Camera).Update();
+			((OrbitalCamera&)m_Camera).Render();
 
 			/* Updating rays. */
 			if (!m_AreRaysSynced)
@@ -526,7 +527,7 @@ namespace Presentation2
 					{
 						AbsorbAlpha(color, m_PrismRenderers[1].Type == PrismType::Air ? 0.42 : 0.8f);
 
-						auto const scale = 0.3f;
+						auto const scale = 0.03f;
 						dxm::vec3 static const uvOffset = { 0.5f, 0.5f, 0.0f };
 						dxm::vec3 static const triangleVert[] = {
 							{ -0.5f, +0.5f, 0.0f },

@@ -4,27 +4,44 @@
     <Filter Include="Source">
       <UniqueIdentifier>{9a743af9-2c52-4e37-a7cc-0c07439b89f2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Engine">
+      <UniqueIdentifier>{2ce76d74-a2b3-450b-a5d2-fa7f97b96352}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Program.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ObjLoader.cpp">
+    <ClCompile Include="Source\PresentationEngine.cpp">
+      <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PresentationFramework.cpp">
+      <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Program_.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\ObjLoader.h">
+    <ClInclude Include="Source\PresentationWidget.hpp">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PresentationWidget.h">
+    <ClInclude Include="Source\PresentationEngine.hpp">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PresentationFramework.hpp">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PresentationScene.hpp">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PresentationEngine.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PresentationFramework.h">
-      <Filter>Source</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\PresentationEngine.inl">
+      <Filter>Source\Engine</Filter>
+    </None>
+    <None Include="Source\PresentationFramework.inl">
+      <Filter>Source\Engine</Filter>
+    </None>
   </ItemGroup>
 </Project>

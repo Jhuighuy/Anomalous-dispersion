@@ -9,10 +9,10 @@ namespace Presentation2
 {
 
 	// -----------------------
-	template<typename D3DWidget_t, typename D3DWidgetPtr_t>
-	ADAPI D3DWidgetPtr_t Window::Direct3D9(Rect const& rect) const
+	template<typename TGraphicsWidget, typename... TArgs>
+	ADAPI std::shared_ptr<TGraphicsWidget> Window::Graphics(Rect const& rect, TArgs&&... args) const
 	{
-		static_assert(std::is_base_of_v<D3DWidget, D3DWidget_t>, "Invalid 'D3DWidget_t' template parameter type.");
+		static_assert(std::is_base_of_v<GraphicsWidget, TGraphicsWidget>, "Invalid base type.");
 		assert(rect.Width != 0 && rect.Height != 0);
 
 		/* Initializing the Direct3D 9 driver. */
@@ -20,7 +20,7 @@ namespace Presentation2
 
 		/* Creating a static widget to render into it. */
 		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Static", nullptr, WS_CHILD | WS_VISIBLE
-			, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr));
+			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, nullptr, nullptr, nullptr));
 
 		/* Creating the device. */
 		D3DPRESENT_PARAMETERS static presentParameters = {};
@@ -35,7 +35,7 @@ namespace Presentation2
 		presentParameters.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
 
 		IDirect3DDevice9* device = nullptr;
-		for (DWORD vertexProcessing : { D3DCREATE_MIXED_VERTEXPROCESSING, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DCREATE_SOFTWARE_VERTEXPROCESSING })
+		for (DWORD const vertexProcessing : { D3DCREATE_MIXED_VERTEXPROCESSING, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DCREATE_SOFTWARE_VERTEXPROCESSING })
 		{
 			/* Trying to create a hardware vertex processing first and only then software. */
 			if (SUCCEEDED(direct3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, handle
@@ -44,7 +44,7 @@ namespace Presentation2
 				break;
 			}
 		}
-		return std::make_shared<D3DWidget_t>(handle, Utils::RuntimeCheck(device), rect);
+		return std::make_shared<TGraphicsWidget>(handle, Utils::RuntimeCheck(device), std::forward<TArgs>(args)...);
 	}
 
 }	// Presentation2

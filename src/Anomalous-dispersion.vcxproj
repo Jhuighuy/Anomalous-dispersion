@@ -10,10 +10,25 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\PresentationEngine.cpp" />
+    <ClCompile Include="Source\PresentationFramework.cpp" />
+    <ClCompile Include="Source\Program.cpp" />
+    <ClCompile Include="Source\Program_.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\PresentationEngine.hpp" />
+    <ClInclude Include="Source\PresentationFramework.hpp" />
+    <ClInclude Include="Source\PresentationScene.hpp" />
+    <ClInclude Include="Source\PresentationWidget.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\PresentationEngine.inl" />
+    <None Include="Source\PresentationFramework.inl" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{96A8EE76-FDE3-4A12-9C92-5DC120C2D4B4}</ProjectGuid>
     <RootNamespace>Anomalousdispersion</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -81,16 +96,6 @@
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Source\ObjLoader.cpp" />
-    <ClCompile Include="Source\Program.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Source\ObjLoader.h" />
-    <ClInclude Include="Source\PresentationEngine.h" />
-    <ClInclude Include="Source\PresentationFramework.h" />
-    <ClInclude Include="Source\PresentationWidget.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

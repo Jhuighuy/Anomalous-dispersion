@@ -9,10 +9,10 @@
 #include <d2d1.h>	/* Doesn't compile without this. */
 #pragma warning(pop)
 #include <WinCodec.h>
-#pragma comment(lib, "WindowsCodecs.lib")
 
 namespace Presentation2
 {
+	ADAPI bool g_IsExitRequested = false;
 	ADAPI std::thread::id g_MainThreadID = std::this_thread::get_id();
 	ADAPI std::thread::id g_RenderingThreadID;
 
@@ -39,10 +39,10 @@ namespace Presentation2
 
 	// -----------------------
 	ADAPI WindowWidget::WindowWidget(HWND const hwnd, TextSize const textSize)
-		: m_Hwnd(hwnd)
+		: m_Handle(hwnd)
 	{
 		assert(std::this_thread::get_id() == g_MainThreadID);
-		assert(m_Hwnd != nullptr);
+		assert(m_Handle != nullptr);
 
 		SetTextSize(textSize);
 	}
@@ -50,7 +50,7 @@ namespace Presentation2
 	// -----------------------
 	ADAPI void WindowWidget::SetTextSize(TextSize const textSize) const
 	{
-		assert(m_Hwnd != nullptr);
+		assert(m_Handle != nullptr);
 		assert(textSize < TextSize::COUNT);
 
 		struct
@@ -63,16 +63,14 @@ namespace Presentation2
 		{
 			/* Lazily loading the system font. */
 			font.Handle = Utils::RuntimeCheck(CreateFontW(Monitor::UpscaleHeight(font.Height), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE
-				, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Consolas"));
+				, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial"));
 		}
-		SendMessageW(m_Hwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font.Handle), TRUE);
+		SendMessageW(m_Handle, WM_SETFONT, reinterpret_cast<WPARAM>(font.Handle), TRUE);
 	}
 	
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 	// Window widgets and controls.
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
-
-	ADAPI bool g_IsExitRequested = false;
 
 	// -----------------------
 	ADINT LRESULT CALLBACK Window::WindowProc(HWND const hWnd, UINT const message, WPARAM const wParam, LPARAM const lParam)
@@ -92,8 +90,8 @@ namespace Presentation2
 				if (self->CheckID(controlID))
 				{
 					auto const& controlCallback = self->m_Callbacks[UnwrapID(controlID)];
-					auto const isControlChecked = IsDlgButtonChecked(self->m_Hwnd, controlID);
-					CheckDlgButton(self->m_Hwnd, controlID, !isControlChecked ? BST_CHECKED : BST_UNCHECKED);
+					auto const isControlChecked = IsDlgButtonChecked(self->m_Handle, controlID);
+					CheckDlgButton(self->m_Handle, controlID, !isControlChecked ? BST_CHECKED : BST_UNCHECKED);
 					controlCallback(!isControlChecked);
 				}
 			}
@@ -102,7 +100,7 @@ namespace Presentation2
 	}
 
 	// -----------------------
-	ADAPI Window::Window(Rect const& rect, wchar_t const* const caption, bool const fullscreen)
+	ADAPI Window::Window(Rect const& rect, LPCWSTR const caption, bool const fullscreen)
 	{
 		WNDCLASSEX static windowClass = { };
 		if (windowClass.cbSize == 0)
@@ -120,8 +118,8 @@ namespace Presentation2
 		if (fullscreen)
 		{
 			/* Initializing fullscreen window as normal one, scaled to fullscreen. */
-			m_Hwnd = Utils::RuntimeCheck(CreateWindowExW(0, windowClass.lpszClassName, caption
-			    , WS_POPUP | WS_VISIBLE | WS_OVERLAPPED
+			m_Handle = Utils::RuntimeCheck(CreateWindowExW(0, windowClass.lpszClassName, caption
+			    , WS_OVERLAPPED | WS_POPUP | WS_VISIBLE
 			    , 0, 0, Monitor::GetWidth(), Monitor::GetHeight()
 			    , nullptr, nullptr, hInstance, nullptr
 				));
@@ -129,20 +127,26 @@ namespace Presentation2
 		else
 		{
 			/* Initializing normal window. */
-			m_Hwnd = Utils::RuntimeCheck(CreateWindowExW(0, windowClass.lpszClassName, caption
+			m_Handle = Utils::RuntimeCheck(CreateWindowExW(0, windowClass.lpszClassName, caption
 			    , WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
 			    , rect.X, rect.Y, rect.Width, rect.Height
 			    , nullptr, nullptr, hInstance, nullptr
 				));
 		}
-		SetWindowLongW(m_Hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+		SetWindowLongW(m_Handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 		Hide();
 	}
 
 	// -----------------------
-	ADAPI void Window::Update() const
+	ADAPI void Window::Update() 
 	{
 		/// @todo Move main loops here?
+		IUpdatable::Update();
+		for (MSG msg = {}; GetMessageW(&msg, m_Handle, 0, 0);)
+		{
+			TranslateMessage(&msg);
+			DispatchMessageW(&msg);
+		}
 	}
 
 	// ***********************************************************************************************
@@ -155,40 +159,51 @@ namespace Presentation2
 		assert(rect.Width != 0 && rect.Height != 0);
 
 		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Static", nullptr, WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ
-			, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr));
+			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, nullptr, nullptr, nullptr));
 		return std::make_shared<WindowWidget>(handle);
 	}
 
 	// -----------------------
-	ADAPI LabelPtr Window::Label(Rect const& rect, wchar_t const* const text, LabelFlags const flags, TextSize const textSize) const
+	ADAPI LabelPtr Window::Label(Rect const& rect, LPCWSTR const text, LabelFlags const flags, TextSize const textSize) const
 	{
 		assert(rect.Width != 0 && rect.Height != 0);
 		assert(text != nullptr);
 
 		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Static", text, WS_CHILD | WS_VISIBLE | static_cast<DWORD>(flags)
-			, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr));
+			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, nullptr, nullptr, nullptr));
 		return std::make_shared<WindowWidget>(handle, textSize);
 	}
 
 	// -----------------------
-#ifdef SUPPORT_LOADING_FROM_FILE
-	ADAPI ImagePtr Window::Image(Rect const& rect, wchar_t const* const path) const
+	ADINT static auto GetImagingFactory()
+	{
+		IWICImagingFactory static* imagingFactory = nullptr;
+		if (imagingFactory == nullptr)
+		{
+			Utils::RuntimeCheckH(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER
+				, IID_PPV_ARGS(&imagingFactory)));
+		}
+		return imagingFactory;
+	}
+
+	// -----------------------
+#if SUPPORT_LOADING_FROM_FILE
+	ADAPI ImagePtr Window::Image(Rect const& rect, LPCWSTR const path) const
 	{
 		assert(rect.Width != 0 && rect.Height != 0);
 		assert(path != nullptr);
 
+#if !_DEBUG
+		OutputDebugStringA("Loading resource from file in release version.");
+#endif	// if !_DEBUG
+
 		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Static", nullptr, WS_CHILD | WS_VISIBLE | SS_BITMAP
-			, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr));
+			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, nullptr, nullptr, nullptr));
 		if (handle != nullptr)
 		{
 			std::vector<BYTE> bitmapBits;
 			{	/* Resizing the bitmap using some interpolation methods. */
-				IWICImagingFactory static* imagingFactory = nullptr;
-				if (imagingFactory == nullptr)
-				{
-					Utils::RuntimeCheckH(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER
-						, IID_PPV_ARGS(&imagingFactory)));
-				}
+				auto const imagingFactory = GetImagingFactory();
 
 				IWICBitmapDecoder* bitmapDecoder = nullptr;
 				Utils::RuntimeCheckH(imagingFactory->CreateDecoderFromFilename(path, nullptr
@@ -219,10 +234,11 @@ namespace Presentation2
 		}
 		return std::make_shared<WindowWidget>(handle);
 	}
-#endif	// ifdef SUPPORT_LOADING_FROM_FILE
+#endif	// if SUPPORT_LOADING_FROM_FILE
 	ADAPI ImagePtr Window::Image(Rect const& rect, LoadFromMemory_t, void const* const data) const
 	{
-		// http://stackoverflow.com/a/2901465
+		/// @todo http://stackoverflow.com/a/2901465
+		/// @todo https://msdn.microsoft.com/ru-ru/library/windows/desktop/bb773831(v=vs.85).aspx
 		(void)this, rect, data;
 		throw 0;
 	}
@@ -232,12 +248,12 @@ namespace Presentation2
 	// ***********************************************************************************************
 
 	// -----------------------
-	ADAPI TextEditPtr Window::TextEdit(Rect const& rect, wchar_t const* const text, TextEditFlags const flags, TextSize const textSize) const
+	ADAPI TextEditPtr Window::TextEdit(Rect const& rect, LPCWSTR const text, TextEditFlags const flags, TextSize const textSize) const
 	{
 		assert(rect.Width != 0 && rect.Height != 0);
 
 		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Edit", text, WS_CHILD | WS_VISIBLE | static_cast<DWORD>(flags)
-			, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, nullptr, nullptr, nullptr));
+			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, nullptr, nullptr, nullptr));
 		return std::make_shared<WindowWidget>(handle, textSize);
 	}
 
@@ -246,7 +262,7 @@ namespace Presentation2
 	// ***********************************************************************************************
 
 	// -----------------------
-	ADAPI ButtonPtr Window::Button(Rect const& rect, wchar_t const* const text, WindowWidgetCallback&& callback, TextSize const textSize)
+	ADAPI ButtonPtr Window::Button(Rect const& rect, LPCWSTR const text, WindowWidgetCallback&& callback, TextSize const textSize)
 	{
 		assert(rect.Width != 0 && rect.Height != 0);
 		assert(text != nullptr);
@@ -255,12 +271,12 @@ namespace Presentation2
 		m_Callbacks.push_back(callback);
 
 		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE
-			, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, reinterpret_cast<HMENU>(id), nullptr, nullptr));
+			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, reinterpret_cast<HMENU>(id), nullptr, nullptr));
 		return std::make_shared<WindowWidget>(handle, textSize);
 	}
 
 	// -----------------------
-	ADAPI CheckBoxPtr Window::CheckBox(Rect const& rect, wchar_t const* const text, WindowWidgetCallback&& callback, bool const enabled, TextSize const textSize)
+	ADAPI CheckBoxPtr Window::CheckBox(Rect const& rect, LPCWSTR const text, WindowWidgetCallback&& callback, bool const enabled, TextSize const textSize)
 	{
 		assert(rect.Width != 0 && rect.Height != 0);
 		assert(text != nullptr);
@@ -269,8 +285,8 @@ namespace Presentation2
 		m_Callbacks.push_back(callback);
 
 		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE | BS_CHECKBOX
-			, rect.X, rect.Y, rect.Width, rect.Height, m_Hwnd, reinterpret_cast<HMENU>(id), nullptr, nullptr));
-		Utils::RuntimeCheck(CheckDlgButton(m_Hwnd, id, enabled ? BST_CHECKED : BST_UNCHECKED));
+			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, reinterpret_cast<HMENU>(id), nullptr, nullptr));
+		Utils::RuntimeCheck(CheckDlgButton(m_Handle, id, enabled ? BST_CHECKED : BST_UNCHECKED));
 		return std::make_shared<WindowWidget>(handle, textSize);
 	}
 
