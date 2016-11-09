@@ -103,8 +103,8 @@ namespace Presentation2
 	static DOUBLE GovnoAbsorptionIndex(DOUBLE const waveLength)
 	{
 		auto const x = waveLength / 1000.0;
-		auto const y = 0.55 * exp(-120 * M_PI * (x - 0.58) * (x - 0.58));
-		return dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
+		auto const y = 0.55 * exp(-40 * M_PI * (x - 0.58) * (x - 0.58));
+		return ((x > 0.61414) && ( x < 0.691326 )) ? dxm::clamp(1.0 - 1.5743*y, 0.0, 1.0) * 0.9 :dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
 	}
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -120,11 +120,11 @@ namespace Presentation2
 		return (violetRefractiveIndex + v * (redRefractiveIndex - violetRefractiveIndex)); */
 		auto const x = 0.001 * waveLength;
 		auto const y = 0.286458 * x * x - 0.469792*x + 1.70216;
-		return y;
+		return 0.95*y;
 	}
 	static DOUBLE GlassAirRefractiveIndex(DOUBLE const waveLength)
 	{
-		return 1.2 / AirGlassRefractiveIndex(waveLength);
+		return 1.15 / AirGlassRefractiveIndex(waveLength);
 	}
 
 	static DOUBLE AirGovnoRefractiveIndex(DOUBLE const waveLength)
@@ -164,7 +164,7 @@ namespace Presentation2
 	}
 	static DOUBLE GovnoAirRefractiveIndex(DOUBLE const waveLength)
 	{
-		return 1.38 / AirGovnoRefractiveIndex(waveLength);
+		return 1.4 / AirGovnoRefractiveIndex(waveLength);
 	}
 
 	struct Plane final
@@ -213,9 +213,9 @@ namespace Presentation2
 
 	struct Prism final
 	{
-		std::atomic_bool IsEnabled = true;
+		bool IsEnabled = true;
 		PrismType Type = PrismType::Air;
-		FLOAT Angle = F_PI / 3.0f, AngleMin = F_PI / 12.0f, AngleMax = F_PI / 2.0f;
+		FLOAT Angle = F_PI / 3.0f, AngleMin = F_PI / 12.0f, AngleMax = dxm::radians(66.0f);
 		dxm::vec3 Position, PositionMin, PositionMax;
 		FLOAT RotationX = 0.0f, RotationXMin = -F_PI / 2, RotationXMax = F_PI / 2;
 		FLOAT RotationZ = 0.0f;
@@ -316,7 +316,7 @@ namespace Presentation2
 		TriangleMutableMeshPtr m_ScreenMesh;
 		TriangleMutableMeshRendererPtr<> m_ScreenRenderer;
 
-		std::atomic_bool mutable m_AreRaysSynced = false;
+		bool mutable m_AreRaysSynced = false;
 #if USE_RAYS_RENDERING
 		LineMutableMeshPtr m_RaysMesh;
 		LineMutableMeshRendererPtr<TRUE> m_RaysRenderer;
@@ -387,6 +387,7 @@ namespace Presentation2
 			LoadOBJ(L"../gfx/holder_gimbal.obj", m_PrismHolderGimbal);
 
 			SetDualPrismsLayout();
+			SetSinglePrismLayout();
 
 			/* Setting up some other shit. */
 			LoadTexture(m_Device, L"../gfx/color_mask.png", &m_RaysProjectionRenderer->Texture);
@@ -399,10 +400,13 @@ namespace Presentation2
 			m_PrismRenderers[0].Type = PrismType::Air;
 			m_PrismRenderers[0].IsEnabled = true;
 			m_PrismRenderers[0].Angle = F_PI / 3.0f;
-			m_PrismRenderers[0].Position = { 0.0f, 0.75f, 2.0f };
+			m_PrismRenderers[0].AngleMin = dxm::radians(15.0f);
+			m_PrismRenderers[0].Position = { 0.0f, 0.75f, 1.3f };
 			m_PrismRenderers[0].PositionMin = { -1.05f, 0.5f, 2.0f };
 			m_PrismRenderers[0].PositionMax = { +1.05f, 1.0f, 2.7f };
 			m_PrismRenderers[0].RotationX = 0;
+			m_PrismRenderers[0].RotationXMin = dxm::radians(-5.0f);
+			m_PrismRenderers[0].RotationXMax = dxm::radians(13.0f);
 			m_PrismRenderers[1].IsEnabled = false;
 
 			m_AreRaysSynced = false;
@@ -412,18 +416,26 @@ namespace Presentation2
 		{
 			m_PrismRenderers[0].Type = PrismType::Air;
 			m_PrismRenderers[0].IsEnabled = true;
+			m_PrismRenderers[0].Angle = F_PI / 3.0f;
+			m_PrismRenderers[0].AngleMin = dxm::radians(55.0f);
 			m_PrismRenderers[0].Position = { 0.0f, 0.75f, 1.4f };
 			m_PrismRenderers[0].PositionMin = { -1.05f, 0.5f, 0.4f };
 			m_PrismRenderers[0].PositionMax = { +1.05f, 1.0f, 1.6f };
+			m_PrismRenderers[0].RotationXMin = dxm::radians(-5.0f);
+			m_PrismRenderers[0].RotationXMax = dxm::radians(13.0f);
 			m_PrismRenderers[0].RotationX = 0;
+
 			m_PrismRenderers[1].Type = PrismType::Air;
 			m_PrismRenderers[1].IsEnabled = true;
-			m_PrismRenderers[1].Angle = F_PI / 3.0f - 0.1f;
+			m_PrismRenderers[1].Angle = F_PI / 3.0f;
+			m_PrismRenderers[1].AngleMin = dxm::radians(55.0f);
 			m_PrismRenderers[1].Position = { 0.0f, 1.0f, 2.0f };
 			m_PrismRenderers[1].PositionMin = { -1.05f, 0.5f, 2.0f };
 			m_PrismRenderers[1].PositionMax = { +1.05f, 1.0f, 2.7f };
 			m_PrismRenderers[1].RotationZ = F_PI / 2;
 			m_PrismRenderers[1].RotationX = 0;
+			m_PrismRenderers[1].RotationXMin = dxm::radians(-5.0f);
+			m_PrismRenderers[1].RotationXMax = dxm::radians(13.0f);
 
 			m_AreRaysSynced = false;
 		}
@@ -485,13 +497,13 @@ namespace Presentation2
 #if USE_RAYS_RENDERING
 			for (auto i = 0u; i < partitioning; ++i)
 			{
-				auto coord = dxm::vec3(0.0f, 0.75f, -2.0f);
+				auto coord = dxm::vec3(0.0f, 0.72f, -2.0f);
 				auto direction = dxm::vec3(0.0f, 0.0f, 1.0f);
 
 				auto static const violetWaveLength = 380.0;
-				auto static const redWaveLength = 740.0;
+				auto static const redWaveLength = 780.0;
 				auto const waveLength = violetWaveLength + i * (redWaveLength - violetWaveLength) / partitioning;
-				auto color = wavelengthToRGB(waveLength);
+				auto color = ConvertWaveLengthToRGB(waveLength);
 
 				for (auto j = 0u; j < m_PrismPlanes.size(); ++j)
 				{
@@ -512,7 +524,7 @@ namespace Presentation2
 
 					if (j == m_PrismPlanes.size() - 1)
 					{
-						AbsorbAlpha(color, m_PrismRenderers[1].Type == PrismType::Air ? 0.42 : 0.7);
+						AbsorbAlpha(color, m_PrismRenderers[1].Type == PrismType::Air ? 0.42 : 0.8f);
 
 						auto const scale = 0.3f;
 						dxm::vec3 static const uvOffset = { 0.5f, 0.5f, 0.0f };
@@ -701,22 +713,24 @@ namespace Presentation2
 
 			// Let the intensity fall off near the vision limits.
 			double factor;
-			if (waveLength >= 380.0 && waveLength < 420.0)
+			if (waveLength >= 380.0 && waveLength < 395.00)
 			{
-				factor = 0.3 + 0.7 * (waveLength - 380.0) / (420.0 - 380.0);
+				factor = 0.3 + 0.7 * (waveLength - 380.0) / (395.0 - 380.0);
 			}
-			else if (waveLength >= 420.0 && waveLength < 701.0)
+			else if (waveLength >= 395.0 && waveLength < 745.52)
 			{
 				factor = 1.0;
 			}
-			else if (waveLength >= 701.0 && waveLength < 781.0)
+			else if (waveLength >= 745.52 && waveLength < 781.0)
 			{
-				factor = 0.3 + 0.7 * (780.0 - waveLength) / (780.0 - 700.0);
+				factor = 0.3 + 0.7 * (780.0 - waveLength) / (780.0 - 745.52);
 			}
 			else
 			{
 				factor = 0.0;
 			}
+
+			//factor = 1.0;
 
 			unsigned rgb[3];
 			rgb[0] = red == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(red * factor, gamma)));

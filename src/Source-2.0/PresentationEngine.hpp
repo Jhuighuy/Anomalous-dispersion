@@ -54,8 +54,8 @@ namespace Presentation2
 	struct Camera : public IUpdatable
 	{
 	public:
-		FLOAT FieldOfView = F_PI / 1.5f;
-		FLOAT NearClippingPlane = 0.01f, FarClippingPlane = 100.0f;
+		FLOAT FieldOfView = F_PI / 3.0f;
+		FLOAT NearClippingPlane = 0.01f, FarClippingPlane = 20.0f;
 	protected:
 		IDirect3DDevice9* const m_Device;
 		RECT m_Rect;

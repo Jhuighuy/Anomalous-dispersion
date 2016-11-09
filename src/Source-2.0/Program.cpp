@@ -187,7 +187,7 @@ namespace Presentation2
 	{
 		m_Presentation = Direct3D9<PresentationWidget>({ STANDART_DESKTOP_WIDTH * 5 / 8, STANDART_DESKTOP_HEIGHT / 2, STANDART_DESKTOP_WIDTH * 3 / 4, STANDART_DESKTOP_HEIGHT });
 		// -----------------------
-		m_ImageLabel = Label({ STANDART_DESKTOP_WIDTH / 8, 85, 480, 40 }, L"Говно призмы от жопы", LabelFlags::CenterAlignment, TextSize::NotSoLarge);
+		m_ImageLabel = Label({ STANDART_DESKTOP_WIDTH / 8, 85, 480, 40 }, L"Показатель преломления обычной призмы", LabelFlags::CenterAlignment, TextSize::Default);
 		Rect const imageRect = { STANDART_DESKTOP_WIDTH / 8, 270, 480, 330 };
 		m_NormImage = Image(imageRect, L"../gfx/norm-func.png");
 		m_AnomImage = Image(imageRect, L"../gfx/anom-func.png");
@@ -233,11 +233,11 @@ namespace Presentation2
 				}
 
 				auto static const InitializeModifierControl = [this](PrismsControl::ModifierControl& control
-					, wchar_t const* const label, auto min, auto& value, auto max, auto delta, auto i, auto j1)
+					, wchar_t const* const label, auto const& min, auto& value, auto const& max, auto delta, auto i, auto j1)
 				{
-					static_assert(std::is_same_v<decltype(min), std::remove_reference_t<decltype(value)>>
-						&& std::is_same_v<decltype(min), decltype(delta)>
-						&& std::is_same_v<decltype(min), decltype(max)>, "Different types of 'min', 'value', 'max' and 'delta' parameters.");
+				//	static_assert(std::is_same_v<decltype(min), std::remove_reference_t<decltype(value)>>
+				//		&& std::is_same_v<decltype(min), decltype(delta)>
+				//		&& std::is_same_v<decltype(min), decltype(max)>, "Different types of 'min', 'value', 'max' and 'delta' parameters.");
 
 					// Initializing the modifier controls.
 					auto const cellX = CellX(i);
@@ -257,14 +257,14 @@ namespace Presentation2
 					auto const textEditY = lowerSubcellY;
 
 					control.Label = Label({ cellX, upperSubcellY + SUBCELL_HEIGHT / 2, SUBCELL_WIDTH, SUBCELL_HEIGHT }, label);
-					control.MinusButton = Button({ minusButtonX, minusButtonY, BUTTON_WIDTH, BUTTON_HEIGHT }, L"-", [this, min, &value, max, &control, delta](long)
+					control.MinusButton = Button({ minusButtonX, minusButtonY, BUTTON_WIDTH, BUTTON_HEIGHT }, L"-", [this, &min, &value, &max, &control, delta](long)
 					{
 						value = dxm::clamp(value - delta, min, max);
 						control.ValueEdit->SetText(ToString(value).c_str());
 						m_Presentation->m_AreRaysSynced = false;
 					});
 					control.ValueEdit = TextEdit({ textEditX, lowerSubcellY, TEXTEDIT_WIDTH, TEXTEDIT_HEIGHT }, ToString(value).c_str(), TextEditFlags::CenterAlignment);
-					control.PlusButton = Button({ plusButtonX, plusButtonY, BUTTON_WIDTH, BUTTON_HEIGHT }, L"+", [this, min, &value, max, &control, delta](long)
+					control.PlusButton = Button({ plusButtonX, plusButtonY, BUTTON_WIDTH, BUTTON_HEIGHT }, L"+", [this, &min, &value, &max, &control, delta](long)
 					{
 						value = dxm::clamp(value + delta, min, max);
 						control.ValueEdit->SetText(ToString(value).c_str());
@@ -357,13 +357,13 @@ namespace Presentation2
 				auto static secondPrismEnabled = DEFAULT_SECOND_PRISM_ENABLED;
 				m_OnePrismLayoutButton = Button({ CellX(0), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }, L"Одна призма", [&](long const)
 				{
-					m_ImageLabel->SetText(L"Говно призмы от жопы");
+					m_ImageLabel->SetText(L"Показатель преломления обычной призмы");
 					secondPrismEnabled = !secondPrismEnabled;
 					SwitchSecondPrismControls(false);
 				});
 				m_TwoPrismsLayoutButton = Button({ CellX(1), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }, L"Две призмы", [&](long const)
 				{
-					m_ImageLabel->SetText(L"Говно второй призмы от жопы");
+					m_ImageLabel->SetText(L"Показатели преломления и поглощения для цианиновой призмы");
 					secondPrismEnabled = !secondPrismEnabled;
 					SwitchSecondPrismControls(true);
 				});
@@ -400,6 +400,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 	// render correctly.
 	std::thread([]()
 	{
+		g_RenderingThreadID = std::this_thread::get_id();
 		while (gp_PresentationWindow == nullptr)
 		{
 			Sleep(100);
@@ -416,6 +417,10 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
+		/*if (gp_PresentationWindow != nullptr)
+		{
+			gp_PresentationWindow->Update();
+		}*/
 	}
 
 	delete gp_AuthorsWindow;

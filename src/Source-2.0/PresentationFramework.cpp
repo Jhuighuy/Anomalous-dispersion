@@ -13,6 +13,9 @@
 
 namespace Presentation2
 {
+	ADAPI std::thread::id g_MainThreadID = std::this_thread::get_id();
+	ADAPI std::thread::id g_RenderingThreadID;
+
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 	// Rectangles and monitors geometry.
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
@@ -33,6 +36,16 @@ namespace Presentation2
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 	// Basic window widget.
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
+
+	// -----------------------
+	ADAPI WindowWidget::WindowWidget(HWND const hwnd, TextSize const textSize)
+		: m_Hwnd(hwnd)
+	{
+		assert(std::this_thread::get_id() == g_MainThreadID);
+		assert(m_Hwnd != nullptr);
+
+		SetTextSize(textSize);
+	}
 
 	// -----------------------
 	ADAPI void WindowWidget::SetTextSize(TextSize const textSize) const
@@ -129,7 +142,7 @@ namespace Presentation2
 	// -----------------------
 	ADAPI void Window::Update() const
 	{
-		
+		/// @todo Move main loops here?
 	}
 
 	// ***********************************************************************************************

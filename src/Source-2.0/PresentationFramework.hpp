@@ -24,7 +24,7 @@
 
 #include <memory>
 #include <vector>
-#include <atomic>
+#include <thread>
 #include <cassert>
 #include <algorithm>
 #include <functional>
@@ -38,6 +38,9 @@
 namespace Presentation2
 {
 	enum LoadFromMemory_t { LoadFromMemory };
+
+	ADAPI extern std::thread::id g_MainThreadID;
+	ADAPI extern std::thread::id g_RenderingThreadID;
 
 	struct INonCopyable
 	{
@@ -56,7 +59,10 @@ namespace Presentation2
 
 	struct IRenderable : public IUpdatable
 	{
-		ADAPI virtual void Render() const = 0;
+		ADAPI virtual void Render() const = 0
+		{
+			assert(std::this_thread::get_id() == g_RenderingThreadID);
+		}
 	};	// struct IRenderable
 
 	namespace Utils
@@ -220,11 +226,7 @@ namespace Presentation2
 	public:
 		// -----------------------
 		ADINL WindowWidget() : m_Hwnd(nullptr) {}
-		ADAPI explicit WindowWidget(HWND const hwnd, TextSize const textSize = TextSize::Default)
-			: m_Hwnd(hwnd)
-		{
-			SetTextSize(textSize);
-		}
+		ADAPI explicit WindowWidget(HWND const hwnd, TextSize const textSize = TextSize::Default);
 		// -----------------------
 		ADAPI virtual ~WindowWidget()
 		{
@@ -238,12 +240,14 @@ namespace Presentation2
 		// -----------------------
 		ADINL void SetText(wchar_t const* const text) const
 		{
+			assert(m_Hwnd != nullptr);
 			SetWindowTextW(m_Hwnd, text);
 		}
 
 		// -----------------------
 		ADINL void Show(bool const show = true) const
 		{
+			assert(m_Hwnd != nullptr);
 			ShowWindow(m_Hwnd, show ? SW_SHOW : SW_HIDE);
 		}
 		ADINL void Hide(bool const hide = true) const
@@ -271,18 +275,12 @@ namespace Presentation2
 	enum class TextEditFlags : DWORD
 	{
 		None = 0,
-		AutoHorizontalScroll = ES_AUTOHSCROLL,
-		AutoVecticalScroll = ES_AUTOVSCROLL,
 		CenterAlignment = ES_CENTER,
 		LeftAlignment = ES_LEFT,
-		Lowercase = ES_LOWERCASE,
-		Uppercase = ES_UPPERCASE,
 		MultiLine = ES_MULTILINE,
 		Numbers = ES_NUMBER,
-		Password = ES_PASSWORD,
 		ReadOnly = ES_READONLY,
 		RightAlignment = ES_RIGHT,
-		WantReturn = ES_WANTRETURN,
 	}; // enum class TextEditFlags
 
 	using TextEditPtr = WindowWidgetPtr;
@@ -291,6 +289,7 @@ namespace Presentation2
 	using CheckBoxPtr = WindowWidgetPtr;
 
 	using D3DWidgetPtr = std::shared_ptr<class D3DWidget>;
+
 	using WindowPtr = std::shared_ptr<class Window>;
 	using WindowWidgetCallback = std::function<void(long)>;
 

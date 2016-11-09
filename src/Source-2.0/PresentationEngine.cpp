@@ -38,8 +38,6 @@ namespace Presentation2
 	// -----------------------
 	ADAPI void OrbitalCamera::Update(bool const forceUpdate) const
 	{
-		Camera::Update();
-
 		if (GetAsyncKeyState(VK_LBUTTON) != 0 || forceUpdate)
 		{
 			POINT mouseCurrentPosition = { };
@@ -61,6 +59,7 @@ namespace Presentation2
 		}
 		GetCursorPos(&m_PrevMousePosition);
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_VIEW, dxm::ptr(m_ViewMatrix)));
+		Camera::Update();
 	}
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
