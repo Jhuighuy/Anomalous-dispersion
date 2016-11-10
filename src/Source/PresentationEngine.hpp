@@ -98,7 +98,7 @@ namespace Presentation2
 	private:
 		POINT mutable m_PrevMousePosition = {};
 	public:
-		dxm::vec3 Rotation, RotationMin, RotationMax;
+		dxm::vec2 Rotation, RotationMin, RotationMax;
 		dxm::vec3 RotationCenter;
 		dxm::vec3 CenterOffset;
 
@@ -240,7 +240,8 @@ namespace Presentation2
 	public:
 		// -----------------------
 		ADINL explicit MutableMesh(IDirect3DDevice9* const device) 
-			: Mesh(device) {}
+			: Mesh(device) 
+		{}
 
 		// -----------------------
 		ADINL void BeginUpdateVertices()
@@ -293,6 +294,7 @@ namespace Presentation2
 		auto static const PrimitiveType = Mesh::PrimitiveType;
 
 	public:
+		bool IsEnabled = true;
 		dxm::vec3 PositionOffset;
 		dxm::vec3 Position;
 		dxm::vec3 Rotation;
@@ -407,6 +409,30 @@ namespace Presentation2
 		ADINL auto OrbitalCamera()
 		{
 			return CustomRenderable<OrbitalCameraPtr::element_type>(m_Device);
+		}
+
+		// -----------------------
+		template<typename... TArgs>
+		ADINL auto TriangleMesh(TArgs&&... args) const
+		{
+			return std::make_shared<TriangleMeshPtr::element_type>(m_Device, std::forward<TArgs>(args)...);
+		}
+		template<typename... TArgs>
+		ADINL auto TriangleMutableMesh(TArgs&&... args) const
+		{
+			return std::make_shared<TriangleMutableMeshPtr::element_type>(m_Device, std::forward<TArgs>(args)...);
+		}
+
+		// -----------------------
+		template<typename... TArgs>
+		ADINL auto LineMesh(TArgs&&... args) const
+		{
+			return std::make_shared<LineMeshPtr::element_type>(m_Device, std::forward<TArgs>(args)...);
+		}
+		template<typename... TArgs>
+		ADINL auto LineMutableMesh(TArgs&&... args) const
+		{
+			return std::make_shared<LineMutableMeshPtr::element_type>(m_Device, std::forward<TArgs>(args)...);
 		}
 
 		// -----------------------

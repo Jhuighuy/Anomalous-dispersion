@@ -35,6 +35,9 @@
     <ClInclude Include="Source\PresentationScene.hpp">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Source\PresentationPhysics.hpp">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\PresentationEngine.inl">

@@ -188,6 +188,13 @@ namespace Presentation2
 	template<typename TMesh, BOOL TIsTransparent, BOOL TIsLit>
 	ADAPI void MeshRenderer<TMesh, TIsTransparent, TIsLit>::Render() const
 	{
+		IEngineRenderable::Render();
+		if (!IsEnabled)
+		{
+			/* Disabled objects should not be rendered. */
+			return;
+		}
+
 		/* Setting up the transformations. */
 		auto const matrix = dxm::translate(Position)
 			* dxm::toMat4(dxm::quat(Rotation))

@@ -19,6 +19,7 @@
   <ItemGroup>
     <ClInclude Include="Source\PresentationEngine.hpp" />
     <ClInclude Include="Source\PresentationFramework.hpp" />
+    <ClInclude Include="Source\PresentationPhysics.hpp" />
     <ClInclude Include="Source\PresentationScene.hpp" />
     <ClInclude Include="Source\PresentationWidget.hpp" />
   </ItemGroup>

@@ -65,7 +65,7 @@ namespace Presentation2
 		Camera::Render();
 
 		auto const translation = dxm::translate(RotationCenter);
-		auto const cameraRotation = dxm::toMat4(dxm::quat(Rotation));
+		auto const cameraRotation = dxm::toMat4(dxm::quat(dxm::vec3(Rotation, 0.0f)));
 		auto const view = dxm::lookAtLH(dxm::vec3(translation * cameraRotation * dxm::vec4(CenterOffset, 1.0f))
 			, RotationCenter, dxm::vec3(cameraRotation * Up));
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_VIEW, dxm::ptr(view)));
@@ -81,15 +81,29 @@ namespace Presentation2
 	{
 		assert(m_Device != nullptr);
 
-		/* Setting up default blending parameters. */
-		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD));
-		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA));
-		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE));
+		{
+			/* Setting up default blending parameters. */
+			Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD));
+			Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA));
+			Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA));
+		}
 
-		/* Setting up default texture parameters. */
-		Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE));
-		Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE));
-		Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE));
+		{
+			/* Setting up default texture parameters. */
+			Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE));
+			Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE));
+			Utils::RuntimeCheckH(m_Device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE));
+		}
+
+		/* Setting up default lights. */
+		D3DLIGHT9 light = {};
+		light.Type = D3DLIGHT_DIRECTIONAL;
+		light.Diffuse = { 0.7f, 0.7f, 0.7f, 1.0f };
+		light.Direction = { 0.0f, -0.3f, 1.0f };
+		light.Attenuation1 = 0.1f;
+		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_LIGHTING, TRUE));
+		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_AMBIENT, ~0u));
+		Utils::RuntimeCheckH(m_Device->SetLight(0, &light));
 	}
 
 	// -----------------------
@@ -112,7 +126,7 @@ namespace Presentation2
 		IEngineRenderable::Render();
 
 		/* Clearing the buffers and starting rendering. */
-		Utils::RuntimeCheckH(m_Device->Clear(0, nullptr, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0, 1.0f, 0));
+		Utils::RuntimeCheckH(m_Device->Clear(0, nullptr, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, ~0u, 1.0f, 0));
 		Utils::RuntimeCheckH(m_Device->BeginScene());
 
 		/* Rendering the scene. */
