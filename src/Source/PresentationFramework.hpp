@@ -11,6 +11,8 @@
 #error Please, include <Windows.h> before this header.
 #endif	// ifdef _WINDOWS_
 
+#define D3D_DEBUG_INFO 1
+
 /* Loading the minimized version of the WinAPI. */
 #ifndef WIN32_LEAN_AND_MEAN 
 #define WIN32_LEAN_AND_MEAN 1
@@ -60,17 +62,17 @@ namespace Presentation2
 	struct IUpdatable : INonCopyable
 	{
 		ADINT virtual ~IUpdatable() = default;
-		ADAPI virtual void Update() = 0
+		ADAPI virtual void OnUpdate() = 0
 		{
-			assert(std::this_thread::get_id() == g_MainThreadID);
+		//	assert(std::this_thread::get_id() == g_MainThreadID);
 		}
 	};	// struct IUpdatable
 
 	struct IRenderable : public IUpdatable
 	{
-		ADAPI virtual void Render() const = 0
+		ADAPI virtual void OnRender() const = 0
 		{
-			assert(std::this_thread::get_id() == g_RenderingThreadID);
+		//	assert(std::this_thread::get_id() == g_RenderingThreadID);
 		}
 	};	// struct IRenderable
 
@@ -345,7 +347,7 @@ namespace Presentation2
 		ADAPI explicit Window(Rect const& rect, LPCWSTR const caption = nullptr, bool const fullscreen = false);
 
 		// -----------------------
-		ADAPI void Update() override;
+		ADAPI void OnUpdate() override;
 
 		// ***********************************************************************************************
 		// Static controls.

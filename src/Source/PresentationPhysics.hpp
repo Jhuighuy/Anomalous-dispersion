@@ -89,7 +89,7 @@ namespace Presentation2
 		rgb[0] = red == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(red * factor, gamma)));
 		rgb[1] = green == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(green * factor, gamma)));
 		rgb[2] = blue == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(blue * factor, gamma)));
-		return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], 0xFF / 2);
+		return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], 30);
 	}
 
 	using IndexFunc = DOUBLE(*)(DOUBLE const waveLength);
@@ -104,8 +104,9 @@ namespace Presentation2
 	static DOUBLE GovnoAbsorptionIndex(DOUBLE const waveLength)
 	{
 		auto const x = waveLength / 1000.0;
-		auto const y = 0.55 * exp(-40 * M_PI * (x - 0.58) * (x - 0.58));
-		return ((x > 0.61414) && (x < 0.691326)) ? dxm::clamp(1.0 - 1.5743*y, 0.0, 1.0) * 0.9 : dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
+		auto y = 0.55 * exp(-40 * M_PI * (x - 0.58) * (x - 0.58));
+		y = ((x > 0.61414) && (x < 0.691326)) ? dxm::clamp(1.0 - 1.5743*y, 0.0, 1.0) * 0.9 : dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
+		return y * 2.0 / 0.6;
 	}
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

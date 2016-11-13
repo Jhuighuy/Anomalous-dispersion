@@ -14,7 +14,7 @@ namespace Presentation2
 	enum class PrismType
 	{
 		Air,
-		Ñyanine,
+		Cyanine,
 		COUNT,
 	};	// enum class PrismType
 
@@ -36,21 +36,22 @@ namespace Presentation2
 	class PrismController final : public IEngineUpdatable
 	{
 	public:
-		bool IsEnabled = true;
+		bool IsEnabled;
 		PrismType Type = PrismType::Air;
-		BoundedValue<FLOAT> Angle;
+		BoundedValue<FLOAT> Angle = { dxm::degrees(60.0f) };
 		BoundedValue<dxm::vec3> Position;
-		BoundedValue<dxm::vec3> Rotation;
+		BoundedValue<FLOAT> RotationX = {};
+		FLOAT RotationZ = 0.0f;
 
 		TriangleMeshRendererPtr<FALSE, TRUE> PrismHolderBase;
 		TriangleMeshRendererPtr<FALSE, TRUE> PrismHolderLeg;
 		TriangleMeshRendererPtr<FALSE, TRUE> PrismHolderGimbal;
-		TriangleMeshRendererPtr<TRUE, TRUE> Prism;
+		TriangleMeshRendererPtr<TRUE> Prism;
 
 	public:
-		ADINT void Update() override final
+		ADINT void OnUpdate() override final
 		{
-			IEngineUpdatable::Update();
+			IEngineUpdatable::OnUpdate();
 
 			/* Setting up the prism holder transformations. */
 			auto static const LegHeight = 1.5f;
@@ -71,15 +72,15 @@ namespace Presentation2
 			PrismHolderGimbal->IsEnabled = IsEnabled;
 			PrismHolderGimbal->Position = Position;
 			PrismHolderGimbal->Rotation = {};
-			PrismHolderGimbal->Rotation.z = Rotation.Value.z;
+			PrismHolderGimbal->Rotation.z = RotationZ;
 			PrismHolderGimbal->Scale = { 1.0f, 1.0f, 1.0f };
 
 			/* Setting up the prism transformations. */
 			Prism->IsEnabled = IsEnabled;
 			Prism->PositionOffset = { 0.0f, 0.2f / 3 - 0.1f, 0.0f };
 			Prism->Position = Position;
-			Prism->Rotation = Rotation;
-			Prism->Rotation.y = 0.0f;
+			Prism->Rotation.x = RotationX;
+			Prism->Rotation.z = RotationZ;
 			Prism->Scale = { 1.0f, 1.0f, tanf(Angle / 2.0f) };
 		}
 
@@ -103,7 +104,7 @@ namespace Presentation2
 			auto const absorptionIndexFunc = absorptionIndexFuncTable[static_cast<size_t>(Type)];
 
 			auto const transformationMatrix = dxm::translate(Position.Value)
-				* dxm::toMat4(dxm::quat(dxm::vec3(Rotation.Value.x, 0.0f, Rotation.Value.z)))
+				* dxm::toMat4(dxm::quat(dxm::vec3(RotationX, 0.0f, RotationZ)))
 				* dxm::translate(glm::vec3{ 0, -0.1f + 0.2f / 3, 0 })
 				* dxm::scale(glm::vec3(1.0f, 1.0f, tanf(Angle / 2.0f)));
 			{
@@ -129,15 +130,20 @@ namespace Presentation2
 	class RaysController final : public IEngineUpdatable
 	{
 	public:
-		bool IsSceneSynced = false;
+		bool& IsSceneSynced;
 		PrismControllerPtrs PrismControllers;
 		LineMutableMeshPtr RaysMesh;
 		TriangleMutableMeshPtr RaysProjectionMesh;
 
 	public:
-		ADINT void Update() override final
+		ADINL explicit RaysController(bool& isSceneSynced)
+			: IsSceneSynced(isSceneSynced)
 		{
-			IEngineUpdatable::Update();
+		}
+
+		ADINT void OnUpdate() override final
+		{
+			IEngineUpdatable::OnUpdate();
 
 			if (!IsSceneSynced)
 			{
@@ -152,7 +158,7 @@ namespace Presentation2
 				RaysProjectionMesh->BeginUpdateVertices();
 
 				auto static const raysCount = 2000u;
-				auto static const skipped = 50u;
+				auto static const skipped = 0u;
 				for (auto i = skipped; i < raysCount - skipped; ++i)
 				{
 					auto const waveLength = g_VioletWaveLength + i * (g_RedWaveLength - g_VioletWaveLength) / raysCount;
@@ -171,7 +177,7 @@ namespace Presentation2
 							continue;
 						}
 						RaysMesh->AddVertex({ prevCoord, waveColor });
-						RaysMesh->AddVertex({ coord, j == prismPlanes.size() - 1 ? waveColor & 0x00FFFFFF : waveColor });
+						RaysMesh->AddVertex({ coord, j == prismPlanes.size() - 1 ? waveColor & 0x01FFFFFF : waveColor });
 						if (!plane.Refract(direction, waveLength))
 							break;
 
@@ -179,7 +185,7 @@ namespace Presentation2
 
 						if (j == prismPlanes.size() - 1)
 						{
-							AbsorbAlpha(waveColor, PrismControllers[1]->Type == PrismType::Air ? 0.42 : 0.8f);
+							AbsorbAlpha(waveColor, 0.6);
 
 							auto const scale = 0.03f;
 							dxm::vec3 static const uvOffset = { 0.5f, 0.5f, 0.0f };
@@ -211,7 +217,7 @@ namespace Presentation2
 
 	class PresentationScene final : public Scene
 	{
-	private:
+	public:
 		bool m_IsSceneSynced = false;
 		PrismControllerPtrs m_PrismContollers;
 		RaysControllerPtr m_RaysController;
@@ -223,7 +229,7 @@ namespace Presentation2
 		{
 			{	/* Setting up the camera. */
 				auto const camera = OrbitalCamera();
-				camera->Rotation = { 0.0, -dxm::radians(90.0f) };
+				camera->Rotation = { 0.0, -dxm::radians(45.0f) };
 				camera->RotationCenter = { 0.0f, 1.2f, 2.0f };
 				camera->CenterOffset = { 0.0f, 0.0f, -1.8f };
 			}
@@ -240,13 +246,13 @@ namespace Presentation2
 			}
 
 			{	/* Setting up the rays. */
-				m_RaysController = CustomUpdatable<RaysController>();
+				m_RaysController = CustomUpdatable<RaysController>(m_IsSceneSynced);
 
 				m_RaysController->RaysProjectionMesh = TriangleMutableMesh();
-				TriangleMutableMeshRenderer<TRUE>(m_RaysController->RaysProjectionMesh, L"../gfx/color_mask.png");
+				auto const raysProjection = TriangleMutableMeshRenderer<TRUE>(m_RaysController->RaysProjectionMesh, L"../gfx/color_mask.png", L"../gfx/Shaders/ColoredTextureShader.hlsl");
 
 				m_RaysController->RaysMesh = LineMutableMesh();
-				LineMutableMeshRenderer<TRUE>(m_RaysController->RaysMesh);
+				auto const rays = LineMutableMeshRenderer<TRUE>(m_RaysController->RaysMesh);
 			}
 
 			{	/* Setting up the prisms. */
@@ -261,7 +267,7 @@ namespace Presentation2
 					prismController->PrismHolderBase = TriangleMeshRenderer<FALSE, TRUE>(prismHolderBaseMesh);
 					prismController->PrismHolderLeg = TriangleMeshRenderer<FALSE, TRUE>(prismHolderLegMesh);
 					prismController->PrismHolderGimbal = TriangleMeshRenderer<FALSE, TRUE>(prismHolderGimbalMesh);
-					prismController->Prism = TriangleMeshRenderer<TRUE, TRUE>(prismMesh);
+					prismController->Prism = TriangleMeshRenderer<TRUE>(prismMesh);
 				}
 				m_RaysController->PrismControllers = m_PrismContollers;
 
@@ -278,7 +284,8 @@ namespace Presentation2
 				firstPrismController->Type = PrismType::Air;
 				firstPrismController->Angle = { dxm::radians(60.0f), dxm::radians(15.0f), dxm::radians(66.0f) };
 				firstPrismController->Position = { { 0.0f, 0.75f, 1.3f }, { -1.05f, 0.5f, 0.4f }, { +1.05f, 1.0f, 1.6f } };
-				firstPrismController->Rotation = { {}, { dxm::radians(-5.0f), 0.0f, 0.0f }, { dxm::radians(13.0f), 0.0f, 0.0f } };
+				firstPrismController->RotationX = { 0.0f, dxm::radians(0.0f), dxm::radians(10.0f) };
+				firstPrismController->RotationZ = 0.0f;
 			}
 			{
 				auto& secondPrismController = m_PrismContollers[1];
@@ -296,19 +303,23 @@ namespace Presentation2
 				firstPrismController->Type = PrismType::Air;
 				firstPrismController->Angle = { dxm::radians(60.0f), dxm::radians(55.0f), dxm::radians(66.0f) };
 				firstPrismController->Position = { { 0.0f, 0.75f, 1.4f }, { -1.05f, 0.5f, 0.4f }, { +1.05f, 1.0f, 1.6f } };
-				firstPrismController->Rotation = { {}, { dxm::radians(-5.0f), 0.0f, 0.0f }, { dxm::radians(13.0f), 0.0f, 0.0f } };
+				firstPrismController->RotationX = { 0.0f, dxm::radians(0.0f), dxm::radians(10.0f) };
+				firstPrismController->RotationZ = 0.0f;
 			}
 			{
 				auto& secondPrismController = m_PrismContollers[1];
 				secondPrismController->IsEnabled = true;
 				secondPrismController->Type = PrismType::Air;
-				secondPrismController->Angle = { dxm::radians(60.0f), dxm::radians(55.0f), dxm::radians(66.0f) };
+				secondPrismController->Angle = { dxm::radians(55.0f), dxm::radians(55.0f), dxm::radians(66.0f) };
 				secondPrismController->Position = { { 0.0f, 1.0f, 2.0f }, { -1.05f, 0.5f, 2.0f }, { +1.05f, 1.0f, 2.7f } };
-				secondPrismController->Rotation = { { 0.0f, 0.0f, dxm::radians(90.0f), }, { 0.0f, 0.0f, dxm::radians(90.0f) }, { dxm::radians(13.0f), 0.0f, dxm::radians(90.0f) } };
+				secondPrismController->RotationX = { 0.0f, 0.0f, dxm::radians(13.0f) };
+				secondPrismController->RotationZ = dxm::radians(90.0f);
 			}
 			m_IsSceneSynced = false;
 		}
 
 	};	// class PresentationScene
+
+	using PresentationScenePtr = std::shared_ptr<PresentationScene>;
 
 }	// namespace Presentation2

@@ -14,14 +14,12 @@
     <ClCompile Include="Source\PresentationEngine.cpp" />
     <ClCompile Include="Source\PresentationFramework.cpp" />
     <ClCompile Include="Source\Program.cpp" />
-    <ClCompile Include="Source\Program_.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\PresentationEngine.hpp" />
     <ClInclude Include="Source\PresentationFramework.hpp" />
     <ClInclude Include="Source\PresentationPhysics.hpp" />
     <ClInclude Include="Source\PresentationScene.hpp" />
-    <ClInclude Include="Source\PresentationWidget.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\PresentationEngine.inl" />

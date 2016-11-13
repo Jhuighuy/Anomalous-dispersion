@@ -27,12 +27,12 @@ namespace Presentation2
 		presentParameters.Windowed = TRUE;
 		presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
 		presentParameters.hDeviceWindow = handle;
-		presentParameters.BackBufferFormat = D3DFMT_X8R8G8B8;
+		presentParameters.BackBufferFormat = D3DFMT_A8R8G8B8;
 		presentParameters.BackBufferWidth = rect.Width;
 		presentParameters.BackBufferHeight = rect.Height;
 		presentParameters.EnableAutoDepthStencil = TRUE;
 		presentParameters.AutoDepthStencilFormat = D3DFMT_D16;
-		presentParameters.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
+	//	presentParameters.MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
 
 		IDirect3DDevice9* device = nullptr;
 		for (DWORD const vertexProcessing : { D3DCREATE_MIXED_VERTEXPROCESSING, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DCREATE_SOFTWARE_VERTEXPROCESSING })

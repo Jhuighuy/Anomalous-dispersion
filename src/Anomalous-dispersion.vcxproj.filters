@@ -18,14 +18,8 @@
     <ClCompile Include="Source\PresentationFramework.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Program_.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\PresentationWidget.hpp">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="Source\PresentationEngine.hpp">
       <Filter>Source\Engine</Filter>
     </ClInclude>

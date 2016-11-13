@@ -147,16 +147,29 @@ namespace Presentation2
 	// -----------------------
 #if SUPPORT_LOADING_FROM_FILE
 	template<typename TMesh, BOOL TIsTransparent, BOOL TIsLit>
-	ADAPI MeshRenderer<TMesh, TIsTransparent, TIsLit>::MeshRenderer(IDirect3DDevice9* const device, MeshPtr const& mesh, LPCWSTR const path)
+	ADAPI MeshRenderer<TMesh, TIsTransparent, TIsLit>::MeshRenderer(IDirect3DDevice9* const device, MeshPtr const& mesh, LPCWSTR const texturePath, LPCWSTR const pixelShaderPath)
 		: MeshRenderer(device, mesh)
 	{
-		assert(path != nullptr);
-
 #if !_DEBUG
 		OutputDebugStringA("Loading a texture from file in a release build.");
 #endif	// if !_DEBUG
 
-		Utils::RuntimeCheckH(D3DXCreateTextureFromFileW(m_Device, path, &m_Texture));
+		if (texturePath != nullptr)
+		{
+			Utils::RuntimeCheckH(D3DXCreateTextureFromFileW(m_Device, texturePath, &m_Texture));
+		}
+
+		if (pixelShaderPath != nullptr)
+		{
+			ID3DXBuffer* pixelShaderCode = nullptr;
+			ID3DXBuffer* pixelShaderErrors = nullptr;
+			if (FAILED(D3DXCompileShaderFromFileW(pixelShaderPath, nullptr, nullptr, "main", "ps_2_0", 0, &pixelShaderCode, &pixelShaderErrors, nullptr)))
+			{
+				MessageBoxA(nullptr, static_cast<char const*>(pixelShaderErrors->GetBufferPointer()), "Error", MB_OK);
+				Utils::RuntimeCheckH(E_FAIL);
+			}
+			Utils::RuntimeCheckH(device->CreatePixelShader(static_cast<DWORD const*>(pixelShaderCode->GetBufferPointer()), &m_PixelShader));
+		}
 	}
 #endif	// if SUPPORT_LOADING_FROM_FILE
 	
@@ -186,9 +199,10 @@ namespace Presentation2
 
 	// -----------------------
 	template<typename TMesh, BOOL TIsTransparent, BOOL TIsLit>
-	ADAPI void MeshRenderer<TMesh, TIsTransparent, TIsLit>::Render() const
+	ADAPI void MeshRenderer<TMesh, TIsTransparent, TIsLit>::OnRender(IDirect3DPixelShader9* const pixelShader
+		, IDirect3DTexture9* const texture1, IDirect3DTexture9* const texture2 = nullptr) const
 	{
-		IEngineRenderable::Render();
+		IEngineRenderable::OnRender();
 		if (!IsEnabled)
 		{
 			/* Disabled objects should not be rendered. */
@@ -202,15 +216,14 @@ namespace Presentation2
 			* dxm::scale(Scale);
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_WORLD, dxm::ptr(matrix)));
 
-		/* Setting up the transparency. */
-		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, TIsTransparent));
-
 		/* Setting up the lights (we have a signle light source on the scene). */
 		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_LIGHTING, TIsLit));
 		Utils::RuntimeCheckH(m_Device->LightEnable(0, TIsLit));
 
-		/* Setting up the textures (we have a signle texture per object). */
-		Utils::RuntimeCheckH(m_Device->SetTexture(0, m_Texture));
+		/* Setting up the textures and shaders (we have a signle texture and shared per object). */
+		Utils::RuntimeCheckH(m_Device->SetTexture(0, texture1));
+		Utils::RuntimeCheckH(m_Device->SetTexture(1, texture2));
+		Utils::RuntimeCheckH(m_Device->SetPixelShader(pixelShader));
 
 		/* Setting up and rendering the mesh data. */
 		Utils::RuntimeCheckH(m_Device->SetFVF(FVF));

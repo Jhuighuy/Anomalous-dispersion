@@ -138,10 +138,10 @@ namespace Presentation2
 	}
 
 	// -----------------------
-	ADAPI void Window::Update() 
+	ADAPI void Window::OnUpdate() 
 	{
 		/// @todo Move main loops here?
-		IUpdatable::Update();
+		IUpdatable::OnUpdate();
 		for (MSG msg = {}; GetMessageW(&msg, m_Handle, 0, 0);)
 		{
 			TranslateMessage(&msg);

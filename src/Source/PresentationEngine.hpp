@@ -14,6 +14,7 @@
 
 #include <mutex>
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE 1 
 #pragma warning(push, 0)
 #include <glm/glm.hpp>
 #pragma warning(pop)
@@ -83,10 +84,10 @@ namespace Presentation2
 		ADAPI explicit Camera(IDirect3DDevice9* const device);
 
 		// -----------------------
-		ADAPI void Render() const override;
-		ADAPI void Update() override 
+		ADAPI void OnRender() const override;
+		ADAPI void OnUpdate() override 
 		{
-			IEngineRenderable::Update();
+			IEngineRenderable::OnUpdate();
 		}
 
 	};	// class Camera
@@ -108,8 +109,8 @@ namespace Presentation2
 		{}
 
 		// -----------------------
-		ADAPI void Update() override final;
-		ADAPI void Render() const override final;
+		ADAPI void OnUpdate() override final;
+		ADAPI void OnRender() const override final;
 	};	// class OrbitalCamera
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
@@ -172,7 +173,7 @@ namespace Presentation2
 
 	protected:
 #if SUPPORT_LOADING_FROM_FILE
-		ADINT void UpdateVertexBuffer(LPCWSTR const path, dxm::argb const color = ~0) const;
+		ADINT void UpdateVertexBuffer(LPCWSTR const path, dxm::argb const color = ~0u) const;
 #endif	// if SUPPORT_LOADING_FROM_FILE
 		ADINT void UpdateVertexBuffer(LoadFromMemory_t, Vertex const* const vertices, UINT const verticesCount) const;
 
@@ -185,7 +186,7 @@ namespace Presentation2
 			assert(device != nullptr);
 		}
 #if SUPPORT_LOADING_FROM_FILE
-		ADINL Mesh(IDirect3DDevice9* const device, LPCWSTR const path, dxm::argb const color = ~0)
+		ADINL Mesh(IDirect3DDevice9* const device, LPCWSTR const path, dxm::argb const color = ~0u)
 			: Mesh(device)
 		{
 			assert(device != nullptr);
@@ -282,10 +283,26 @@ namespace Presentation2
 	using LineMutableMeshPtr = std::shared_ptr<LineMutableMesh>;
 
 	/*************** 
+	 * Describes a base mesh renderer. */
+	class IMeshRenderer : public IEngineRenderable
+	{
+	public:
+		// -----------------------
+		ADAPI virtual bool IsTransparent() const = 0;
+		ADAPI virtual bool IsLit() const = 0;
+		ADAPI virtual void OnRender(IDirect3DPixelShader9* const pixelShader) const = 0;
+		ADAPI virtual void OnRender(IDirect3DPixelShader9* const pixelShader, IDirect3DTexture9* const texture1, IDirect3DTexture9* const texture2 = nullptr) const = 0;
+	};	// class IMeshRenderer
+
+	using IMeshRendererPtr = std::shared_ptr<IMeshRenderer>;
+
+	/*************** 
 	 * Describes a template mesh renderer. */
 	template<typename TMesh = TriangleMutableMesh, BOOL TIsTransparent = FALSE, BOOL TIsLit = FALSE>
-	class MeshRenderer final : public IEngineRenderable
+	class MeshRenderer final : public IMeshRenderer
 	{
+		friend class Scene;
+
 	public:
 		using Mesh = TMesh;
 		using MeshPtr = std::shared_ptr<Mesh>;
@@ -302,6 +319,7 @@ namespace Presentation2
 	protected:
 		IDirect3DDevice9* const m_Device;
 		IDirect3DTexture9* m_Texture = nullptr;
+		IDirect3DPixelShader9* m_PixelShader = nullptr;
 	private:
 		MeshPtr m_Mesh;
 
@@ -309,7 +327,7 @@ namespace Presentation2
 		// -----------------------
 		ADAPI MeshRenderer(IDirect3DDevice9* const device, MeshPtr const& mesh);
 #if SUPPORT_LOADING_FROM_FILE
-		ADAPI MeshRenderer(IDirect3DDevice9* const device, MeshPtr const& mesh, LPCWSTR const path);
+		ADAPI MeshRenderer(IDirect3DDevice9* const device, MeshPtr const& mesh, LPCWSTR const texturePath, LPCWSTR const pixelShaderPath = nullptr);
 #endif	// if SUPPORT_LOADING_FROM_FILE
 		ADAPI MeshRenderer(IDirect3DDevice9* const device, MeshPtr const& mesh, LoadFromMemory_t, void const* const data, UINT const width, UINT const height);
 		ADINL ~MeshRenderer()
@@ -321,11 +339,17 @@ namespace Presentation2
 		}
 
 		// -----------------------
-		ADAPI void Render() const override final;
-		ADAPI void Update() override final 
+		ADAPI void OnRender() const override final { OnRender(m_PixelShader, m_Texture); }
+		ADAPI void OnRender(IDirect3DPixelShader9* const pixelShader, IDirect3DTexture9* const texture1, IDirect3DTexture9* const texture2 = nullptr) const override;
+		ADAPI void OnRender(IDirect3DPixelShader9* const pixelShader) const override { OnRender(pixelShader, m_Texture); }
+		ADAPI void OnUpdate() override final 
 		{
-			IEngineRenderable::Update();
+			IEngineRenderable::OnUpdate();
 		}
+
+		// -----------------------
+		ADAPI bool IsTransparent() const override final { return TIsTransparent; }
+		ADAPI bool IsLit() const override final { return TIsLit; }
 
 	};	// class MeshRenderer
 
@@ -360,9 +384,20 @@ namespace Presentation2
 	 * Describes a scene. */
 	class Scene : public IEngineRenderable
 	{
+		struct RenderTarget final
+		{
+			IDirect3DSurface9* Surface;
+			IDirect3DTexture9* Texture;
+		};	// struct RenderTarget
+
 	protected:
 		IDirect3DDevice9* const m_Device;
 	private:
+		mutable IDirect3DPixelShader9* m_ForceBlackShader;
+		mutable IDirect3DPixelShader9* m_BlendTexturesShader;
+		mutable RenderTarget m_RenderTargets[2];
+		mutable TriangleMeshRendererPtr<TRUE> m_ScreenQuad;
+
 		std::vector<IEngineUpdatablePtr> m_Updatables;
 		std::vector<IEngineRenderablePtr> m_Renderables;
 
@@ -372,8 +407,8 @@ namespace Presentation2
 		ADAPI explicit Scene(IDirect3DDevice9* const device);
 
 		// -----------------------
-		ADAPI void Update() override final;
-		ADAPI void Render() const override final;
+		ADAPI void OnUpdate() override final;
+		ADAPI void OnRender() const override final;
 
 		// ***********************************************************************************************
 		// Custom objects.
@@ -478,25 +513,27 @@ namespace Presentation2
 
 		// -----------------------
 		template<typename TScene, typename... TArgs>
-		ADINL void InitializeScene(TArgs&&... args)
+		ADINL std::shared_ptr<TScene> InitializeScene(TArgs&&... args)
 		{
 			static_assert(std::is_base_of_v<Scene, TScene>, "Invalid base type.");
 			assert(m_Scene == nullptr);
-			m_Scene = std::make_shared<TScene>(m_Device, std::forward<TArgs>(args)...);
+			auto const scene = std::make_shared<TScene>(m_Device, std::forward<TArgs>(args)...);
+			m_Scene = scene;
+			return scene;
 		}
 
 		// -----------------------
-		ADINL void Update() override
+		ADINL void OnUpdate() override
 		{
 			assert(m_Scene != nullptr);
-			IRenderable::Update();
-			m_Scene->Update();
+			IRenderable::OnUpdate();
+			m_Scene->OnUpdate();
 		}
-		ADINL void Render() const override
+		ADINL void OnRender() const override
 		{
 			assert(m_Scene != nullptr);
-			IRenderable::Render();
-			m_Scene->Render();
+			IRenderable::OnRender();
+			m_Scene->OnRender();
 		}
 
 	};	// struct EngineWidget
