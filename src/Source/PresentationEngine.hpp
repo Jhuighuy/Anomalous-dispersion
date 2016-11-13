@@ -56,27 +56,54 @@ namespace Presentation2
 	using OrbitalCameraPtr = std::shared_ptr<class OrbitalCamera>;
 
 	/*************** 
+	 * Helper tiny class that extracts context size from D3D device */
+	class DependsOnContextSize
+	{
+	protected:
+		RECT m_Rect;
+
+	protected:
+		// -----------------------
+		ADINL explicit DependsOnContextSize(IDirect3DDevice9* const device)
+		{
+			assert(device != nullptr);
+			D3DDEVICE_CREATION_PARAMETERS deviceCreationParameters = {};
+			Utils::RuntimeCheckH(device->GetCreationParameters(&deviceCreationParameters));
+			Utils::RuntimeCheck(GetWindowRect(deviceCreationParameters.hFocusWindow, &m_Rect));
+		}
+
+		// -----------------------
+		ADINL auto GetContextWidth() const
+		{
+			return static_cast<UINT>(m_Rect.right - m_Rect.left);
+		}
+		ADINL auto GetContextHeight() const
+		{
+			return static_cast<UINT>(m_Rect.bottom - m_Rect.top);
+		}
+
+		// -----------------------
+		ADINL auto GetContextWidthF() const
+		{
+			return static_cast<FLOAT>(GetContextWidth());
+		}
+		ADINL auto GetContextHeightF() const
+		{
+			return static_cast<FLOAT>(GetContextHeight());
+		}
+	};	// class DependsOnContextSize
+
+	/*************** 
 	 * Describes a base camera. */
-	class Camera : public IEngineRenderable
+	class Camera : public IEngineRenderable, public DependsOnContextSize
 	{
 	protected:
 		IDirect3DDevice9* const m_Device;
-		RECT m_Rect;
 	public:
 		FLOAT FieldOfView = dxm::radians(60.0f);
 		FLOAT NearClippingPlane = 0.01f, FarClippingPlane = 20.0f;
 	
 	protected:
-
-		// -----------------------
-		ADINL auto GetContextWidth() const
-		{
-			return static_cast<FLOAT>(m_Rect.right - m_Rect.left);
-		}
-		ADINL auto GetContextHeight() const
-		{
-			return static_cast<FLOAT>(m_Rect.bottom - m_Rect.top);
-		}
 
 	public:
 
@@ -382,7 +409,7 @@ namespace Presentation2
 
 	/*************** 
 	 * Describes a scene. */
-	class Scene : public IEngineRenderable
+	class Scene : public IEngineRenderable, public DependsOnContextSize
 	{
 		struct RenderTarget final
 		{
@@ -392,6 +419,7 @@ namespace Presentation2
 
 	protected:
 		IDirect3DDevice9* const m_Device;
+		RECT m_Rect;
 	private:
 		mutable IDirect3DPixelShader9* m_ForceBlackShader;
 		mutable IDirect3DPixelShader9* m_BlendTexturesShader;

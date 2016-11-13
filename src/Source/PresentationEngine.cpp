@@ -19,7 +19,7 @@ namespace Presentation2
 
 	// -----------------------
 	ADAPI Camera::Camera(IDirect3DDevice9* const device) 
-		: m_Device(device), m_Rect{}
+		: DependsOnContextSize(device), m_Device(device)
 	{
 		assert(m_Device != nullptr);
 
@@ -32,7 +32,7 @@ namespace Presentation2
 	{
 		IEngineRenderable::OnRender();
 		
-		auto const projection = dxm::perspectiveFovLH<FLOAT>(FieldOfView, GetContextWidth(), GetContextHeight(), NearClippingPlane, FarClippingPlane);
+		auto const projection = dxm::perspectiveFovLH<FLOAT>(FieldOfView, GetContextWidthF(), GetContextHeightF(), NearClippingPlane, FarClippingPlane);
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_PROJECTION, dxm::ptr(projection)));
 	}
 	
@@ -48,8 +48,8 @@ namespace Presentation2
 			if (PtInRect(&m_Rect, mouseCurrentPosition))
 			{
 				/* Mouse has been moved inside the context rect while left button has been pressed. */
-				auto const deltaX = static_cast<FLOAT>(mouseCurrentPosition.y - m_PrevMousePosition.y) / GetContextWidth();
-				auto const deltaY = static_cast<FLOAT>(mouseCurrentPosition.x - m_PrevMousePosition.x) / GetContextHeight();
+				auto const deltaX = static_cast<FLOAT>(mouseCurrentPosition.y - m_PrevMousePosition.y) / GetContextWidthF();
+				auto const deltaY = static_cast<FLOAT>(mouseCurrentPosition.x - m_PrevMousePosition.x) / GetContextHeightF();
 
 				Rotation.y += deltaY;
 				Rotation.x = dxm::clamp(Rotation.x + deltaX, -F_PI / 12.0f, F_PI / 7.5f);
@@ -77,7 +77,8 @@ namespace Presentation2
 
 	// -----------------------
 	ADAPI Scene::Scene(IDirect3DDevice9* const device)
-		: m_Device(device), m_ForceBlackShader(nullptr), m_BlendTexturesShader(nullptr)
+		: DependsOnContextSize(device)
+		, m_Device(device), m_ForceBlackShader(nullptr), m_BlendTexturesShader(nullptr)
 		, m_RenderTargets{ nullptr }
 	{
 		assert(m_Device != nullptr);
@@ -122,10 +123,11 @@ namespace Presentation2
 		TriangleMeshRendererPtr<> static screenQuad;
 		if (m_ScreenQuad == nullptr)
 		{
-			for (auto i = 0; i < dxm::countof(m_RenderTargets); ++i)
+			for (auto& renderTarget : m_RenderTargets)
 			{
-				Utils::RuntimeCheckH(D3DXCreateTexture(m_Device, 1440, 1080, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A16B16G16R16F, D3DPOOL_DEFAULT, &m_RenderTargets[i].Texture));
-				Utils::RuntimeCheckH(m_RenderTargets[i].Texture->GetSurfaceLevel(0, &m_RenderTargets[i].Surface));
+				Utils::RuntimeCheckH(D3DXCreateTexture(m_Device, GetContextWidth(), GetContextHeight(), 0
+					, D3DUSAGE_RENDERTARGET, D3DFMT_A16B16G16R16F, D3DPOOL_DEFAULT, &renderTarget.Texture));
+				Utils::RuntimeCheckH(renderTarget.Texture->GetSurfaceLevel(0, &renderTarget.Surface));
 			}
 
 			/// @todo

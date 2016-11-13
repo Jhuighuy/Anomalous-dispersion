@@ -46,7 +46,7 @@ namespace Presentation2
 		TriangleMeshRendererPtr<FALSE, TRUE> PrismHolderBase;
 		TriangleMeshRendererPtr<FALSE, TRUE> PrismHolderLeg;
 		TriangleMeshRendererPtr<FALSE, TRUE> PrismHolderGimbal;
-		TriangleMeshRendererPtr<TRUE> Prism;
+		TriangleMeshRendererPtr<TRUE, TRUE> Prism;
 
 	public:
 		ADINT void OnUpdate() override final
@@ -259,7 +259,7 @@ namespace Presentation2
 				auto const prismHolderBaseMesh = TriangleMesh(L"../gfx/holder_base.obj");
 				auto const prismHolderLegMesh = TriangleMesh(L"../gfx/holder_leg.obj");
 				auto const prismHolderGimbalMesh = TriangleMesh(L"../gfx/holder_gimbal.obj");
-				auto const prismMesh = TriangleMesh(L"../gfx/prism.obj", D3DCOLOR_ARGB(0xFF / 3, 0xFF / 3, 0xFF, 0xFF));
+				auto const prismMesh = TriangleMesh(L"../gfx/prism.obj", D3DCOLOR_ARGB(0xEE, 0xFF / 3, 0xFF, 0xFF));
 
 				for (auto& prismController : m_PrismContollers)
 				{
@@ -267,7 +267,7 @@ namespace Presentation2
 					prismController->PrismHolderBase = TriangleMeshRenderer<FALSE, TRUE>(prismHolderBaseMesh);
 					prismController->PrismHolderLeg = TriangleMeshRenderer<FALSE, TRUE>(prismHolderLegMesh);
 					prismController->PrismHolderGimbal = TriangleMeshRenderer<FALSE, TRUE>(prismHolderGimbalMesh);
-					prismController->Prism = TriangleMeshRenderer<TRUE>(prismMesh);
+					prismController->Prism = TriangleMeshRenderer<TRUE, TRUE>(prismMesh);
 				}
 				m_RaysController->PrismControllers = m_PrismContollers;
 

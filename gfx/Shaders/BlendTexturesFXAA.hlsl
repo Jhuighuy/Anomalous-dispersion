@@ -44,15 +44,15 @@ float4 SolidAntiAlias(float2 texCoords)
 	const float minLuminance = min(luminanceCenter, min(luminanceTopLeft, min(luminanceTopRight, min(luminanceBottomLeft, luminanceBottomRight))));
 	const float maxLuminance = max(luminanceCenter, max(luminanceTopLeft, max(luminanceTopRight, max(luminanceBottomLeft, luminanceBottomRight))));
 
-	static const float dirReduceMul = 1.0f;
-	static const float dirReduceMin = 1.0f / 256.0f;
-	static const float2 dirSpanMax = float2(16.0f, 16.0f);
+	static const float dirReduceMul = 1.0f / 16.0f;
+	static const float dirReduceMin = 1.0f / 128.0f;
+	static const float2 dirSpanMax = float2(8.0f, 8.0f);
 
 	/* Computing the blur vector.. */
 	float2 blurDirection = float2((luminanceTopLeft + luminanceTopRight) - (luminanceBottomLeft + luminanceBottomRight)
 		, (luminanceTopLeft + luminanceBottomLeft) - (luminanceTopRight + luminanceBottomRight));
 
-	const float blurDirectionReduce = max((luminanceTopLeft + luminanceTopRight + luminanceBottomLeft + luminanceBottomRight) * dirReduceMul * 0.25f, dirReduceMin);
+	const float blurDirectionReduce = max((luminanceTopLeft + luminanceTopRight + luminanceBottomLeft + luminanceBottomRight) * 0.25f * dirReduceMul, dirReduceMin);
 	const float blurInverseDirectionAdjustment = 1.0f / (blurDirectionReduce + min(abs(blurDirection.x), abs(blurDirection.y)));
 	blurDirection = clamp(blurDirection, -dirSpanMax, dirSpanMax);
 	blurDirection *= step(float2(1.0f, 1.0f), abs(blurDirection));
