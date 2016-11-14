@@ -113,17 +113,17 @@ namespace Presentation2
 	MenuWindow::MenuWindow(LPCWSTR const caption)
 		: Window(Rect(), caption, true)
 	{
-		m_UniversityFacultyLogoCMC = Image({ 105, 105, 150, 150 }, L"../gfx/cmc1.png");
-		m_UniversityFacultyLogoPH = Image({ STANDART_DESKTOP_WIDTH - 105, 105, 150, 150 }, L"../gfx/fizfak.png");
+		m_UniversityFacultyLogoCMC = Image({ UpperLeftPivot, 10, 10, 200, 220 }, L"../gfx/cmc1.png");
+		m_UniversityFacultyLogoPH = Image({ UpperRightPivot, STANDART_DESKTOP_WIDTH - 10, 10, 200, 220 }, L"../gfx/fizfak.png");
 		// -----------------------
-		m_UniversityNameLabel = Label({ STANDART_DESKTOP_WIDTH / 2, 40, 1500, 80 },
-			L"Московский Государственный Университет им. М.В. Ломоносова\r\n"
-			L"Компьютерная презентация по курсу «Физика Волновых Процессов»\r\n", LabelFlags::CenterAlignment, TextSize::Large);
-		m_UniversityPresentationLabel = Label({ STANDART_DESKTOP_WIDTH / 2, 130, 1500, 100 },
+		m_UniversityNameLabel = Label({ CenterPivot, STANDART_DESKTOP_WIDTH / 2, 40, 1500, 80 },
+			L"Московский государственный университет имени М.В. Ломоносова\r\n"
+			L"Компьютерные презентации по курсу лекций «Физика Волновых Процессов»\r\n", LabelFlags::CenterAlignment, TextSize::Large);
+		m_UniversityPresentationLabel = Label({ CenterPivot, STANDART_DESKTOP_WIDTH / 2, 150, 1500, 100 },
 			L"Нормальная и аномальная дисперсия", LabelFlags::CenterAlignment, TextSize::VeryLarge);
 		// -----------------------
-		m_UniversitySeparator = HorizontalSeparator({ STANDART_DESKTOP_WIDTH / 2, 210, STANDART_DESKTOP_WIDTH, 1 });
-		m_UniversityYearLabel = Label({ STANDART_DESKTOP_WIDTH / 2, 180, 1500, 40 },
+		m_UniversitySeparator = HorizontalSeparator({ STANDART_DESKTOP_WIDTH / 2, 230, STANDART_DESKTOP_WIDTH, 1 });
+		m_UniversityYearLabel = Label({ STANDART_DESKTOP_WIDTH / 2, STANDART_DESKTOP_HEIGHT - 30, 1500, 40 },
 			L"2016 г.", LabelFlags::CenterAlignment, TextSize::NotSoLarge);
 	}
 
@@ -189,7 +189,7 @@ namespace Presentation2
 		m_PresentationRenderer = Graphics<EngineWidget>({ STANDART_DESKTOP_WIDTH * 5 / 8, STANDART_DESKTOP_HEIGHT / 2, STANDART_DESKTOP_WIDTH * 3 / 4, STANDART_DESKTOP_HEIGHT });
 		m_Presentation = m_PresentationRenderer->InitializeScene<PresentationScene>();
 		// -----------------------
-		m_ImageLabel = Label({ STANDART_DESKTOP_WIDTH / 8, 85, 480, 40 }, L"Показатель преломления обычной призмы", LabelFlags::CenterAlignment, TextSize::Default);
+		m_ImageLabel = Label({ STANDART_DESKTOP_WIDTH / 8, 85, 480, 40 }, L"Показатель преломления первой призмы", LabelFlags::CenterAlignment, TextSize::Default);
 		Rect const imageRect = { STANDART_DESKTOP_WIDTH / 8, 270, 480, 330 };
 		m_NormImage = Image(imageRect, L"../gfx/norm-func.png");
 		m_AnomImage = Image(imageRect, L"../gfx/anom-func.png");
@@ -289,7 +289,7 @@ namespace Presentation2
 					auto const cellX = CellX(0);
 					auto const lowerSubcellY = CellY(j++);
 					prismControl.AnomalousDispersionEnabled = CheckBox({ cellX, lowerSubcellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }
-						, L"Аномальная дисперсия"
+						, L"Поверхность призмы \r\nпокрыта цианином"
 						, [this, isSecondPrism, &prism](long const enabled)
 					{
 						prism->Type = static_cast<PrismType>(enabled);
@@ -359,13 +359,13 @@ namespace Presentation2
 				auto static secondPrismEnabled = DEFAULT_SECOND_PRISM_ENABLED;
 				m_OnePrismLayoutButton = Button({ CellX(0), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }, L"Одна призма", [&](long const)
 				{
-					m_ImageLabel->SetText(L"Показатель преломления обычной призмы");
+					m_ImageLabel->SetText(L"Показатель преломления первой призмы");
 					secondPrismEnabled = !secondPrismEnabled;
 					SwitchSecondPrismControls(false);
 				});
 				m_TwoPrismsLayoutButton = Button({ CellX(1), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }, L"Две призмы", [&](long const)
 				{
-					m_ImageLabel->SetText(L"Показатели преломления и поглощения для цианиновой призмы");
+					m_ImageLabel->SetText(L"Показатели преломления и поглощения для второй призмы");
 					secondPrismEnabled = !secondPrismEnabled;
 					SwitchSecondPrismControls(true);
 				});

@@ -238,8 +238,8 @@ namespace Presentation2
 				auto const roomMesh = TriangleMesh(L"../gfx/room.obj");
 				auto const screenMesh = TriangleMesh(L"../gfx/screen.obj");
 
-				auto const screen = TriangleMeshRenderer(screenMesh, L"../gfx/screenLightMap.png");
-				auto const room = TriangleMeshRenderer(roomMesh, L"../gfx/roomLightMap.png");
+				auto const screen = TriangleMeshRenderer(screenMesh, L"../gfx/screenLightMap.png", L"../gfx/Shaders/ColoredTextureShader.hlsl");
+				auto const room = TriangleMeshRenderer(roomMesh, L"../gfx/roomLightMap.png", L"../gfx/Shaders/ColoredTextureShader.hlsl");
 
 				room->Position.z = screen->Position.z = 2.0f;
 				room->Rotation.y = screen->Rotation.y = dxm::radians(180.0f);

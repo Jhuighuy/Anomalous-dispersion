@@ -7,8 +7,8 @@ set encoding utf8
 set xlabel "Длина волны (нм)"
 set xrange [0.38:0.78] 
 set mxtics 10
-#set xtics ("380" 0.38, "480" 0.48, "580" 0.58, "680" 0.68, "780" 0.78) 
-set xtics ("380" 0.38,\
+set xtics ("380" 0.38, "480" 0.48, "580" 0.58, "680" 0.68, "780" 0.78) 
+#set xtics ("380" 0.38,\
               "" 0.39,\
 			  "" 0.40,\
 			  "" 0.41,\
@@ -53,8 +53,8 @@ set xtics ("380" 0.38,\
 
 set ylabel "Показатель преломления"
 set yrange [1:2.2]
-#set ytics ("1" 1, "1.3" 1.3, "1.6" 1.6, "1.9" 1.9, "2.2" 2.2) 
-set ytics ("1" 1,    \
+set ytics ("1" 1, "1.3" 1.3, "1.6" 1.6, "1.9" 1.9, "2.2" 2.2) 
+#set ytics ("1" 1,    \
             "" 1.15, \
          "1.3" 1.3,  \
 		    "" 1.45, \
@@ -65,10 +65,10 @@ set ytics ("1" 1,    \
 		 "2.2" 2.2   \
 		 ) 
 
-#set grid
+set grid
 
-set output "../gfx/anom-func.png"
-plot [0.38:0.78] "hist.dat" smooth bezier ti "n", "abs.dat" smooth bezier ti '{/Symbol a}'
+set output "../gfx/anom-func1.png"
+plot [0.38:0.78] "hist.dat" smooth bezier ti "n" lc rgb "#FF0000", "abs.dat" smooth bezier ti '{/Symbol a}' lc rgb "#0000FF"
 
 set yrange [1.5:1.6]
 #set ytics ("1.5" 1.5, "1.55" 1.55, "1.6" 1.6) 
@@ -79,5 +79,5 @@ set ytics ( "1.5" 1.5,  \
 		    "1.6" 1.6   \
 		   ) 
 
-set output "../gfx/norm-func.png"
-plot [0.38:0.78] 0.286458*x**2 - 0.469792*x + 1.70216 smooth bezier ti "n" 
+set output "../gfx/norm-func1.png"
+plot [0.38:0.78] 0.286458*x**2 - 0.469792*x + 1.70216 smooth bezier ti "n" lc rgb "#FF0000"

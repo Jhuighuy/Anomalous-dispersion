@@ -7,16 +7,16 @@ texture TextureTransparent;
 sampler SamplerTransparent = sampler_state
 {
 	Texture = <TextureTransparent>;
-	MinFilter = Linear;
-	MagFilter = Linear;
+	MinFilter = Bilinear;
+	MagFilter = Bilinear;
 };	// sampler SamplerTransparent
 
 texture TextureSolid;
 sampler SamplerSolid = sampler_state
 {
 	Texture = <TextureSolid>;
-	MinFilter = Linear;
-	MagFilter = Linear;
+	MinFilter = Bilinear;
+	MagFilter = Bilinear;
 };	// sampler SamplerSolid
 
 /* Blends two textures from our render targets. */
@@ -67,11 +67,13 @@ float4 AntiAliasBlendedRenderTargets(float2 texCoords)
 		BlendRenderTargets(texCoords + blurDirection * (0.0f / 3.0f - 0.5f)) +
 		BlendRenderTargets(texCoords + blurDirection * (3.0f / 3.0f - 0.5f)));
 	
+	/* If only we have power to run this.. */
 	/*const float luminanceTwoStep = dot(luminance, twoStepBlur);
 	if (minLuminance < luminanceTwoStep && luminanceTwoStep < maxLuminance)
 	{
 		return twoStepBlur;
-	}*/
+	}
+	return oneStepBlur;*/
 	return twoStepBlur;
 }
 

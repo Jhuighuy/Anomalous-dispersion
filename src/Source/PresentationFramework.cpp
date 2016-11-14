@@ -284,7 +284,7 @@ namespace Presentation2
 		auto const id = GenID();
 		m_Callbacks.push_back(callback);
 
-		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE | BS_CHECKBOX
+		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE | BS_CHECKBOX | BS_MULTILINE
 			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, reinterpret_cast<HMENU>(id), nullptr, nullptr));
 		Utils::RuntimeCheck(CheckDlgButton(m_Handle, id, enabled ? BST_CHECKED : BST_UNCHECKED));
 		return std::make_shared<WindowWidget>(handle, textSize);
