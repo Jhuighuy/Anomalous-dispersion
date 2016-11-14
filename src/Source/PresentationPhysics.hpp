@@ -104,8 +104,9 @@ namespace Presentation2
 	static DOUBLE GovnoAbsorptionIndex(DOUBLE const waveLength)
 	{
 		auto const x = waveLength / 1000.0;
-		auto y = 0.55 * exp(-40 * M_PI * (x - 0.58) * (x - 0.58));
-		y = ((x > 0.61414) && (x < 0.691326)) ? dxm::clamp(1.0 - 1.5743*y, 0.0, 1.0) * 0.9 : dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
+		auto y = 0.3 * exp(-15 * M_PI * (x - 0.52) * (x - 0.52));
+		y = ((x > 0.63) && (x < 0.691326)) ? dxm::clamp(1.0 - 4.5*y, 0.0, 1.0) * 0.9 : dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
+		//	y = dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
 		return y * 2.0 / 0.6;
 	}
 
