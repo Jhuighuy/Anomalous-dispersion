@@ -20,42 +20,48 @@ namespace Presentation2
 		auto static const gamma = 0.8;
 		auto static const intensityMax = 255.0;
 
-		double red, green, blue;
+		double red, green, blue, alpha = /*30 * (781.0 - 645.0)*/1;
 		if (waveLength >= 380.0 && waveLength < 440.0)
 		{
 			red = -(waveLength - 440.0) / (440.0 - 380.0);
 			green = 0.0;
 			blue = 1.0;
+			alpha /= (440 - 380);
 		}
 		else if (waveLength >= 440.0 && waveLength < 490.0)
 		{
 			red = 0.0;
 			green = (waveLength - 440.0) / (490.0 - 440.0);
 			blue = 1.0;
+			alpha /= (490 - 440);
 		}
 		else if (waveLength >= 490.0 && waveLength < 510.0)
 		{
 			red = 0.0;
 			green = 1.0;
 			blue = -(waveLength - 510.0) / (510.0 - 490.0);
+			alpha /= (510 - 490);
 		}
 		else if (waveLength >= 510.0 && waveLength < 580.0)
 		{
 			red = (waveLength - 510.0) / (580.0 - 510.0);
 			green = 1.0;
 			blue = 0.0;
+			alpha /= 580 - 510;
 		}
 		else if (waveLength >= 580.0 && waveLength < 645.0)
 		{
 			red = 1.0;
 			green = -(waveLength - 645.0) / (645.0 - 580.0);
 			blue = 0.0;
+			alpha /= (645 - 580) * 2;
 		}
 		else if (waveLength >= 645.0 && waveLength < 781.0)
 		{
 			red = 1.0;
 			green = 0.0;
 			blue = 0.0;
+			alpha /= 781 - 645;
 		}
 		else
 		{
@@ -66,11 +72,11 @@ namespace Presentation2
 
 		// Let the intensity fall off near the vision limits.
 		double factor;
-		if (waveLength >= 380.0 && waveLength < 395.00)
+		if (waveLength >= 380.0 && waveLength < 390.00)
 		{
-			factor = 0.3 + 0.7 * (waveLength - 380.0) / (395.0 - 380.0);
+			factor = 0.3 + 0.7 * (waveLength - 380.0) / (390.0 - 380.0);
 		}
-		else if (waveLength >= 395.0 && waveLength < 745.52)
+		else if (waveLength >= 390.0 && waveLength < 745.52)
 		{
 			factor = 1.0;
 		}
@@ -85,11 +91,16 @@ namespace Presentation2
 
 		//factor = 1.0;
 
-		unsigned rgb[3];
+		unsigned rgb[4];
 		rgb[0] = red == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(red * factor, gamma)));
 		rgb[1] = green == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(green * factor, gamma)));
 		rgb[2] = blue == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(blue * factor, gamma)));
-		return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], 30);
+		rgb[3] = int(round(intensityMax * pow(alpha, 0.5)));
+
+	//	auto x = waveLength / 1000.0;
+	//	auto a = 30 * exp(-(x-0.58)*(x-0.58));
+		// /*waveLength <= 440 ? 50 : 33*/(int)a
+		return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], rgb[3]);
 	}
 
 	using IndexFunc = DOUBLE(*)(DOUBLE const waveLength);
@@ -104,10 +115,10 @@ namespace Presentation2
 	static DOUBLE GovnoAbsorptionIndex(DOUBLE const waveLength)
 	{
 		auto const x = waveLength / 1000.0;
-		auto y = 0.3 * exp(-15 * M_PI * (x - 0.52) * (x - 0.52));
-		y = ((x > 0.63) && (x < 0.691326)) ? dxm::clamp(1.0 - 4.5*y, 0.0, 1.0) * 0.9 : dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
+		auto y = 0.07 * exp(-10 * M_PI * (x - 0.52) * (x - 0.52));
+		y = ((x > 0.63) && (x < 0.691326)) ? dxm::clamp(1.0 - 6*y, 0.0, 1.0) * 0.9 : dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
 		//	y = dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
-		return y * 2.0 / 0.6;
+		return y * 2.0 / 0.7;
 	}
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

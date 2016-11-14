@@ -220,6 +220,9 @@ namespace Presentation2
 		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_LIGHTING, TIsLit));
 		Utils::RuntimeCheckH(m_Device->LightEnable(0, TIsLit));
 
+		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, SourceBlend));
+		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, DestBlend));
+
 		/* Setting up the textures and shaders (we have a signle texture and shared per object). */
 		Utils::RuntimeCheckH(m_Device->SetTexture(0, texture1));
 		Utils::RuntimeCheckH(m_Device->SetTexture(1, texture2));

@@ -289,7 +289,7 @@ namespace Presentation2
 					auto const cellX = CellX(0);
 					auto const lowerSubcellY = CellY(j++);
 					prismControl.AnomalousDispersionEnabled = CheckBox({ cellX, lowerSubcellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }
-						, L"Поверхность призмы \r\nпокрыта цианином"
+						, L"Аномальная \r\nдисперсия"
 						, [this, isSecondPrism, &prism](long const enabled)
 					{
 						prism->Type = static_cast<PrismType>(enabled);

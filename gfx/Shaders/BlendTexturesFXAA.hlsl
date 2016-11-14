@@ -23,9 +23,9 @@ sampler SamplerSolid = sampler_state
 float4 BlendRenderTargets(float2 texCoords)
 {
 	const float4 transparent = tex2D(SamplerTransparent, texCoords);
-	const float4 solid = tex2D(SamplerSolid, texCoords);
+	const float4 solid = 0.7 * tex2D(SamplerSolid, texCoords);
 
-	const float4 sourceBlendColor = solid;
+	const float4 sourceBlendColor = solid - float4(0.01f, 0.0f, 0.1f, 0.0f);
 	const float4 destBlendColor = solid * transparent;
 	return lerp(sourceBlendColor, destBlendColor, transparent.a);
 }
@@ -63,9 +63,9 @@ float4 AntiAliasBlendedRenderTargets(float2 texCoords)
 	const float4 oneStepBlur = 0.5f * (
 		BlendRenderTargets(texCoords + blurDirection * (1.0f / 3.0f - 0.5f)) +
 		BlendRenderTargets(texCoords + blurDirection * (2.0f / 3.0f - 0.5f)));
-	const float4 twoStepBlur = 0.5f * oneStepBlur + 0.25f * (
+	/*const float4 twoStepBlur = 0.5f * oneStepBlur + 0.25f * (
 		BlendRenderTargets(texCoords + blurDirection * (0.0f / 3.0f - 0.5f)) +
-		BlendRenderTargets(texCoords + blurDirection * (3.0f / 3.0f - 0.5f)));
+		BlendRenderTargets(texCoords + blurDirection * (3.0f / 3.0f - 0.5f)));*/
 	
 	/* If only we have power to run this.. */
 	/*const float luminanceTwoStep = dot(luminance, twoStepBlur);
@@ -74,7 +74,7 @@ float4 AntiAliasBlendedRenderTargets(float2 texCoords)
 		return twoStepBlur;
 	}
 	return oneStepBlur;*/
-	return twoStepBlur;
+	return oneStepBlur;
 }
 
 float4 main(float2 texCoords : TEXCOORD0) : COLOR

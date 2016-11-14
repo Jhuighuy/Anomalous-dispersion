@@ -185,7 +185,7 @@ namespace Presentation2
 
 						if (j == prismPlanes.size() - 1)
 						{
-							AbsorbAlpha(waveColor, 0.6);
+							AbsorbAlpha(waveColor, 0.7);
 
 							auto const scale = 0.03f;
 							dxm::vec3 static const uvOffset = { 0.5f, 0.5f, 0.0f };
@@ -268,6 +268,7 @@ namespace Presentation2
 					prismController->PrismHolderLeg = TriangleMeshRenderer<FALSE, TRUE>(prismHolderLegMesh);
 					prismController->PrismHolderGimbal = TriangleMeshRenderer<FALSE, TRUE>(prismHolderGimbalMesh);
 					prismController->Prism = TriangleMeshRenderer<TRUE, TRUE>(prismMesh);
+					prismController->Prism->DestBlend = D3DBLEND_INVSRCALPHA;
 				}
 				m_RaysController->PrismControllers = m_PrismContollers;
 

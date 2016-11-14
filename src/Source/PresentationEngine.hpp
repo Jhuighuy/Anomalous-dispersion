@@ -343,6 +343,8 @@ namespace Presentation2
 		dxm::vec3 Position;
 		dxm::vec3 Rotation;
 		dxm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
+		D3DBLEND SourceBlend = D3DBLEND_SRCALPHA;
+		D3DBLEND DestBlend = D3DBLEND_ONE;
 	protected:
 		IDirect3DDevice9* const m_Device;
 		IDirect3DTexture9* m_Texture = nullptr;
