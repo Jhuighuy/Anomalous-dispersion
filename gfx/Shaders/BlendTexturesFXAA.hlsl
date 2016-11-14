@@ -33,7 +33,7 @@ float4 BlendRenderTargets(float2 texCoords)
 /* Performs AA for our render solid target. */
 float4 AntiAliasBlendedRenderTargets(float2 texCoords)
 {
-	static const float2 texCoordOffset = 1.0f / float2(1440.0f * 0.75f, 990.0f);
+	static const float2 texCoordOffset = 1.0f / float2(1440.0f * 0.75f, 900.0f);
 //	static const float2 texCoordOffset = 1.0f / float2(1920.0f * 0.75f, 1080.0f);
 	static const float4 luminance = float4(0.299f, 0.587f, 0.114f, 0.0f);
 
