@@ -61,7 +61,7 @@ namespace Presentation2
 			red = 1.0;
 			green = 0.0;
 			blue = 0.0;
-			alpha /= (781 - 645) * 4;
+			alpha /= (781 - 645) * 1.5;
 		}
 		else
 		{
@@ -82,7 +82,7 @@ namespace Presentation2
 		}
 		else if (waveLength >= 745.52 && waveLength < 781.0)
 		{
-			factor = 0.3 + 0.7 * (780.0 - waveLength) / (780.0 - 745.52);
+			factor = 0.3 + 0.7 * (781.0 - waveLength) / (781.0 - 745.52);
 		}
 		else
 		{
@@ -112,13 +112,42 @@ namespace Presentation2
 	}
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+/*	static DOUBLE GovnoAbsorptionIndex(DOUBLE const waveLength)
+	{
+		auto const x = waveLength / 1000.0;
+		auto y = 0.6 *  exp(-65* M_PI * (x - 0.58) * (x - 0.58));
+		//y = ((x > 0.63) && (x < 0.691326)) ? dxm::clamp(1.0 - 6*y, 0.0, 1.0) : dxm::clamp(1.0 - y, 0.0, 1.0);
+		y = dxm::clamp(1.0 - y, 0.0, 1.0);
+		return y;
+	} */
+
 	static DOUBLE GovnoAbsorptionIndex(DOUBLE const waveLength)
 	{
 		auto const x = waveLength / 1000.0;
-		auto y = 0.07 * exp(-10 * M_PI * (x - 0.52) * (x - 0.52));
-		y = ((x > 0.63) && (x < 0.691326)) ? dxm::clamp(1.0 - 6*y, 0.0, 1.0) * 0.9 : dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
-		//	y = dxm::clamp(1.0 - y, 0.0, 1.0) * 0.9;
-		return y * 2.0 / 0.7;
+
+		double static const grid[] = {
+			0.6, 0.640243, 0.680674 ,0.721456, 0.76219, 0.80195, 0.840668, 0.881285, 0.92685, 0.971498, 1.00204, 1.01123, 1.01012, 1.01237, 1.02103, 1.0315, 1.04038,
+			1.04779, 1.05449, 1.06201, 1.07241, 1.08801, 1.11168, 1.1453, 1.18065, 1.20401, 1.21129, 1.21715,1.23605,1.26333,1.28527,1.29819,1.31542,1.35033,1.40504,
+			1.4769,1.55944,1.64058,1.70889,1.75937,1.78948,1.8008,1.80031,1.7945,1.78572, 1.775,1.76308,1.75033,1.73727, 1.7252,1.71553,1.70783,1.69978,1.68943,
+			1.67656,1.6614,1.64492,1.62885,1.6147,1.60348,1.59568,1.58641,1.56665,1.53129,1.48645,1.43965,1.39206,1.34058,1.28627,1.24028,1.21388,1.20389,1.19865,
+			1.19078,1.182,1.17445,1.16386,1.14275,1.10998,1.07594,1.05098,1.03605,1.02789,1.02353,1.02049,1.01672,1.01244,1.00873,1.00542,1.00064,0.992984,0.984309,
+			0.977489,0.973339,0.970166,0.966457,0.96224,0.958012,0.953957,0.95
+		};
+
+		auto static const violetWaveLength = 0.380;
+		auto static const redWaveLength = 0.780;
+
+		auto const v = (x - violetWaveLength) / (redWaveLength - violetWaveLength);
+		auto const i = size_t(v * (dxm::countof(grid) - 1));
+		if (i == dxm::countof(grid) - 1)
+			return grid[dxm::countof(grid) - 1];
+
+		auto const yi = grid[i], yi1 = grid[i + 1];
+		auto const xi = violetWaveLength + i * (redWaveLength - violetWaveLength) / dxm::countof(grid);
+		auto const xi1 = violetWaveLength + (i + 1) * (redWaveLength - violetWaveLength) / dxm::countof(grid);
+		auto y = yi + (x - xi) / (xi1 - xi) * (yi1 - yi);
+		y = dxm::clamp(1.0 - 0.95*(y - 1.0), 0.0, 1.0);
+		return y*1.3;
 	}
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
