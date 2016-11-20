@@ -110,10 +110,11 @@ namespace Presentation2
 		
 		auto const viewportWidth = static_cast<FLOAT>(Viewport.Width);
 		auto const viewportHeight = static_cast<FLOAT>(Viewport.Height);
+		auto const viewportAspect = viewportWidth / viewportHeight;
 
 		auto const projection = Projection == BaseCameraProjection::Perspective
 			? dxm::perspectiveFovLH<FLOAT>(FieldOfView, viewportWidth, viewportHeight, NearClippingPlane, FarClippingPlane)
-			: dxm::orthoLH(0.0f, Size * viewportWidth / viewportHeight, 0.0f, Size, NearClippingPlane, FarClippingPlane);
+			: dxm::orthoLH(-0.5f * Size * viewportAspect, 0.5f * Size * viewportAspect, -0.5f * Size, 0.5f * Size, NearClippingPlane, FarClippingPlane);
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_PROJECTION, dxm::ptr(projection)));
 
 		RenderWithTranparency(g_Scene);
@@ -296,21 +297,20 @@ namespace Presentation2
 	{
 		BaseCamera::OnUpdate();
 
-		if (GetAsyncKeyState(VK_LBUTTON) != 0 && m_PrevMousePosition.x != 0 && m_PrevMousePosition.y != 0)
-		{
-			POINT mouseCurrentPosition = {};
-			Utils::RuntimeCheck(GetCursorPos(&mouseCurrentPosition));
-			if (PtInRect(&m_Rect, mouseCurrentPosition))
-			{
-				/* Mouse has been moved inside the context rect while left button has been pressed. */
-				auto const deltaY = static_cast<FLOAT>(mouseCurrentPosition.y - m_PrevMousePosition.y) / GetContextWidthF();
-				auto const deltaX = static_cast<FLOAT>(mouseCurrentPosition.x - m_PrevMousePosition.x) / GetContextHeightF();
+		//if (GetAsyncKeyState(VK_LBUTTON) != 0 && m_PrevMousePosition.x != 0 && m_PrevMousePosition.y != 0)
+		//{
+		//	POINT mouseCurrentPosition = {};
+		//	Utils::RuntimeCheck(GetCursorPos(&mouseCurrentPosition));
+		//	if (PtInRect(&m_Rect, mouseCurrentPosition))
+		//	{
+		//		/* Mouse has been moved inside the context rect while left button has been pressed. */
+		//		auto const deltaY = static_cast<FLOAT>(mouseCurrentPosition.y - m_PrevMousePosition.y) / GetContextWidthF();
+		//		auto const deltaX = static_cast<FLOAT>(mouseCurrentPosition.x - m_PrevMousePosition.x) / GetContextHeightF();
 
-				Position.x += deltaX;
-				Position.y += deltaY;
-				/// @todo Move this constants somewhere.
-			}
-		}
+		//		Position.x += deltaX;
+		//		Position.y += deltaY;
+		//	}
+		//}
 		Utils::RuntimeCheck(GetCursorPos(&m_PrevMousePosition));
 	}
 

@@ -136,6 +136,7 @@ namespace Presentation2
 		PrismControllerPtrs PrismControllers;
 		LineMutableMeshPtr RaysMesh;
 		TriangleMutableMeshPtr RaysProjectionMesh;
+		CameraPtr RaysProjectionCamera;
 
 	public:
 		ADINL explicit RaysController(bool& isSceneSynced)
@@ -159,7 +160,10 @@ namespace Presentation2
 				RaysMesh->BeginUpdateVertices();
 				RaysProjectionMesh->BeginUpdateVertices();
 
-				auto static const raysCount = 100u;
+				dxm::vec3 minBound(FLT_MAX);
+				dxm::vec3 maxBound(-FLT_MAX);
+
+				auto static const raysCount = 2000u;
 				auto static const skipped = 0u;
 				for (auto i = skipped; i < raysCount - skipped; ++i)
 				{
@@ -188,6 +192,13 @@ namespace Presentation2
 						if (j == prismPlanes.size() - 1)
 						{
 							AbsorbAlpha(waveColor, 0.7);
+							minBound.x = std::min(minBound.x, coord.x);
+							minBound.y = std::min(minBound.y, coord.y);
+							minBound.z = std::min(minBound.z, coord.z);
+
+							maxBound.x = std::max(maxBound.x, coord.x);
+							maxBound.y = std::max(maxBound.y, coord.y);
+							maxBound.z = std::max(maxBound.z, coord.z);
 
 							auto const scale = 0.03f;
 							dxm::vec3 static const uvOffset = { 0.5f, 0.5f, 0.0f };
@@ -204,9 +215,36 @@ namespace Presentation2
 							{
 								RaysProjectionMesh->AddVertex({ triangleVert[k] * scale + coord,{ 0.0, 0.0, -1.0f }, waveColor, triangleVert[k] + uvOffset });
 							}
+							/*auto const scale = 0.03f;
+							dxm::vec3 static prevHitCoord;
+							dxm::argb static prevHitWaveColor;
+
+							if (i == 0 || i == raysCount - 1)
+							{
+								RaysProjectionMesh->AddVertex(TriangleVertex(coord - dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
+								RaysProjectionMesh->AddVertex(TriangleVertex(coord + dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
+								prevHitCoord = coord;
+								prevHitWaveColor = waveColor;
+							}
+							else
+							{
+								RaysProjectionMesh->AddVertex(TriangleVertex(coord + dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, {0.5f, 0.5f}));
+
+								RaysProjectionMesh->AddVertex(TriangleVertex(coord - dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
+								RaysProjectionMesh->AddVertex(TriangleVertex(coord + dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
+								RaysProjectionMesh->AddVertex(TriangleVertex(prevHitCoord - dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, prevHitWaveColor, { 0.5f, 0.5f }));
+
+								RaysProjectionMesh->AddVertex(TriangleVertex(coord - dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
+								RaysProjectionMesh->AddVertex(TriangleVertex(coord + dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
+								prevHitCoord = coord;
+								prevHitWaveColor = waveColor;
+							}*/
 						}
 					}
 				}
+				RaysProjectionCamera->Position = (minBound + maxBound) / 2.0f;
+				RaysProjectionCamera->Position.z = 0.0f;
+				RaysProjectionCamera->Size = std::max(maxBound.x - minBound.x, maxBound.y - minBound.y);
 
 				RaysMesh->EndUpdateVertices();
 				RaysProjectionMesh->EndUpdateVertices();
@@ -229,23 +267,6 @@ namespace Presentation2
 		ADINT explicit PresentationScene(IDirect3DDevice9* const device)
 			: Scene(device)
 		{
-			{	/* Setting up the camera. */
-				/*auto const camera = OrbitalCamera();
-				camera->Rotation = { 0.0, -dxm::radians(45.0f) };
-				camera->RotationCenter = { 0.0f, 1.2f, 2.0f };
-				camera->CenterOffset = { 0.0f, 0.0f, -1.8f };
-				camera->Layer = Layer::Custom0 | Layer::Transparent; */
-
-				auto const projectionCamera = Camera();
-				projectionCamera->Projection = BaseCameraProjection::Orthographic;
-				projectionCamera->Position.x = -0.153f;
-				projectionCamera->Position.y = +1.159f;
-				projectionCamera->Rotation = dxm::vec3(0, dxm::radians(0.0f), 0);
-				projectionCamera->Layer = Layer::Custom0 | Layer::Transparent;
-			//	projectionCamera->Viewport = Rect(UpperLeftPivot, 100, 100, 500, 500);
-				//projectionCamera->Viewport = Rect(LowerRightPivot, STANDART_DESKTOP_WIDTH - 500, STANDART_DESKTOP_HEIGHT - 500, 300, 300);
-			}
-
 			{	/* Setting up the room. */
 				auto const roomMesh = TriangleMesh(L"../gfx/room.obj");
 				auto const screenMesh = TriangleMesh(L"../gfx/screen.obj");
@@ -266,6 +287,21 @@ namespace Presentation2
 
 				m_RaysController->RaysMesh = LineMutableMesh();
 				auto const rays = LineMutableMeshRenderer<TRUE>(m_RaysController->RaysMesh);
+			}
+
+			{	/* Setting up the camera. */
+				/*auto const camera = OrbitalCamera();
+				camera->Rotation = { 0.0, -dxm::radians(45.0f) };
+				camera->RotationCenter = { 0.0f, 1.2f, 2.0f };
+				camera->CenterOffset = { 0.0f, 0.0f, -1.8f };
+				camera->Layer = Layer::Default | Layer::Custom0 | Layer::Transparent;*/
+
+				m_RaysController->RaysProjectionCamera = Camera();
+				m_RaysController->RaysProjectionCamera->Projection = BaseCameraProjection::Orthographic;
+				m_RaysController->RaysProjectionCamera->Rotation = dxm::vec3(0, dxm::radians(0.0f), 0);
+				m_RaysController->RaysProjectionCamera->Layer = Layer::Custom0 | Layer::Transparent;
+				m_RaysController->RaysProjectionCamera->Viewport = Rect(UpperLeftPivot, 1440 - 500 - 50, 50, 500, 500);
+				//projectionCamera->Viewport = Rect(LowerRightPivot, STANDART_DESKTOP_WIDTH - 500, STANDART_DESKTOP_HEIGHT - 500, 300, 300);
 			}
 
 			{	/* Setting up the prisms. */

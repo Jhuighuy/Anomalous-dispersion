@@ -26,42 +26,42 @@ namespace Presentation2
 			red = -(waveLength - 440.0) / (440.0 - 380.0);
 			green = 0.0;
 			blue = 1.0;
-			alpha /= (440 - 380);
+			alpha /= (440 - 380) * 1.5;
 		}
 		else if (waveLength >= 440.0 && waveLength < 490.0)
 		{
 			red = 0.0;
 			green = (waveLength - 440.0) / (490.0 - 440.0);
 			blue = 1.0;
-			alpha /= (490 - 440);
+			alpha /= (490 - 440) * 2.5;
 		}
 		else if (waveLength >= 490.0 && waveLength < 510.0)
 		{
 			red = 0.0;
 			green = 1.0;
 			blue = -(waveLength - 510.0) / (510.0 - 490.0);
-			alpha /= (510 - 490);
+			alpha /= (510 - 490) * 11;
 		}
 		else if (waveLength >= 510.0 && waveLength < 580.0)
 		{
 			red = (waveLength - 510.0) / (580.0 - 510.0);
 			green = 1.0;
 			blue = 0.0;
-			alpha /= 580 - 510;
+			alpha /= (580 - 510) * 300;
 		}
 		else if (waveLength >= 580.0 && waveLength < 645.0)
 		{
 			red = 1.0;
 			green = -(waveLength - 645.0) / (645.0 - 580.0);
 			blue = 0.0;
-			alpha /= (645 - 580) * 2;
+			alpha /= (645 - 580) * 3;
 		}
 		else if (waveLength >= 645.0 && waveLength < 781.0)
 		{
 			red = 1.0;
 			green = 0.0;
 			blue = 0.0;
-			alpha /= 781 - 645;
+			alpha /= (781 - 645) * 4;
 		}
 		else
 		{
@@ -95,12 +95,12 @@ namespace Presentation2
 		rgb[0] = red == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(red * factor, gamma)));
 		rgb[1] = green == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(green * factor, gamma)));
 		rgb[2] = blue == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(blue * factor, gamma)));
-		rgb[3] = int(round(intensityMax * pow(alpha, gamma)));
+		rgb[3] = int(round(intensityMax * pow(alpha, 0.7)));
 
 	//	auto x = waveLength / 1000.0;
 	//	auto a = 30 * exp(-(x-0.58)*(x-0.58));
 		// /*waveLength <= 440 ? 50 : 33*/(int)a
-		return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], rgb[3] * 8);
+		return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], rgb[3]);
 	}
 
 	using IndexFunc = DOUBLE(*)(DOUBLE const waveLength);

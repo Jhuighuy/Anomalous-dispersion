@@ -408,7 +408,7 @@ namespace Presentation2
 		ADAPI explicit BaseCamera(IDirect3DDevice9* const device);
 
 		// -----------------------
-		ADAPI void OnRender() const override;
+		ADAPI void OnRender() const;
 		ADAPI void OnUpdate() override 
 		{
 			IEngineRenderable::OnUpdate();
