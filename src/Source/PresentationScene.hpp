@@ -290,18 +290,17 @@ namespace Presentation2
 			}
 
 			{	/* Setting up the camera. */
-				/*auto const camera = OrbitalCamera();
+				auto const camera = OrbitalCamera();
 				camera->Rotation = { 0.0, -dxm::radians(45.0f) };
 				camera->RotationCenter = { 0.0f, 1.2f, 2.0f };
 				camera->CenterOffset = { 0.0f, 0.0f, -1.8f };
-				camera->Layer = Layer::Default | Layer::Custom0 | Layer::Transparent;*/
+				camera->Layer = Layer::Default | Layer::Custom0 | Layer::Transparent;
 
 				m_RaysController->RaysProjectionCamera = Camera();
 				m_RaysController->RaysProjectionCamera->Projection = BaseCameraProjection::Orthographic;
 				m_RaysController->RaysProjectionCamera->Rotation = dxm::vec3(0, dxm::radians(0.0f), 0);
 				m_RaysController->RaysProjectionCamera->Layer = Layer::Custom0 | Layer::Transparent;
 				m_RaysController->RaysProjectionCamera->Viewport = Rect(UpperLeftPivot, 1440 - 500 - 50, 50, 500, 500);
-				//projectionCamera->Viewport = Rect(LowerRightPivot, STANDART_DESKTOP_WIDTH - 500, STANDART_DESKTOP_HEIGHT - 500, 300, 300);
 			}
 
 			{	/* Setting up the prisms. */

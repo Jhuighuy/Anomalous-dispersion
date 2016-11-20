@@ -409,6 +409,8 @@ namespace Presentation2
 
 		// -----------------------
 		ADAPI void OnRender() const;
+		ADAPI void OnRenderToTargets(Scene const* scene) const;
+		ADAPI void OnRenderTargets() const;
 		ADAPI void OnUpdate() override 
 		{
 			IEngineRenderable::OnUpdate();
@@ -416,8 +418,6 @@ namespace Presentation2
 
 	private:
 		ADINT void Clear(dxm::argb const color = ~0u) const;
-		ADINT void Render(Scene const* scene) const;
-		ADINT void RenderWithTranparency(Scene const* scene) const;
 	};	// class Camera
 
 	/*************** 
