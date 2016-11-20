@@ -24,7 +24,7 @@ namespace Presentation2
 	// -----------------------
 	ADAPI BaseCamera::BaseCamera(IDirect3DDevice9* const device) 
 		: DependsOnContextSize(device)
-		, m_Device(device), Viewport(UpperLeftPivot, 0, 0, GetContextWidth(), GetContextHeight())
+		, m_Device(device), Viewport(UpperLeftPivot, 0, 0, /*GetContextWidth()*/1440, /*GetContextHeight()*/1080)
 	{
 		assert(m_Device != nullptr);
 
@@ -187,8 +187,8 @@ namespace Presentation2
 		auto const viewMatrix = dxm::mat4();
 		auto const projectionMatrix = dxm::orthoLH(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
 
-		screenQuad->Position = dxm::vec3((FLOAT)Viewport.X / GetContextWidthF(), (FLOAT)Viewport.Y / GetContextHeightF(), 0.0f);
-		screenQuad->Scale = dxm::vec3((FLOAT)Viewport.Width / GetContextWidthF(), (FLOAT)Viewport.Height / GetContextHeightF(), 1.0f);
+		screenQuad->Position = dxm::vec3(Viewport.X / GetContextWidthF(), Viewport.Y / GetContextHeightF(), 0.0f);
+		screenQuad->Scale = dxm::vec3(Viewport.Width / GetContextWidthF(), Viewport.Height / GetContextHeightF(), 1.0f);
 
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_PROJECTION, dxm::ptr(projectionMatrix)));
 		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_VIEW, dxm::ptr(viewMatrix)));
