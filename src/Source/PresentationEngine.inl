@@ -142,6 +142,10 @@ namespace Presentation2
 	ADAPI MeshRenderer<TMesh, TIsTransparent, TIsLit>::MeshRenderer(IDirect3DDevice9* const device, MeshPtr const& mesh)
 		: m_Device(device), m_Texture(nullptr), m_Mesh(mesh)
 	{
+		if (TIsTransparent)
+		{
+			Layers |= Layer::Transparent;
+		}
 	}
 
 	// -----------------------
@@ -210,20 +214,20 @@ namespace Presentation2
 		}
 
 		/* Setting up the transformations. */
-		auto const matrix = dxm::translate(Position)
+		auto const world = dxm::translate(Position)
 			* dxm::toMat4(dxm::quat(Rotation))
 			* dxm::translate(PositionOffset)
 			* dxm::scale(Scale);
-		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_WORLD, dxm::ptr(matrix)));
+		Utils::RuntimeCheckH(m_Device->SetTransform(D3DTS_WORLD, dxm::ptr(world)));
 
-		/* Setting up the lights (we have a signle light source on the scene). */
+		/* Setting up the lights (we have a single light source on the scene). */
 		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_LIGHTING, TIsLit));
 		Utils::RuntimeCheckH(m_Device->LightEnable(0, TIsLit));
 
 		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_SRCBLEND, SourceBlend));
 		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_DESTBLEND, DestBlend));
 
-		/* Setting up the textures and shaders (we have a signle texture and shared per object). */
+		/* Setting up the textures and shaders (we have a single texture and shared per object). */
 		Utils::RuntimeCheckH(m_Device->SetTexture(0, texture1));
 		Utils::RuntimeCheckH(m_Device->SetTexture(1, texture2));
 		Utils::RuntimeCheckH(m_Device->SetPixelShader(pixelShader));

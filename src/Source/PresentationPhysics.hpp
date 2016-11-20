@@ -95,12 +95,12 @@ namespace Presentation2
 		rgb[0] = red == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(red * factor, gamma)));
 		rgb[1] = green == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(green * factor, gamma)));
 		rgb[2] = blue == 0.0 ? 0 : static_cast<int>(round(intensityMax * pow(blue * factor, gamma)));
-		rgb[3] = int(round(intensityMax * pow(alpha, 0.5)));
+		rgb[3] = int(round(intensityMax * pow(alpha, gamma)));
 
 	//	auto x = waveLength / 1000.0;
 	//	auto a = 30 * exp(-(x-0.58)*(x-0.58));
 		// /*waveLength <= 440 ? 50 : 33*/(int)a
-		return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], rgb[3]);
+		return D3DCOLOR_RGBA(rgb[0], rgb[1], rgb[2], rgb[3] * 8);
 	}
 
 	using IndexFunc = DOUBLE(*)(DOUBLE const waveLength);

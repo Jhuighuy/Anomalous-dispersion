@@ -8,6 +8,8 @@
 #include "PresentationPhysics.hpp"
 
 #include <array>
+#define STANDART_DESKTOP_WIDTH 1920
+#define STANDART_DESKTOP_HEIGHT 1080
 
 namespace Presentation2
 {
@@ -157,7 +159,7 @@ namespace Presentation2
 				RaysMesh->BeginUpdateVertices();
 				RaysProjectionMesh->BeginUpdateVertices();
 
-				auto static const raysCount = 2000u;
+				auto static const raysCount = 100u;
 				auto static const skipped = 0u;
 				for (auto i = skipped; i < raysCount - skipped; ++i)
 				{
@@ -228,10 +230,20 @@ namespace Presentation2
 			: Scene(device)
 		{
 			{	/* Setting up the camera. */
-				auto const camera = OrbitalCamera();
+				/*auto const camera = OrbitalCamera();
 				camera->Rotation = { 0.0, -dxm::radians(45.0f) };
 				camera->RotationCenter = { 0.0f, 1.2f, 2.0f };
 				camera->CenterOffset = { 0.0f, 0.0f, -1.8f };
+				camera->Layer = Layer::Custom0 | Layer::Transparent; */
+
+				auto const projectionCamera = Camera();
+				projectionCamera->Projection = BaseCameraProjection::Orthographic;
+				projectionCamera->Position.x = -0.153f;
+				projectionCamera->Position.y = +1.159f;
+				projectionCamera->Rotation = dxm::vec3(0, dxm::radians(0.0f), 0);
+				projectionCamera->Layer = Layer::Custom0 | Layer::Transparent;
+			//	projectionCamera->Viewport = Rect(UpperLeftPivot, 100, 100, 500, 500);
+				//projectionCamera->Viewport = Rect(LowerRightPivot, STANDART_DESKTOP_WIDTH - 500, STANDART_DESKTOP_HEIGHT - 500, 300, 300);
 			}
 
 			{	/* Setting up the room. */
@@ -250,6 +262,7 @@ namespace Presentation2
 
 				m_RaysController->RaysProjectionMesh = TriangleMutableMesh();
 				auto const raysProjection = TriangleMutableMeshRenderer<TRUE>(m_RaysController->RaysProjectionMesh, L"../gfx/color_mask.png", L"../gfx/Shaders/ColoredTextureShader.hlsl");
+				raysProjection->Layers |= Layer::Custom0;
 
 				m_RaysController->RaysMesh = LineMutableMesh();
 				auto const rays = LineMutableMeshRenderer<TRUE>(m_RaysController->RaysMesh);

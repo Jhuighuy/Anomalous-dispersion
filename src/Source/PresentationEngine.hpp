@@ -42,21 +42,18 @@ namespace Presentation2
 		}
 	}	// namespace dxm
 
-	struct IEngineUpdatable : public IUpdatable {};
-	struct IEngineRenderable : public IRenderable {};
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
+	// Engine Core.
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
+
+	class IEngineUpdatable : public IUpdatable {};
+	class IEngineRenderable : public IRenderable {};
 
 	using IEngineUpdatablePtr = std::shared_ptr<IEngineUpdatable>;
 	using IEngineRenderablePtr = std::shared_ptr<IEngineRenderable>;
 
-	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
-	// Cameras.
-	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
-
-	using CameraPtr = std::shared_ptr<class Camera>;
-	using OrbitalCameraPtr = std::shared_ptr<class OrbitalCamera>;
-
 	/*************** 
-	 * Helper tiny class that extracts context size from D3D device */
+	 * Helper tiny class that extracts context size from D3D device. */
 	class DependsOnContextSize
 	{
 	protected:
@@ -92,53 +89,6 @@ namespace Presentation2
 			return static_cast<FLOAT>(GetContextHeight());
 		}
 	};	// class DependsOnContextSize
-
-	/*************** 
-	 * Describes a base camera. */
-	class Camera : public IEngineRenderable, public DependsOnContextSize
-	{
-	protected:
-		IDirect3DDevice9* const m_Device;
-	public:
-		FLOAT FieldOfView = dxm::radians(60.0f);
-		FLOAT NearClippingPlane = 0.01f, FarClippingPlane = 20.0f;
-	
-	protected:
-
-	public:
-
-		// -----------------------
-		ADAPI explicit Camera(IDirect3DDevice9* const device);
-
-		// -----------------------
-		ADAPI void OnRender() const override;
-		ADAPI void OnUpdate() override 
-		{
-			IEngineRenderable::OnUpdate();
-		}
-
-	};	// class Camera
-
-	/*************** 
-	 * Describes an orbital mouse-controlled camera. */
-	class OrbitalCamera final : public Camera
-	{
-	private:
-		POINT mutable m_PrevMousePosition = {};
-	public:
-		dxm::vec2 Rotation, RotationMin, RotationMax;
-		dxm::vec3 RotationCenter;
-		dxm::vec3 CenterOffset;
-
-		// -----------------------
-		ADINL explicit OrbitalCamera(IDirect3DDevice9* const device)
-			: Camera(device)
-		{}
-
-		// -----------------------
-		ADAPI void OnUpdate() override final;
-		ADAPI void OnRender() const override final;
-	};	// class OrbitalCamera
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 	// Meshes and materials.
@@ -310,25 +260,45 @@ namespace Presentation2
 	using LineMutableMeshPtr = std::shared_ptr<LineMutableMesh>;
 
 	/*************** 
+	 * Describes a layer of a mesh renderer. */
+	using Layer_t = BYTE;
+	namespace Layer
+	{
+		enum : Layer_t
+		{
+			Transparent = 1 << 0,
+			Default = 1 << 1,
+			Custom0 = 1 << 2,
+		};
+	}	// namespace Layer
+
+	/*************** 
 	 * Describes a base mesh renderer. */
-	class IMeshRenderer : public IEngineRenderable
+	class BaseMeshRenderer : public IEngineRenderable
 	{
 	public:
+		bool IsEnabled = true;
+		Layer_t Layers = Layer::Default;
+		dxm::vec3 PositionOffset;
+		dxm::vec3 Position;
+		dxm::vec3 Rotation;
+		dxm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
+
+	public:
 		// -----------------------
-		ADAPI virtual bool IsTransparent() const = 0;
-		ADAPI virtual bool IsLit() const = 0;
+		ADAPI virtual void OnRender() const override = 0;
 		ADAPI virtual void OnRender(IDirect3DPixelShader9* const pixelShader) const = 0;
 		ADAPI virtual void OnRender(IDirect3DPixelShader9* const pixelShader, IDirect3DTexture9* const texture1, IDirect3DTexture9* const texture2 = nullptr) const = 0;
 	};	// class IMeshRenderer
 
-	using IMeshRendererPtr = std::shared_ptr<IMeshRenderer>;
+	using BaseMeshRendererPtr = std::shared_ptr<BaseMeshRenderer>;
 
 	/*************** 
 	 * Describes a template mesh renderer. */
 	template<typename TMesh = TriangleMutableMesh, BOOL TIsTransparent = FALSE, BOOL TIsLit = FALSE>
-	class MeshRenderer final : public IMeshRenderer
+	class MeshRenderer final : public BaseMeshRenderer
 	{
-		friend class Scene;
+		friend class BaseCamera;
 
 	public:
 		using Mesh = TMesh;
@@ -338,11 +308,6 @@ namespace Presentation2
 		auto static const PrimitiveType = Mesh::PrimitiveType;
 
 	public:
-		bool IsEnabled = true;
-		dxm::vec3 PositionOffset;
-		dxm::vec3 Position;
-		dxm::vec3 Rotation;
-		dxm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
 		D3DBLEND SourceBlend = D3DBLEND_SRCALPHA;
 		D3DBLEND DestBlend = D3DBLEND_ONE;
 	protected:
@@ -376,10 +341,6 @@ namespace Presentation2
 			IEngineRenderable::OnUpdate();
 		}
 
-		// -----------------------
-		ADAPI bool IsTransparent() const override final { return TIsTransparent; }
-		ADAPI bool IsLit() const override final { return TIsLit; }
-
 	};	// class MeshRenderer
 
 	template<BOOL TIsTransparent = FALSE, BOOL TIsLit = FALSE>
@@ -403,15 +364,23 @@ namespace Presentation2
 	using LineMutableMeshRendererPtr = std::shared_ptr<LineMutableMeshRenderer<TIsTransparent, TIsLit>>;
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
-	// Scenes and bridging.
+	// Cameras and render targets.
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 
 	using ScenePtr = std::shared_ptr<class Scene>;
-	using EngineWidgetPtr = std::shared_ptr<class EngineWidget>;
+	using BaseCameraPtr = std::shared_ptr<class BaseCamera>;
+	using CameraPtr = std::shared_ptr<class Camera>;
+	using OrbitalCameraPtr = std::shared_ptr<class OrbitalCamera>;
+
+	enum class BaseCameraProjection
+	{
+		Perspective,
+		Orthographic,
+	};	// enum class CameraType
 
 	/*************** 
-	 * Describes a scene. */
-	class Scene : public IEngineRenderable, public DependsOnContextSize
+	 * Describes a base camera. */
+	class BaseCamera : public IEngineRenderable, public DependsOnContextSize
 	{
 		struct RenderTarget final
 		{
@@ -421,15 +390,98 @@ namespace Presentation2
 
 	protected:
 		IDirect3DDevice9* const m_Device;
+		RenderTarget m_RenderTargets[2];
+	public:
+		dxm::argb ClearColor = 0u;
+		FLOAT FieldOfView = dxm::radians(60.0f);
+		FLOAT Size = 0.25f;
+		FLOAT NearClippingPlane = 0.01f;
+		FLOAT FarClippingPlane = 20.0f;
+		BaseCameraProjection Projection = BaseCameraProjection::Perspective;
+		Rect Viewport;
+		Layer_t Layer = Layer::Transparent | Layer::Default;
+		IDirect3DSurface9* RenderTarget = nullptr;
+
+	public:
+
+		// -----------------------
+		ADAPI explicit BaseCamera(IDirect3DDevice9* const device);
+
+		// -----------------------
+		ADAPI void OnRender() const override;
+		ADAPI void OnUpdate() override 
+		{
+			IEngineRenderable::OnUpdate();
+		}
+
+	private:
+		ADINT void Clear(dxm::argb const color = ~0u) const;
+		ADINT void Render(Scene const* scene) const;
+		ADINT void RenderWithTranparency(Scene const* scene) const;
+	};	// class Camera
+
+	/*************** 
+	 * Describes an pane mouse-controlled camera. */
+	class Camera final : public BaseCamera
+	{
+	private:
+		POINT mutable m_PrevMousePosition = {};
+	public:
+		dxm::vec3 Position;
+		dxm::vec3 Rotation;
+
+		// -----------------------
+		ADINL explicit Camera(IDirect3DDevice9* const device)
+			: BaseCamera(device)
+		{}
+
+		// -----------------------
+		ADAPI void OnRender() const override final;
+		ADAPI void OnUpdate() override final;
+	};	// class Camera
+
+	/*************** 
+	 * Describes an orbital mouse-controlled camera. */
+	class OrbitalCamera final : public BaseCamera
+	{
+	private:
+		POINT mutable m_PrevMousePosition = {};
+	public:
+		dxm::vec2 Rotation, RotationMin, RotationMax;
+		dxm::vec3 RotationCenter;
+		dxm::vec3 CenterOffset;
+
+		// -----------------------
+		ADINL explicit OrbitalCamera(IDirect3DDevice9* const device)
+			: BaseCamera(device)
+		{}
+
+		// -----------------------
+		ADAPI void OnUpdate() override final;
+		ADAPI void OnRender() const override final;
+	};	// class OrbitalCamera
+
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
+	// Scenes and bridging.
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
+
+	using EngineWidgetPtr = std::shared_ptr<class EngineWidget>;
+
+	/*************** 
+	 * Describes a scene. */
+	class Scene : public IEngineRenderable, public DependsOnContextSize
+	{
+		friend class BaseCamera;
+		
+	protected:
+		IDirect3DDevice9* const m_Device;
 		RECT m_Rect;
 	private:
-		mutable IDirect3DPixelShader9* m_ForceBlackShader;
-		mutable IDirect3DPixelShader9* m_BlendTexturesShader;
-		mutable RenderTarget m_RenderTargets[2];
-		mutable TriangleMeshRendererPtr<TRUE> m_ScreenQuad;
 
+		std::vector<BaseCameraPtr> m_Cameras;
+		std::vector<BaseMeshRendererPtr> m_MeshRenderers;
+		std::vector<IEngineRenderablePtr> m_CustomRenderables;
 		std::vector<IEngineUpdatablePtr> m_Updatables;
-		std::vector<IEngineRenderablePtr> m_Renderables;
 
 	public:
 
@@ -462,7 +514,7 @@ namespace Presentation2
 			static_assert(std::is_base_of_v<IEngineRenderable, TEngineRenderable>, "Invalid base type.");
 
 			auto const renderable = std::make_shared<TEngineRenderable>(std::forward<TArgs>(args)...);
-			m_Renderables.push_back(renderable);
+			m_CustomRenderables.push_back(renderable);
 			return renderable;
 		}
 
@@ -471,9 +523,19 @@ namespace Presentation2
 		// ***********************************************************************************************
 
 		// -----------------------
+		ADINL auto Camera()
+		{
+			auto const camera = std::make_shared<CameraPtr::element_type>(m_Device);
+			m_Cameras.push_back(camera);
+			return camera;
+		}
+
+		// -----------------------
 		ADINL auto OrbitalCamera()
 		{
-			return CustomRenderable<OrbitalCameraPtr::element_type>(m_Device);
+			auto const orbitalCamera = std::make_shared<OrbitalCameraPtr::element_type>(m_Device);
+			m_Cameras.push_back(orbitalCamera);
+			return orbitalCamera;
 		}
 
 		// -----------------------
@@ -504,24 +566,32 @@ namespace Presentation2
 		template<BOOL TIsTransparent = FALSE, BOOL TIsLit = FALSE, typename... TArgs>
 		ADINL auto TriangleMeshRenderer(TArgs&&... args)
 		{
-			return this->CustomRenderable<typename TriangleMeshRendererPtr<TIsTransparent, TIsLit>::element_type>(m_Device, std::forward<TArgs>(args)...);
+			auto const triangleMeshRenderer = std::make_shared<typename TriangleMeshRendererPtr<TIsTransparent, TIsLit>::element_type>(m_Device, std::forward<TArgs>(args)...);
+			m_MeshRenderers.push_back(triangleMeshRenderer);
+			return triangleMeshRenderer;
 		}
 		template<BOOL TIsTransparent = FALSE, BOOL TIsLit = FALSE, typename... TArgs>
 		ADINL auto TriangleMutableMeshRenderer(TArgs&&... args)
 		{
-			return this->CustomRenderable<typename TriangleMutableMeshRendererPtr<TIsTransparent, TIsLit>::element_type>(m_Device, std::forward<TArgs>(args)...);
+			auto const triangleMeshRenderer = std::make_shared<typename TriangleMutableMeshRendererPtr<TIsTransparent, TIsLit>::element_type>(m_Device, std::forward<TArgs>(args)...);
+			m_MeshRenderers.push_back(triangleMeshRenderer);
+			return triangleMeshRenderer;
 		}
 
 		// -----------------------
 		template<BOOL TIsTransparent = FALSE, BOOL TIsLit = FALSE, typename... TArgs>
 		ADINL auto LineMeshRenderer(TArgs&&... args)
 		{
-			return this->CustomRenderable<typename LineMeshRendererPtr<TIsTransparent, TIsLit>::element_type>(m_Device, std::forward<TArgs>(args)...);
+			auto const lineMeshRenderer = std::make_shared<typename LineMeshRendererPtr<TIsTransparent, TIsLit>::element_type>(m_Device, std::forward<TArgs>(args)...);
+			m_MeshRenderers.push_back(lineMeshRenderer);
+			return lineMeshRenderer;
 		}
 		template<BOOL TIsTransparent = FALSE, BOOL TIsLit = FALSE, typename... TArgs>
 		ADINL auto LineMutableMeshRenderer(TArgs&&... args)
 		{
-			return this->CustomRenderable<typename LineMutableMeshRendererPtr<TIsTransparent, TIsLit>::element_type>(m_Device, std::forward<TArgs>(args)...);
+			auto const lineMeshRenderer = std::make_shared<typename LineMutableMeshRendererPtr<TIsTransparent, TIsLit>::element_type>(m_Device, std::forward<TArgs>(args)...);
+			m_MeshRenderers.push_back(lineMeshRenderer);
+			return lineMeshRenderer;
 		}
 
 	};	// struct Scene

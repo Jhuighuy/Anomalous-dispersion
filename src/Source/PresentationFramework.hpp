@@ -11,8 +11,6 @@
 #error Please, include <Windows.h> before this header.
 #endif	// ifdef _WINDOWS_
 
-#define D3D_DEBUG_INFO 1
-
 /* Loading the minimized version of the WinAPI. */
 #ifndef WIN32_LEAN_AND_MEAN 
 #define WIN32_LEAN_AND_MEAN 1
@@ -210,7 +208,7 @@ namespace Presentation2
 		ADINL Rect(INT const x, INT const y, INT const w, INT const h)
 			: Rect(CenterPivot, x, y, w, h)
 		{}
-	};	// struct Rect final
+	};	// struct Rect 
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 	// Basic window widget.
@@ -274,7 +272,6 @@ namespace Presentation2
 	enum class LabelFlags : DWORD
 	{
 		LeftAlignment = SS_LEFT,
-		LeftAlignmentNoWordWrap = SS_LEFTNOWORDWRAP,
 		CenterAlignment = SS_CENTER,
 		RightAlignment = SS_RIGHT,
 	}; // enum LabelFlags

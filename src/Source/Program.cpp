@@ -102,8 +102,7 @@ namespace Presentation2
 		}
 	} static *gp_PresentationWindow = nullptr;	// class PresentationWindow
 
-#define STANDART_DESKTOP_WIDTH 1920
-#define STANDART_DESKTOP_HEIGHT 1080
+
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 	// Windows setup.
@@ -398,6 +397,11 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 
 	g_MainWindow.Show();
 
+	atexit([]()
+	{
+		g_IsExitRequested = true;
+	});
+
 	// Rendering presentation in the separate thread to make buttons
 	// render correctly.
 	std::thread([]()
@@ -412,6 +416,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 			gp_PresentationWindow->Update();
 			gp_PresentationWindow->Render();
 		}
+		int i;
 	}).detach();
 
 	MSG msg;
