@@ -47,7 +47,7 @@ namespace Presentation2
 			red = (waveLength - 510.0) / (580.0 - 510.0);
 			green = 1.0;
 			blue = 0.0;
-			alpha /= (580 - 510) * 300;
+			alpha /= (580 - 510) * 3;
 		}
 		else if (waveLength >= 580.0 && waveLength < 645.0)
 		{
