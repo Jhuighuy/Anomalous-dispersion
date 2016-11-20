@@ -244,7 +244,7 @@ namespace Presentation2
 				}
 				RaysProjectionCamera->Position = (minBound + maxBound) / 2.0f;
 				RaysProjectionCamera->Position.z = 0.0f;
-				RaysProjectionCamera->Size = std::max(maxBound.x - minBound.x, maxBound.y - minBound.y);
+				RaysProjectionCamera->Size = 1.1f * std::max(maxBound.x - minBound.x, maxBound.y - minBound.y);
 
 				RaysMesh->EndUpdateVertices();
 				RaysProjectionMesh->EndUpdateVertices();
