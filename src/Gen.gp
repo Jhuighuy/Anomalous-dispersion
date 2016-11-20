@@ -67,6 +67,7 @@ set ytics ("1" 1, "1.3" 1.3, "1.6" 1.6, "1.9" 1.9, "2.2" 2.2)
 
 set grid
 
+#set output "../gfx/anom-func2.png"
 set output "../gfx/anom-func1.png"
 plot [0.38:0.78] "hist.dat" smooth bezier ti "n" lc rgb "#FF0000", "abs.dat" smooth bezier ti '{/Symbol a}' lc rgb "#0000FF"
 
@@ -79,5 +80,6 @@ set ytics ( "1.5" 1.5,  \
 		    "1.6" 1.6   \
 		   ) 
 
+#set output "../gfx/norm-func2.png"
 set output "../gfx/norm-func1.png"
 plot [0.38:0.78] 0.286458*x**2 - 0.469792*x + 1.70216 smooth bezier ti "n" lc rgb "#FF0000"
