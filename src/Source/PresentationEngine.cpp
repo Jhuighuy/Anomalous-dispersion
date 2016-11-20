@@ -287,11 +287,16 @@ namespace Presentation2
 		}
 
 		/* Setting up default lights. */
+		auto const dir = dxm::normalize(dxm::vec3(-0.1f, -0.3f, 1.0f));
 		D3DLIGHT9 light = { };
+		light.Diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
+		light.Ambient = { 0.1f, 0.1f, 0.1f, 1.0f };
 		light.Type = D3DLIGHT_DIRECTIONAL;
 		light.Diffuse = { 0.7f, 0.7f, 0.7f, 1.0f };
-		light.Direction = { 0.0f, -0.3f, 1.0f };
+		light.Direction = { dir.x, dir.y, dir.z };
+		light.Attenuation0 = 0.1f;
 		light.Attenuation1 = 0.1f;
+
 		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_LIGHTING, TRUE));
 		Utils::RuntimeCheckH(m_Device->SetRenderState(D3DRS_AMBIENT, ~0u));
 		Utils::RuntimeCheckH(m_Device->SetLight(0, &light));

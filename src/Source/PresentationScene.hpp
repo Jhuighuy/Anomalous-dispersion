@@ -215,30 +215,6 @@ namespace Presentation2
 							{
 								RaysProjectionMesh->AddVertex({ triangleVert[k] * scale + coord,{ 0.0, 0.0, -1.0f }, waveColor, triangleVert[k] + uvOffset });
 							}
-							/*auto const scale = 0.03f;
-							dxm::vec3 static prevHitCoord;
-							dxm::argb static prevHitWaveColor;
-
-							if (i == 0 || i == raysCount - 1)
-							{
-								RaysProjectionMesh->AddVertex(TriangleVertex(coord - dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
-								RaysProjectionMesh->AddVertex(TriangleVertex(coord + dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
-								prevHitCoord = coord;
-								prevHitWaveColor = waveColor;
-							}
-							else
-							{
-								RaysProjectionMesh->AddVertex(TriangleVertex(coord + dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, {0.5f, 0.5f}));
-
-								RaysProjectionMesh->AddVertex(TriangleVertex(coord - dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
-								RaysProjectionMesh->AddVertex(TriangleVertex(coord + dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
-								RaysProjectionMesh->AddVertex(TriangleVertex(prevHitCoord - dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, prevHitWaveColor, { 0.5f, 0.5f }));
-
-								RaysProjectionMesh->AddVertex(TriangleVertex(coord - dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
-								RaysProjectionMesh->AddVertex(TriangleVertex(coord + dxm::vec3(scale, 0.0f, 0.0f), { 0.0, 0.0, -1.0f }, waveColor, { 0.5f, 0.5f }));
-								prevHitCoord = coord;
-								prevHitWaveColor = waveColor;
-							}*/
 						}
 					}
 				}

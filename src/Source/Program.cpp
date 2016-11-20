@@ -188,8 +188,8 @@ namespace Presentation2
 		m_PresentationRenderer = Graphics<EngineWidget>({ STANDART_DESKTOP_WIDTH * 5 / 8, STANDART_DESKTOP_HEIGHT / 2, STANDART_DESKTOP_WIDTH * 3 / 4, STANDART_DESKTOP_HEIGHT });
 		m_Presentation = m_PresentationRenderer->InitializeScene<PresentationScene>();
 		// -----------------------
-		m_ImageLabel = Label({ STANDART_DESKTOP_WIDTH / 8, 85, 480, 40 }, L"Показатель преломления первой призмы", LabelFlags::CenterAlignment, TextSize::Default);
-		Rect const imageRect = { STANDART_DESKTOP_WIDTH / 8, 270, 480, 330 };
+		m_ImageLabel = Label({ STANDART_DESKTOP_WIDTH / 8, 85, 480, 60 }, L"Показатель преломления первой призмы", LabelFlags::CenterAlignment, TextSize::Default);
+		Rect const imageRect = { STANDART_DESKTOP_WIDTH / 8, 280, 480, 330 };
 		m_NormImage = Image(imageRect, L"../gfx/norm-func.png");
 		m_AnomImage = Image(imageRect, L"../gfx/anom-func.png");
 		m_AnomImage->Hide();
@@ -198,7 +198,7 @@ namespace Presentation2
 			auto static const PADDING = 5;
 			auto static const REAL_CELL_WIDTH = STANDART_DESKTOP_WIDTH / 4 / 2;
 			auto static const CELL_WIDTH = REAL_CELL_WIDTH - 2 * PADDING;
-			auto static const CELL_HEIGHT = 80;
+			auto static const CELL_HEIGHT = 120;
 			auto static const SUBCELL_WIDTH = CELL_WIDTH;
 			auto static const SUBCELL_HEIGHT = CELL_HEIGHT / 2;
 			auto static const CELL_CENTER_X = STANDART_DESKTOP_WIDTH / 8;
@@ -212,13 +212,8 @@ namespace Presentation2
 
 			for (auto cnt = 0; cnt < m_Presentation->m_PrismContollers.size(); ++cnt)
 			{
-#if _DEBUG
-				auto static const ROWS_PER_PRISM = 4;
-#else
-				// We have only 2 rows of controls in debug mode - moving controls are disabled.
 				auto static const ROWS_PER_PRISM = 2;
-#endif
-				auto j = ROWS_PER_PRISM * cnt + 5;
+				auto j = ROWS_PER_PRISM * cnt + 3;
 				auto const isSecondPrism = cnt != 0;
 
 				// Initializing the layout controls for prisms.
@@ -228,9 +223,9 @@ namespace Presentation2
 				{	// Initializing the label of the prism control.
 					auto const cellX = CELL_CENTER_X;
 					auto const lowerSubcellY = LowerSubcellY(j++) + SUBCELL_HEIGHT / 2;
-					prismControl.Label = Label({ cellX, lowerSubcellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }
+					prismControl.Label = Label({ cellX, lowerSubcellY, 2 * SUBCELL_WIDTH, SUBCELL_HEIGHT }
 						, isSecondPrism ? L"Вторая призма" : L"Первая призма"
-						, LabelFlags::CenterAlignment, TextSize::NotSoLarge);
+						, LabelFlags::CenterAlignment, TextSize::Large);
 				}
 
 				auto static const InitializeModifierControl = [this](PrismsControl::ModifierControl& control
