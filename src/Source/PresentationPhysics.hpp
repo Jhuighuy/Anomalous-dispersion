@@ -61,7 +61,7 @@ namespace Presentation2
 			red = 1.0;
 			green = 0.0;
 			blue = 0.0;
-			alpha /= (781 - 645) * 1.5;
+			alpha /= (781 - 645) * 2;
 		}
 		else
 		{
