@@ -38,12 +38,25 @@ namespace Presentation2
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 
 	// -----------------------
+	ADINT LRESULT CALLBACK WindowProcCall(HWND const hWnd, UINT const message, WPARAM const wParam, LPARAM const lParam, UINT_PTR const, DWORD_PTR const)
+	{
+		auto const self = reinterpret_cast<WindowWidget*>(GetWindowLongW(hWnd, GWLP_USERDATA));
+		if (self != nullptr)
+		{
+			return self->OnWindowProcCall(message, wParam, lParam);
+		}
+		return DefSubclassProc(hWnd, message, wParam, lParam);
+	}
+
+	// -----------------------
 	ADAPI WindowWidget::WindowWidget(HWND const hwnd, TextSize const textSize)
 		: m_Handle(hwnd)
 	{
 		assert(std::this_thread::get_id() == g_MainThreadID);
 		assert(m_Handle != nullptr);
 
+		Utils::RuntimeCheck(SetWindowSubclass(hwnd, &WindowProcCall, 1, 0));
+		SetWindowLongW(m_Handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 		SetTextSize(textSize);
 	}
 
@@ -73,30 +86,23 @@ namespace Presentation2
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX //
 
 	// -----------------------
-	ADINT LRESULT CALLBACK Window::WindowProc(HWND const hWnd, UINT const message, WPARAM const wParam, LPARAM const lParam)
+	ADAPI LRESULT ButtonWidget::OnWindowProcCall(UINT const message, WPARAM const wParam, LPARAM const lParam)
 	{
-		if (message == WM_CLOSE)
+		if (message == WM_LBUTTONUP)
 		{
-			PostQuitMessage(0);
-			g_IsExitRequested = true;
+			return 0;
 		}
-		else if (message == WM_COMMAND)
+		return DefSubclassProc(m_Handle, message, wParam, lParam);
+	}
+
+	// -----------------------
+	ADAPI LRESULT CheckboxWidget::OnWindowProcCall(UINT const message, WPARAM const wParam, LPARAM const lParam)
+	{
+		if (message == WM_LBUTTONUP)
 		{
-			/* We need to process messages from buttons only. */
-			auto const self = reinterpret_cast<Window*>(GetWindowLongW(hWnd, GWLP_USERDATA));
-			if (self != nullptr)
-			{
-				auto const controlID = static_cast<WORD>(LOWORD(wParam));
-				if (self->CheckID(controlID))
-				{
-					auto const& controlCallback = self->m_Callbacks[UnwrapID(controlID)];
-					auto const isControlChecked = IsDlgButtonChecked(self->m_Handle, controlID);
-					CheckDlgButton(self->m_Handle, controlID, !isControlChecked ? BST_CHECKED : BST_UNCHECKED);
-					controlCallback(!isControlChecked);
-				}
-			}
+			return 0;
 		}
-		return DefWindowProcW(hWnd, message, wParam, lParam);
+		return DefSubclassProc(m_Handle, message, wParam, lParam);
 	}
 
 	// -----------------------
@@ -107,7 +113,7 @@ namespace Presentation2
 		{
 			windowClass.cbSize = sizeof(WNDCLASSEX);
 			windowClass.style = CS_HREDRAW | CS_VREDRAW;
-			windowClass.lpfnWndProc = WindowProc;
+			windowClass.lpfnWndProc = DefWindowProcW;
 			windowClass.hInstance = GetModuleHandleW(nullptr);
 			windowClass.hbrBackground = GetSysColorBrush(COLOR_3DFACE);
 			windowClass.lpszClassName = L"Presentation2WindowClass";
@@ -133,8 +139,13 @@ namespace Presentation2
 			    , nullptr, nullptr, hInstance, nullptr
 				));
 		}
-		SetWindowLongW(m_Handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 		Hide();
+	}
+
+	// -----------------------
+	ADINT LRESULT Window::OnWindowProcCall(UINT const message, WPARAM const wParam, LPARAM const lParam)
+	{
+		return DefSubclassProc(m_Handle, message, wParam, lParam);
 	}
 
 	// -----------------------
@@ -262,32 +273,25 @@ namespace Presentation2
 	// ***********************************************************************************************
 
 	// -----------------------
-	ADAPI ButtonPtr Window::Button(Rect const& rect, LPCWSTR const text, WindowWidgetCallback&& callback, TextSize const textSize)
+	ADAPI ButtonPtr Window::Button(Rect const& rect, LPCWSTR const text, ButtonWidgetCallback&& callback, TextSize const textSize) const
 	{
 		assert(rect.Width != 0 && rect.Height != 0);
 		assert(text != nullptr);
 
-		auto const id = GenID();
-		m_Callbacks.push_back(callback);
-
 		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE
-			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, reinterpret_cast<HMENU>(id), nullptr, nullptr));
-		return std::make_shared<WindowWidget>(handle, textSize);
+			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, nullptr, nullptr, nullptr));
+		return std::make_shared<ButtonWidget>(std::forward<ButtonWidgetCallback>(callback), handle, textSize);
 	}
 
 	// -----------------------
-	ADAPI CheckBoxPtr Window::CheckBox(Rect const& rect, LPCWSTR const text, WindowWidgetCallback&& callback, bool const enabled, TextSize const textSize)
+	ADAPI CheckBoxPtr Window::CheckBox(Rect const& rect, LPCWSTR const text, CheckboxWidgetCallback&& callback, bool const enabled, TextSize const textSize) const
 	{
 		assert(rect.Width != 0 && rect.Height != 0);
 		assert(text != nullptr);
 
-		auto const id = GenID();
-		m_Callbacks.push_back(callback);
-
 		auto const handle = Utils::RuntimeCheck(CreateWindowW(L"Button", text, WS_CHILD | WS_VISIBLE | BS_CHECKBOX | BS_MULTILINE
-			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, reinterpret_cast<HMENU>(id), nullptr, nullptr));
-		Utils::RuntimeCheck(CheckDlgButton(m_Handle, id, enabled ? BST_CHECKED : BST_UNCHECKED));
-		return std::make_shared<WindowWidget>(handle, textSize);
+			, rect.X, rect.Y, rect.Width, rect.Height, m_Handle, nullptr, nullptr, nullptr));
+		return std::make_shared<CheckboxWidget>(std::forward<CheckboxWidgetCallback>(callback), handle, textSize);
 	}
 
 }	// namespace Presentation2

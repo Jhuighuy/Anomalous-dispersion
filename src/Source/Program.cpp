@@ -130,7 +130,7 @@ namespace Presentation2
 	MainWindow::MainWindow()
 		: MenuWindow(L"Аномальная дисперсия")
 	{
-		m_BeginButton = Button({ STANDART_DESKTOP_WIDTH / 2, 500, 700, 80 }, L"Начало", [](long)
+		m_BeginButton = Button({ STANDART_DESKTOP_WIDTH / 2, 500, 700, 80 }, L"Начало", []()
 		{
 			if (gp_PresentationWindow == nullptr)
 			{
@@ -139,7 +139,7 @@ namespace Presentation2
 			gp_PresentationWindow->Show();
 			g_MainWindow.Hide();
 		}, TextSize::Large);
-		m_AuthorsButton = Button({ STANDART_DESKTOP_WIDTH / 2, 590, 700, 80 }, L"Авторы", [](long)
+		m_AuthorsButton = Button({ STANDART_DESKTOP_WIDTH / 2, 590, 700, 80 }, L"Авторы", []()
 		{
 			g_MainWindow.Hide();
 			if (gp_AuthorsWindow == nullptr)
@@ -148,7 +148,7 @@ namespace Presentation2
 			}
 			gp_AuthorsWindow->Show();
 		}, TextSize::Large);
-		m_ExitButton = Button({ STANDART_DESKTOP_WIDTH / 2, 680, 700, 80 }, L"Выход", [](long)
+		m_ExitButton = Button({ STANDART_DESKTOP_WIDTH / 2, 680, 700, 80 }, L"Выход", []()
 		{
 			exit(0);
 		}, TextSize::Large);
@@ -169,7 +169,7 @@ namespace Presentation2
 		m_LecturersLabel = Label({ STANDART_DESKTOP_WIDTH / 3 + 100, STANDART_DESKTOP_HEIGHT / 2 + 450, 500 + 200, 80 }
 		, L"Лекторы:\r\nВ.П. Кандидов, А.Ю. Чикишев", LabelFlags::LeftAlignment, TextSize::Large);
 		// -----------------------
-		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 3 + 100, STANDART_DESKTOP_HEIGHT / 2 + 450, 500 - 200, 80 }, L"Назад", [](long)
+		m_BackButton = Button({ STANDART_DESKTOP_WIDTH - STANDART_DESKTOP_WIDTH / 3 + 100, STANDART_DESKTOP_HEIGHT / 2 + 450, 500 - 200, 80 }, L"Назад", []()
 		{
 			g_MainWindow.Show();
 			gp_AuthorsWindow->Hide();
@@ -253,14 +253,14 @@ namespace Presentation2
 					auto const textEditY = lowerSubcellY;
 
 					control.Label = Label({ cellX, upperSubcellY + SUBCELL_HEIGHT / 2, SUBCELL_WIDTH, SUBCELL_HEIGHT }, label);
-					control.MinusButton = Button({ minusButtonX, minusButtonY, BUTTON_WIDTH, BUTTON_HEIGHT }, L"-", [this, &boundedValue, &control, delta](long)
+					control.MinusButton = Button({ minusButtonX, minusButtonY, BUTTON_WIDTH, BUTTON_HEIGHT }, L"-", [this, &boundedValue, &control, delta]()
 					{
 						boundedValue.Value = dxm::clamp(boundedValue.Value - delta, boundedValue.Min, boundedValue.Max);
 						control.ValueEdit->SetText(ToString(boundedValue.Value).c_str());
 						m_Presentation->m_IsSceneSynced = false;
 					});
-					control.ValueEdit = TextEdit({ textEditX, lowerSubcellY, TEXTEDIT_WIDTH, TEXTEDIT_HEIGHT }, ToString(boundedValue.Value).c_str(), TextEditFlags::CenterAlignment);
-					control.PlusButton = Button({ plusButtonX, plusButtonY, BUTTON_WIDTH, BUTTON_HEIGHT }, L"+", [this, &boundedValue, &control, delta](long)
+					control.ValueEdit = TextEdit({ textEditX, lowerSubcellY, TEXTEDIT_WIDTH, TEXTEDIT_HEIGHT }, ToString(boundedValue.Value).c_str(), TextEditFlags::CenterAlignment, TextSize::NotSoLarge);
+					control.PlusButton = Button({ plusButtonX, plusButtonY, BUTTON_WIDTH, BUTTON_HEIGHT }, L"+", [this, &boundedValue, &control, delta]()
 					{
 						boundedValue.Value = dxm::clamp(boundedValue.Value + delta, boundedValue.Min, boundedValue.Max);
 						control.ValueEdit->SetText(ToString(boundedValue.Value).c_str());
@@ -351,13 +351,13 @@ namespace Presentation2
 			{	// Initializing the layout switch button.
 				auto const cellY = UpperSubcellY(0);
 				auto static secondPrismEnabled = DEFAULT_SECOND_PRISM_ENABLED;
-				m_OnePrismLayoutButton = Button({ CellX(0), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT * 7 / 9 }, L"Одна призма", [&](long const)
+				m_OnePrismLayoutButton = Button({ CellX(0), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT * 7 / 9 }, L"Одна призма", [&]()
 				{
 					m_ImageLabel->SetText(L"Показатель преломления первой призмы");
 					secondPrismEnabled = !secondPrismEnabled;
 					SwitchSecondPrismControls(false);
 				});
-				m_TwoPrismsLayoutButton = Button({ CellX(1), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT * 7 / 9 }, L"Две призмы", [&](long const)
+				m_TwoPrismsLayoutButton = Button({ CellX(1), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT * 7 / 9 }, L"Две призмы", [&]()
 				{
 					m_ImageLabel->SetText(L"Показатели преломления и поглощения для второй призмы");
 					secondPrismEnabled = !secondPrismEnabled;
@@ -367,7 +367,7 @@ namespace Presentation2
 			SwitchSecondPrismControls(DEFAULT_SECOND_PRISM_ENABLED);
 		}
 		// -----------------------
-		m_BackButton = Button({ STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4 - 10, 70 }, L"Назад", [](long)
+		m_BackButton = Button({ STANDART_DESKTOP_WIDTH / 8, STANDART_DESKTOP_HEIGHT - 40, STANDART_DESKTOP_WIDTH / 4 - 10, 70 }, L"Назад", []()
 		{
 			g_MainWindow.Show();
 			gp_PresentationWindow->Hide();
