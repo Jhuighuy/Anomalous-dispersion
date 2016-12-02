@@ -351,13 +351,13 @@ namespace Presentation2
 			{	// Initializing the layout switch button.
 				auto const cellY = UpperSubcellY(0);
 				auto static secondPrismEnabled = DEFAULT_SECOND_PRISM_ENABLED;
-				m_OnePrismLayoutButton = Button({ CellX(0), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT * 7 / 9 }, L"Одна призма", [&]()
+				m_OnePrismLayoutButton = Button({ CellX(0), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }, L"Одна призма", [&](long const)
 				{
 					m_ImageLabel->SetText(L"Показатель преломления первой призмы");
 					secondPrismEnabled = !secondPrismEnabled;
 					SwitchSecondPrismControls(false);
 				});
-				m_TwoPrismsLayoutButton = Button({ CellX(1), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT * 7 / 9 }, L"Две призмы", [&]()
+				m_TwoPrismsLayoutButton = Button({ CellX(1), cellY, SUBCELL_WIDTH, SUBCELL_HEIGHT }, L"Две призмы", [&](long const)
 				{
 					m_ImageLabel->SetText(L"Показатели преломления и поглощения для второй призмы");
 					secondPrismEnabled = !secondPrismEnabled;
@@ -411,6 +411,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 			gp_PresentationWindow->Update();
 			gp_PresentationWindow->Render();
 		}
+		int i;
 	}).detach();
 
 	MSG msg;

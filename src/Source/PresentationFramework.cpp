@@ -70,7 +70,7 @@ namespace Presentation2
 		{
 			int const Height;
 			HFONT Handle;
-		} static FontsCache[static_cast<size_t>(TextSize::COUNT)] = { { 30 }, { 45 }, { 45 }, { 75 } };
+		} static FontsCache[static_cast<size_t>(TextSize::COUNT)] = { { 30 }, { 30 }, { 40 }, { 75 } };
 		auto& font = FontsCache[static_cast<size_t>(textSize)];
 		if (font.Handle == nullptr)
 		{
