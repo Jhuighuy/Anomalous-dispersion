@@ -22,7 +22,6 @@
 #define NOMINMAX 1
 #endif	// ifndef NOMINMAX 
 #include <Windows.h>
-#include <CommCtrl.h>
 #include <D3D9.h>
 
 #include <memory>
@@ -243,12 +242,7 @@ namespace Presentation2
 			DestroyWindow(m_Handle);
 		}
 
-		// -----------------------
-		ADAPI virtual LRESULT OnWindowProcCall(UINT const message, WPARAM const wParam, LPARAM const lParam)
-		{
-			return DefSubclassProc(m_Handle, message, wParam, lParam);
-		}
-
+	public:
 		// -----------------------
 		ADAPI void SetTextSize(TextSize const textSize = TextSize::Default) const;
 
@@ -299,38 +293,13 @@ namespace Presentation2
 
 	using TextEditPtr = WindowWidgetPtr;
 
-	using ButtonWidgetCallback = std::function<void()>;
-	using CheckboxWidgetCallback = std::function<void(bool)>;
+	using ButtonPtr = WindowWidgetPtr;
+	using CheckBoxPtr = WindowWidgetPtr;
 
-	/***************
-	 * Simple wrapper around raw WinAPI buttons. */
-	class ButtonWidget final : public WindowWidget
-	{
-	private:
-		ButtonWidgetCallback m_Callback;
+	using GraphicsWidgetPtr = std::shared_ptr<class GraphicsWidget>;
 
-	public:
-		// -----------------------
-		ADINL ButtonWidget(ButtonWidgetCallback&& callback, HWND const hwnd, TextSize const textSize = TextSize::Default)
-			: WindowWidget(hwnd, textSize), m_Callback(callback) {}
-		ADAPI LRESULT OnWindowProcCall(UINT const message, WPARAM const wParam, LPARAM const lParam) override final;
-	};	// class ButtonWidget
-	using ButtonPtr = std::shared_ptr<ButtonWidget>;
-
-	/***************
-	 * Simple wrapper around raw WinAPI checkboxes. */
-	class CheckboxWidget final : public WindowWidget
-	{
-	private:
-		CheckboxWidgetCallback m_Callback;
-
-	public:
-		// -----------------------
-		ADINL CheckboxWidget(CheckboxWidgetCallback&& callback, HWND const hwnd, TextSize const textSize = TextSize::Default)
-			: WindowWidget(hwnd, textSize), m_Callback(callback) {}
-		ADAPI LRESULT OnWindowProcCall(UINT const message, WPARAM const wParam, LPARAM const lParam) override final;
-	};	// class ButtonWidget
-	using CheckBoxPtr = std::shared_ptr<CheckboxWidget>;
+	using WindowPtr = std::shared_ptr<class Window>;
+	using WindowWidgetCallback = std::function<void(long)>;
 
 	/*************** 
 	 * Simple wrapper around raw WinAPI Direct3D 9 device handle. */
@@ -339,22 +308,42 @@ namespace Presentation2
 	public:
 		IDirect3DDevice9* const m_Device;
 	public:
-		ADINL GraphicsWidget(HWND const hwnd, IDirect3DDevice9* const device) 
+		ADINL explicit GraphicsWidget(HWND const hwnd, IDirect3DDevice9* const device) 
 			: WindowWidget(hwnd), m_Device(device) {}
 	};	// class GraphicsWidget
-	using GraphicsWidgetPtr = std::shared_ptr<class GraphicsWidget>;
 
 	/*************** 
 	 * Simple wrapper around raw WinAPI window. */
 	class Window : public WindowWidget, public IUpdatable
 	{
+	private:
+		WORD static const s_idOffset = 13;
+		std::vector<WindowWidgetCallback> m_Callbacks;
+
+		// -----------------------
+		ADINT LRESULT static CALLBACK WindowProc(HWND const hWnd, UINT const message, WPARAM const wParam, LPARAM const lParam);
+		ADINL static WORD WrapID(WORD const id)
+		{
+			return id + s_idOffset;
+		}
+		ADINL static WORD UnwrapID(WORD const id)
+		{
+			return id - s_idOffset;
+		}
+		ADINT WORD GenID() const
+		{
+			return WrapID(static_cast<WORD>(m_Callbacks.size()));
+		}
+		ADINT bool CheckID(WORD const id) const
+		{
+			return UnwrapID(id) < m_Callbacks.size();
+		}
+
 	public:
 		// -----------------------
 		ADAPI explicit Window(Rect const& rect, LPCWSTR const caption = nullptr, bool const fullscreen = false);
 
-	public:
 		// -----------------------
-		ADAPI LRESULT OnWindowProcCall(UINT const message, WPARAM const wParam, LPARAM const lParam) override final;
 		ADAPI void OnUpdate() override;
 
 		// ***********************************************************************************************
@@ -385,10 +374,10 @@ namespace Presentation2
 		// ***********************************************************************************************
 
 		// -----------------------
-		ADAPI ButtonPtr Button(Rect const& rect, LPCWSTR const text, ButtonWidgetCallback&& callback, TextSize const textSize = TextSize::Default) const;
+		ADAPI ButtonPtr Button(Rect const& rect, LPCWSTR const text, WindowWidgetCallback&& callback, TextSize const textSize = TextSize::Default);
 
 		// -----------------------
-		ADAPI CheckBoxPtr CheckBox(Rect const& rect, LPCWSTR const text, CheckboxWidgetCallback&& callback, bool const enabled = false, TextSize const textSize = TextSize::Default) const;
+		ADAPI CheckBoxPtr CheckBox(Rect const& rect, LPCWSTR const text, WindowWidgetCallback&& callback, bool const enabled = false, TextSize const textSize = TextSize::Default);
 
 		// ***********************************************************************************************
 		// Graphics.
@@ -399,7 +388,6 @@ namespace Presentation2
 		ADAPI std::shared_ptr<TGraphicsWidget> Graphics(Rect const& rect, TArgs&&... args) const;
 
 	};	// class Window
-	using WindowPtr = std::shared_ptr<class Window>;
 
 }	// namespace Presentation2
 
