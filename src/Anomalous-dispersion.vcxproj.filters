@@ -1,44 +1,235 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source">
-      <UniqueIdentifier>{9a743af9-2c52-4e37-a7cc-0c07439b89f2}</UniqueIdentifier>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+      <ParseFiles>false</ParseFiles>
     </Filter>
-    <Filter Include="Source\Engine">
-      <UniqueIdentifier>{2ce76d74-a2b3-450b-a5d2-fa7f97b96352}</UniqueIdentifier>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;moc;h;def;odl;idl;res;</Extensions>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;moc;h;def;odl;idl;res;</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Distribution Files">
+      <UniqueIdentifier>{B83CAF91-C7BF-462F-B76C-EA11631F866C}</UniqueIdentifier>
+      <Extensions>*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Distribution Files">
+      <UniqueIdentifier>{B83CAF91-C7BF-462F-B76C-EA11631F866C}</UniqueIdentifier>
+      <Extensions>*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Generated Files\Debug">
+      <UniqueIdentifier>{bc25204e-3fb1-415d-8c28-29d1fb7d3979}</UniqueIdentifier>
+      <Extensions>cpp;moc</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Generated Files\Release">
+      <UniqueIdentifier>{5af08de4-9fe4-451e-a938-c4006013ccf9}</UniqueIdentifier>
+      <Extensions>cpp;moc</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Program.cpp">
-      <Filter>Source</Filter>
+    <ClCompile Include="forms\AuthorsWindow.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\PresentationEngine.cpp">
-      <Filter>Source\Engine</Filter>
+    <ClCompile Include="forms\MenuWindow.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\PresentationFramework.cpp">
-      <Filter>Source\Engine</Filter>
+    <ClCompile Include="widgets\PlotViewWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PresentationGeometry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PresentationPhysics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PresentationScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneMeshes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\SceneWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="forms\SceneWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_AuthorsWindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_AuthorsWindow.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_MenuWindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_MenuWindow.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_SceneWindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_SceneWindow.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\qrc_Images.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\qrc_Scene.cpp">
+      <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\PresentationEngine.hpp">
-      <Filter>Source\Engine</Filter>
+    <CustomBuild Include="forms\AuthorsWindow.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="forms\MenuWindow.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <ClInclude Include="widgets\PlotViewWidget.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PresentationFramework.hpp">
-      <Filter>Source\Engine</Filter>
+    <ClInclude Include="PresentationGeometry.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PresentationScene.hpp">
-      <Filter>Source</Filter>
+    <ClInclude Include="PresentationPhysics.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PresentationPhysics.hpp">
-      <Filter>Source</Filter>
+    <ClInclude Include="PresentationScene.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SceneMeshes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\SceneWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <CustomBuild Include="forms\SceneWindow.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Source\PresentationEngine.inl">
-      <Filter>Source\Engine</Filter>
+    <CustomBuild Include="forms\AuthorsWindow.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="forms\MenuWindow.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="forms\SceneWindow.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="resources\Images.qrc">
+      <Filter>Resource Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="resources\Scene.qrc">
+      <Filter>Resource Files</Filter>
+    </CustomBuild>
+    <None Include="..\gfx\cmc1.png">
+      <Filter>Resource Files</Filter>
     </None>
-    <None Include="Source\PresentationFramework.inl">
-      <Filter>Source\Engine</Filter>
+    <None Include="..\gfx\color_mask.png">
+      <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\gfx\fizfak.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\fragLit.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\fragUnlit.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\fragUnlitTextured.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\gfx\gleba.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\gfx\oleja.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\gfx\roomLightMap.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\gfx\screenLightMap.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\fragLit.glsl">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="shaders\fragUnlit.glsl">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="shaders\fragUnlitTextured.glsl">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="shaders\vertex.glsl">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="shaders\fragLit.glsl" />
+    <None Include="shaders\fragUnlit.glsl" />
+    <None Include="shaders\fragUnlitTextured.glsl" />
+    <None Include="shaders\vertex.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GeneratedFiles\ui_AuthorsWindow.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_MenuWindow.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_SceneWindow.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

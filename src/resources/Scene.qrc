@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>../shaders/fragLit.glsl</file>
+        <file>../shaders/fragUnlit.glsl</file>
+        <file>../shaders/fragUnlitTextured.glsl</file>
+        <file>../shaders/vertex.glsl</file>
+        <file>../../gfx/roomLightMap.png</file>
+        <file>../../gfx/screenLightMap.png</file>
+        <file>../../gfx/color_mask.png</file>
+    </qresource>
+</RCC>

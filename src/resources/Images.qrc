@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/images"/>
+    <qresource prefix="/">
+        <file>../../gfx/cmc1.png</file>
+        <file>../../gfx/fizfak.png</file>
+        <file>../../gfx/gleba.png</file>
+        <file>../../gfx/oleja.png</file>
+    </qresource>
+</RCC>
