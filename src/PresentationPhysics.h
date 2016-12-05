@@ -375,6 +375,7 @@ public:
 
 	virtual void refractBeam(OpBeam& beam, bool enters = true) const
 	{
+		(void)enters;
 		const OpBeamPart& prevPart = beam.last();
 		OpBeamPart newPart = prevPart;
 		beam.push_back(newPart);

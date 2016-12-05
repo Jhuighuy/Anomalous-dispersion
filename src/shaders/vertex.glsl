@@ -19,7 +19,7 @@ void main(void)
 {
     vr_VertexCoordWS = un_ModelMatrix * in_VertexCoordMS;
     vr_TexCoord = in_TexCoord;
-    vr_NormalWS = un_NormalMatrix * in_NormalMS;
+    vr_NormalWS = normalize(un_NormalMatrix * in_NormalMS);
     vr_Color = in_Color;
 
     gl_Position = un_ProjectionMatrix * un_ViewMatrix * vr_VertexCoordWS;

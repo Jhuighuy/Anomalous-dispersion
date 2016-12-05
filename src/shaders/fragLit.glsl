@@ -14,6 +14,6 @@ vec4 litWithDirectionalLight(vec3 lightDirectionWS)
 
 void main(void)
 {
-    vec3 lightDirectionWS = vec3(-0.1f, -0.3f, -1.0f);
+    vec3 lightDirectionWS = vec3(-0.1f, -0.3f, 1.0f);
     gl_FragColor = vr_Color * litWithDirectionalLight(normalize(lightDirectionWS));
 }

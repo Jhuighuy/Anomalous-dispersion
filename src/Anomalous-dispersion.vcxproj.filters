@@ -56,12 +56,12 @@
       <ParseFiles>false</ParseFiles>
     </Filter>
     <Filter Include="Generated Files\Debug">
-      <UniqueIdentifier>{bc25204e-3fb1-415d-8c28-29d1fb7d3979}</UniqueIdentifier>
+      <UniqueIdentifier>{05113f8a-f4c6-49ae-98e6-06823240b784}</UniqueIdentifier>
       <Extensions>cpp;moc</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="Generated Files\Release">
-      <UniqueIdentifier>{5af08de4-9fe4-451e-a938-c4006013ccf9}</UniqueIdentifier>
+      <UniqueIdentifier>{4e04a49e-af7c-469e-a2d3-e17ff220ee4b}</UniqueIdentifier>
       <Extensions>cpp;moc</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
@@ -89,6 +89,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\SceneWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\SceneWidgetAdvanced.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="forms\SceneWindow.cpp">
@@ -147,6 +150,9 @@
     <ClInclude Include="widgets\SceneWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="widgets\SceneWidgetAdvanced.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <CustomBuild Include="forms\SceneWindow.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
@@ -181,6 +187,9 @@
     <None Include="shaders\fragLit.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\fragRefract.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="shaders\fragUnlit.glsl">
       <Filter>Resource Files</Filter>
     </None>
@@ -202,9 +211,15 @@
     <None Include="shaders\vertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\vertexRefract.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragLit.glsl">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="shaders\fragRefract.glsl">
       <Filter>Distribution Files</Filter>
     </None>
     <None Include="shaders\fragUnlit.glsl">
@@ -216,10 +231,15 @@
     <None Include="shaders\vertex.glsl">
       <Filter>Distribution Files</Filter>
     </None>
+    <None Include="shaders\vertexRefract.glsl">
+      <Filter>Distribution Files</Filter>
+    </None>
     <None Include="shaders\fragLit.glsl" />
+    <None Include="shaders\fragRefract.glsl" />
     <None Include="shaders\fragUnlit.glsl" />
     <None Include="shaders\fragUnlitTextured.glsl" />
     <None Include="shaders\vertex.glsl" />
+    <None Include="shaders\vertexRefract.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_AuthorsWindow.h">

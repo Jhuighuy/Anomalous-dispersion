@@ -21,6 +21,7 @@ TEMPLATE = app
 
 SOURCES += \
     widgets/SceneWidget.cpp \
+    widgets/SceneWidgetAdvanced.cpp \
     widgets/PlotViewWidget.cpp \
     forms/MenuWindow.cpp \
     forms/AuthorsWindow.cpp \
@@ -33,6 +34,7 @@ SOURCES += \
 
 HEADERS  += \
     widgets/SceneWidget.h \
+    widgets/SceneWidgetAdvanced.h \
     widgets/PlotViewWidget.h \
     forms/MenuWindow.h \
     forms/AuthorsWindow.h \
@@ -53,6 +55,7 @@ DISTFILES += \
     shaders/fragLit.glsl \
     shaders/fragUnlitTextured.glsl \
     shaders/fragUnlit.glsl \
+    shaders/fragRefract.glsl
 
 RESOURCES += \
     resources/Scene.qrc \

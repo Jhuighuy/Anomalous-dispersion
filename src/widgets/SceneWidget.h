@@ -48,25 +48,25 @@ public:
 	}
 
 	const QVector3D& position() const { return mPosition; }
-	virtual ScTransform& setPosition(const QVector3D& position)
+	ScTransform& setPosition(const QVector3D& position)
 	{
 		mPosition = position;
 		return *this;
 	}
 
 	const QQuaternion& rotation() const { return mRotation; }
-	virtual ScTransform& setRotation(const QQuaternion& rotation)
+	ScTransform& setRotation(const QQuaternion& rotation)
 	{
 		mRotation = rotation;
 		return *this;
 	}
-	virtual ScTransform& setRotation(const QVector3D& rotation)
+	ScTransform& setRotation(const QVector3D& rotation)
 	{
 		return setRotation(QQuaternion::fromEulerAngles(rotation));
 	}
 
 	const QVector3D& scale() const { return mScale; }
-	virtual ScTransform& setScale(const QVector3D& scale)
+	ScTransform& setScale(const QVector3D& scale)
 	{
 		mScale = scale;
 		return *this;
@@ -264,8 +264,8 @@ DEFINE_SHARED_PTR(ScEditableMesh)
 DEFINE_SHARED_PTR(ScMeshRenderer)
 DEFINE_SHARED_PTR(ScTransparentMeshRenderer)
 
-extern QOpenGLShaderProgram_p pLoadShaderProgram(const char* vertexShaderPath, const char* pixelShaderPath);
-extern QOpenGLTexture_p pLoadTexture(const char* texturePath);
+extern QOpenGLShaderProgram_p scLoadShaderProgram(const char* vertexShaderPath, const char* pixelShaderPath);
+extern QOpenGLTexture_p scLoadTexture(const char* texturePath);
 
 /*!
  * The vertex data structure.

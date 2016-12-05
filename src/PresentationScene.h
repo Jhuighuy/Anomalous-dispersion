@@ -5,6 +5,7 @@
 #include <QVector>
 
 #include "SceneMeshes.h"
+#include "widgets/SceneWidgetAdvanced.h"
 #include "PresentationPhysics.h"
 #include "PresentationGeometry.h"
 #include <QChart>
@@ -13,7 +14,7 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 /*!
- * @param The prism material enum.
+ * The prism material enum.
  */
 enum class PrPrismMaterial
 {
@@ -23,7 +24,7 @@ enum class PrPrismMaterial
 };
 
 /*!
- * @param The prism renderer class.
+ * The prism renderer class.
  */
 class PrPrismRenderer final : public ScTransparentMeshRenderer, public OpRefractiveObject
 {
@@ -86,12 +87,8 @@ public:
                 .setPosition(position())
                 .setRotation({ rotation().x(), rotation().y(), rotation().z() });
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		ScTransparentMeshRenderer::render(camera);
-        glDisable(GL_BLEND);
-
-        prismHolderBase().render(camera);
+        ScTransparentMeshRenderer::render(camera);
+		prismHolderBase().render(camera);
         prismHolderLeg().render(camera);
         prismHolderGimbal().render(camera);
     }
@@ -108,7 +105,7 @@ public:
         mSecondPlane.refractBeam(beam, false);
     }
 
-public slots:
+public:
 	void syncRefractivePlanes() const
 	{
 		QMatrix4x4 model = modelMatrix();
@@ -116,11 +113,11 @@ public slots:
 		PhComplexIndexFunction_p refractiveIndex = mFirstPlane.refractiveIndex();
 		if (refractiveIndex == nullptr)
 		{
-			refractiveIndex = PhComplexIndexFunction_p(new PhComplexIndexFunction());
+			refractiveIndex = PhComplexIndexFunction::create();
 			if (material() == PrPrismMaterial::NormAir)
 			{
-				refractiveIndex->setRealPart(QSharedPointer<PhIndexFunction>(new PhParabolicIndexFunction));
-				refractiveIndex->setImaginaryPart(QSharedPointer<PhIndexFunction>(new PhIndexFunction));
+				refractiveIndex->setRealPart(PhParabolicIndexFunction::create());
+				refractiveIndex->setImaginaryPart(PhIndexFunction::create());
 			}
 			else
 			{
@@ -193,9 +190,9 @@ public:
 			beamCone.collide(prismRenderer);
 		}
 
-		PhComplexIndexFunction_p index2(new PhComplexIndexFunction());
-		index2->setRealPart(QSharedPointer<PhIndexFunction>(new PhIndexFunction));
-		index2->setImaginaryPart(QSharedPointer<PhIndexFunction>(new PhIndexFunction));
+		PhComplexIndexFunction_p index2 = PhComplexIndexFunction::create();
+		index2->setRealPart(PhIndexFunction::create());
+		index2->setImaginaryPart(PhIndexFunction::create());
 		OpRefractivePlane screenPlane;
 		screenPlane
 				.setOpaque(true)
@@ -254,14 +251,15 @@ public:
     PrPrismRenderer mPrismRenderers[2];
 
     QSharedPointer<ScEditableMesh> mRaysMesh, mRaysProjMesh;
-    PrBeamsRenderer mRaysRenderer, mRaysProjRenderer;
+    PrBeamsRenderer mRaysRenderer;
 
 public:
     PrScene(QtCharts::QChartView* chart): mCharts(chart)
     {
-        auto unlitTexturedShaderProgram = pLoadShaderProgram(":/shaders/vertex.glsl", ":/shaders/fragUnlitTextured.glsl");
-        auto unlitColoredShaderProgram = pLoadShaderProgram(":/shaders/vertex.glsl", ":/shaders/fragUnlit.glsl");
-        auto litColoredShaderProgram = pLoadShaderProgram(":/shaders/vertex.glsl", ":/shaders/fragLit.glsl");
+        auto unlitTexturedShaderProgram = scLoadShaderProgram(":/shaders/vertex.glsl", ":/shaders/fragUnlitTextured.glsl");
+        auto unlitColoredShaderProgram = scLoadShaderProgram(":/shaders/vertex.glsl", ":/shaders/fragUnlit.glsl");
+		auto litColoredShaderProgram = scLoadShaderProgram(":/shaders/vertex.glsl", ":/shaders/fragLit.glsl");
+		auto litRefrShaderProgram = scLoadShaderProgram(":/shaders/vertex.glsl", ":/shaders/fragRefract.glsl");
 
         // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
         mMainCamera
@@ -279,14 +277,14 @@ public:
         mRoomRenderer
                 .setMesh(QSharedPointer<ScEditableMesh>(new ScEditableMesh(roomVertices, _countof(roomVertices))))
                 .setShaderProgram(unlitTexturedShaderProgram)
-                .setDiffuseTexture(pLoadTexture(":/gfx/roomLightMap.png"))
+                .setDiffuseTexture(scLoadTexture(":/gfx/roomLightMap.png"))
 				.enable()
                 .setPosition({0.0f, 0.0f, -2.0f})
                 .setScale({-1.0f, 1.0f, 1.0f});
         mScreenRenderer
                 .setMesh(QSharedPointer<ScEditableMesh>(new ScEditableMesh(screenVertices, _countof(screenVertices))))
                 .setShaderProgram(unlitTexturedShaderProgram)
-                .setDiffuseTexture(pLoadTexture(":/gfx/screenLightMap.png"))
+                .setDiffuseTexture(scLoadTexture(":/gfx/screenLightMap.png"))
 				.enable()
                 .setPosition({0.0f, 0.0f, -2.0f});
 
@@ -314,7 +312,8 @@ public:
                     .setPrismHolderLeg(prismHolderLegRenderer)
                     .setPrismHolderGimbal(prismHolderGimbalRenderer)
                     .setMesh(prismMesh)
-                    .setShaderProgram(litColoredShaderProgram)
+                    .setShaderProgram(litRefrShaderProgram)
+					.setDiffuseTexture(scLoadCubemap(":/gfx/roomCubemap", ".png"))
                     .enable();
 			prismRenderer.render(mMainCamera);
         }
@@ -332,7 +331,7 @@ public:
 				.setPosition({ 0.0f, 0.72f, 2.0f });
 		mRaysRenderer.mProjectionRenderer
     			.setShaderProgram(unlitTexturedShaderProgram)
-                .setDiffuseTexture(pLoadTexture(":/gfx/color_mask.png"));
+                .setDiffuseTexture(scLoadTexture(":/gfx/color_mask.png"));
 
         recalculateRays();
     }

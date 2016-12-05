@@ -7,5 +7,13 @@
         <file>../../gfx/roomLightMap.png</file>
         <file>../../gfx/screenLightMap.png</file>
         <file>../../gfx/color_mask.png</file>
+        <file>../shaders/vertexRefract.glsl</file>
+        <file>../shaders/fragRefract.glsl</file>
+        <file>../../gfx/roomCubemap_BK.png</file>
+        <file>../../gfx/roomCubemap_DN.png</file>
+        <file>../../gfx/roomCubemap_FR.png</file>
+        <file>../../gfx/roomCubemap_LF.png</file>
+        <file>../../gfx/roomCubemap_RT.png</file>
+        <file>../../gfx/roomCubemap_UP.png</file>
     </qresource>
 </RCC>

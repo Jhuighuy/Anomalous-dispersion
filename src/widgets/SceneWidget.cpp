@@ -141,7 +141,7 @@ QMatrix4x4 ScOrbitalCamera::viewMatrix() const
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-QOpenGLShaderProgram_p pLoadShaderProgram(const char* vertexShaderPath, const char* pixelShaderPath)
+QOpenGLShaderProgram_p scLoadShaderProgram(const char* vertexShaderPath, const char* pixelShaderPath)
 {
     QOpenGLShaderProgram_p shaderProgram(new QOpenGLShaderProgram());
 
@@ -162,7 +162,7 @@ QOpenGLShaderProgram_p pLoadShaderProgram(const char* vertexShaderPath, const ch
     }
     return shaderProgram;
 }
-QOpenGLTexture_p pLoadTexture(const char* texturePath)
+QOpenGLTexture_p scLoadTexture(const char* texturePath)
 {
     //! @todo Validate the texture path.
     QOpenGLTexture_p texture(new QOpenGLTexture(QImage(texturePath)));
@@ -318,8 +318,13 @@ void ScMeshRenderer::beginRender(const ScBasicCamera& camera) const
 	if (diffuseTexture() != nullptr)
 	{
 		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_TEXTURE_2D);
 		diffuseTexture()->bind(0);
 	}
+
+	QMatrix4x4 view = camera.viewMatrix();
+	QMatrix4x4 projection = camera.projectionMatrix();
+	QVector3D cameraPosition(view.inverted().column(3));
 
 	shaderProgram()->bind();
 	shaderProgram()->setUniformValue("un_DiffuseTexture", 0);
@@ -329,8 +334,9 @@ void ScMeshRenderer::beginRender(const ScBasicCamera& camera) const
 #endif
 	shaderProgram()->setUniformValue("un_ModelMatrix", modelMatrix());
 	shaderProgram()->setUniformValue("un_NormalMatrix", normalMatrix());
-	shaderProgram()->setUniformValue("un_ViewMatrix", camera.viewMatrix());
-	shaderProgram()->setUniformValue("un_ProjectionMatrix", camera.projectionMatrix());
+	shaderProgram()->setUniformValue("un_ViewMatrix", view);
+	shaderProgram()->setUniformValue("un_ProjectionMatrix", projection);
+	shaderProgram()->setUniformValue("un_CameraPositionWS", cameraPosition);
 }
 void ScMeshRenderer::endRender() const
 {
