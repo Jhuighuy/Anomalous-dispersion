@@ -49,6 +49,7 @@ FORMS += \
 
 DISTFILES += \
     shaders/vertex.glsl \
+    shaders/vertexRefract.glsl \
     shaders/fragLit.glsl \
     shaders/fragUnlitTextured.glsl \
     shaders/fragUnlit.glsl \

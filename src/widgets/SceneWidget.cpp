@@ -19,6 +19,37 @@
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+QMatrix4x4 ScTransform::modelMatrix() const
+{
+	QMatrix4x4 model;
+	model.setToIdentity();
+	model.translate(position());
+	model.rotate(rotation());
+	model.scale(scale());
+	return model;
+}
+QMatrix3x3 ScTransform::normalMatrix() const
+{
+	QMatrix4x4 model = modelMatrix();
+	QMatrix3x3 normal(model.normalMatrix());
+	return normal;
+}
+
+// ----------------------
+
+QMatrix4x4 ScOffsetTransform::modelMatrix() const
+{
+	QMatrix4x4 model;
+	model.setToIdentity();
+	model.translate(position());
+	model.rotate(rotation());
+	model.translate(offset());
+	model.scale(scale());
+	return model;
+}
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 QMatrix4x4 ScBasicCamera::viewMatrix() const
 {
     QMatrix4x4 view;
@@ -148,28 +179,61 @@ QOpenGLTexture_p pLoadTexture(const char* texturePath)
  * @param cacheVertices Do cache vertices inside the mesh object?
  * @param computeAABB Do compute the bounding box for this mesh?
  */
-ScEditableMesh& ScEditableMesh::load(const ScVertexData* vertices, int count, bool cacheVertices, bool computeAABB)
+ScEditableMesh& ScEditableMesh::setVertices(const ScVertexData* vertices, int count, bool cacheVertices, bool computeAABB)
 {
-    int size = count * sizeof(*vertices);
-    mVerticesCount = count;
+	mVerticesCount = count;
+
+	// Caching the vertices.
+	if (cacheVertices)
+	{
+		resize(count);
+		qCopy(vertices, vertices + count, begin());
+	}
+	else
+	{
+		clear();
+	}
+
+	// Computing the AABB.
+	if (computeAABB && count != 0)
+	{
+		mMinBound = vertices[0].vertexCoord;
+		mMaxBound = vertices[0].vertexCoord;
+		for (int i = 1; i < count; ++i)
+		{
+			for (int j = 0; j < 3; ++j)
+			{
+				mMinBound[j] = qMin(mMinBound[j], vertices[i].vertexCoord[j]);
+				mMaxBound[j] = qMax(mMaxBound[j], vertices[i].vertexCoord[j]);
+			}
+		}
+	}
+	else
+	{
+		mMinBound = QVector3D();
+		mMaxBound = QVector3D();
+	}
+
+	// Loading the mesh.
+    int newSize = count * sizeof(*vertices);
     if (!mVertexBuffer.isCreated())
     {
-        mVertexBuffer.create();
-        mVertexBuffer.bind();
-        mVertexBuffer.allocate(vertices, size);
+		mVertexBuffer.create();
+		mVertexBuffer.bind();
+		mVertexBuffer.allocate(vertices, newSize);
     }
     else
     {
         int existingSize = mVertexBuffer.size();
 
-        mVertexBuffer.bind();
-        if (size < existingSize)
+		mVertexBuffer.bind();
+        if (newSize < existingSize)
         {
-            mVertexBuffer.write(0, vertices, size);
+			mVertexBuffer.write(0, vertices, newSize);
         }
         else
         {
-            mVertexBuffer.allocate(vertices, size);
+			mVertexBuffer.allocate(vertices, newSize);
         }
     }
     return *this;
@@ -179,15 +243,15 @@ ScEditableMesh& ScEditableMesh::load(const ScVertexData* vertices, int count, bo
  * Renders this mesh with the specified shader program.
  * @param shaderProgram Program to be used while rendering.
  */
-void ScEditableMesh::render(QOpenGLShaderProgram& shaderProgram)
+void ScEditableMesh::render(QOpenGLShaderProgram& shaderProgram, int firstVertex, int count)
 {
-    if (!mVertexBuffer.isCreated() || mVerticesCount == 0)
+    if (!mVertexBuffer.isCreated() || count == 0)
     {
         return;
     }
 
     shaderProgram.bind();
-    mVertexBuffer.bind();
+	mVertexBuffer.bind();
 
     int vertexLocation = shaderProgram.attributeLocation("in_VertexCoordMS");
     if (vertexLocation != -1)
@@ -225,27 +289,10 @@ void ScEditableMesh::render(QOpenGLShaderProgram& shaderProgram)
                                          sizeof(ScVertexData));
     }
 
-    glDrawArrays(GL_TRIANGLES, 0, mVerticesCount);
+    glDrawArrays(GL_TRIANGLES, firstVertex, count);
 }
 
 // ----------------------
-
-QMatrix4x4 ScMeshRenderer::modelMatrix() const
-{
-    QMatrix4x4 model;
-    model.setToIdentity();
-    model.translate(position());
-    model.rotate(rotation());
-    model.translate(offset());
-    model.scale(scale());
-    return model;
-}
-QMatrix3x3 ScMeshRenderer::normalMatrix() const
-{
-    QMatrix4x4 model = modelMatrix();
-    QMatrix3x3 normal(model.normalMatrix());
-    return normal;
-}
 
 /*!
  * Renders this object with the specified camera.
@@ -253,33 +300,100 @@ QMatrix3x3 ScMeshRenderer::normalMatrix() const
  */
 void ScMeshRenderer::render(const ScBasicCamera& camera)
 {
-    Q_ASSERT(mesh() != nullptr);
-    Q_ASSERT(shaderProgram() != nullptr);
-
-    if (!enabled())
-    {
-        return;
-    }
-
-    if (texture() != nullptr)
-    {
-        glEnable(GL_TEXTURE_2D);
-        texture()->bind(0);
-    }
-
-    shaderProgram()->bind();
-    shaderProgram()->setUniformValue("un_Texture", 0);
-    shaderProgram()->setUniformValue("un_ModelMatrix", modelMatrix());
-    shaderProgram()->setUniformValue("un_NormalMatrix", normalMatrix());
-    shaderProgram()->setUniformValue("un_ViewProjectionMatrix", camera.projectionMatrix() * camera.viewMatrix());
-    shaderProgram()->release();
+	beginRender(camera);
     mesh()->render(*shaderProgram());
+	endRender();
+}
 
-    if (texture() != nullptr)
+void ScMeshRenderer::beginRender(const ScBasicCamera& camera) const
+{
+	Q_ASSERT(mesh() != nullptr);
+	Q_ASSERT(shaderProgram() != nullptr);
+
+	if (!enabled())
+	{
+		return;
+	}
+
+	if (diffuseTexture() != nullptr)
+	{
+		glEnable(GL_TEXTURE_2D);
+		diffuseTexture()->bind(0);
+	}
+
+	shaderProgram()->bind();
+	shaderProgram()->setUniformValue("un_DiffuseTexture", 0);
+#if USE_ADVANCED_RENDERING
+	shaderProgram()->setUniformValue("un_DisplacementTexture", 1);
+	shaderProgram()->setUniformValue("un_NormalTexture", 2);
+#endif
+	shaderProgram()->setUniformValue("un_ModelMatrix", modelMatrix());
+	shaderProgram()->setUniformValue("un_NormalMatrix", normalMatrix());
+	shaderProgram()->setUniformValue("un_ViewMatrix", camera.viewMatrix());
+	shaderProgram()->setUniformValue("un_ProjectionMatrix", camera.projectionMatrix());
+}
+void ScMeshRenderer::endRender() const
+{
+	shaderProgram()->release();
+	if (diffuseTexture() != nullptr)
+	{
+		diffuseTexture()->release(0);
+		glDisable(GL_TEXTURE_2D);
+	}
+}
+
+// ----------------------
+
+/*!
+ * Renders this transparent object with the specified camera.
+ * @param camera The camera to be used while rendering.
+ */
+void ScTransparentMeshRenderer::render(const ScBasicCamera& camera)
+{
+	Q_ASSERT(mesh()->size() != 0);
+
+	QMatrix4x4 modelView = camera.viewMatrix() * modelMatrix();
+	
+	struct ScTraingleInfo
+	{
+		int vertexIndex;
+		float distance;
+	};
+
+	// Building the mesh triangle info.
+	QVector<ScTraingleInfo> trianglesInfo(mesh()->size() / 3);
+	for (int i = 0; i < trianglesInfo.size(); ++i)
+	{
+		QVector3D trianglePositionVS;
+		for (int j = 0; j < 3; ++j)
+		{
+			const ScVertexData& vertex = mesh()->at(3 * i + j);
+			QVector3D vertexPositionVS = modelView * vertex.vertexCoord;
+			trianglePositionVS += vertexPositionVS;
+		}
+		trianglesInfo[i] = { 3 * i, trianglePositionVS.length() };
+	}
+
+	// Sorting the triangles further to the nearest.
+    qSort(trianglesInfo.begin(), trianglesInfo.end(), [](const ScTraingleInfo& a,
+                                                         const ScTraingleInfo& b)
     {
-        texture()->release(0);
-        glDisable(GL_TEXTURE_2D);
-    }
+        return a.distance > b.distance;
+    });
+
+	// Rendering the sorted triangles.
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	beginRender(camera);
+	for (int i = 0; i < trianglesInfo.size(); ++i)
+	{
+		int triangleIndex = trianglesInfo[i].vertexIndex;
+		mesh()->render(*shaderProgram(), triangleIndex, 3);
+	}
+	endRender();
+
+	glDisable(GL_BLEND);
 }
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -320,7 +434,7 @@ void ScOpenGLWidget::initializeGL()
     glEnable(GL_SCISSOR_TEST);
     //glEnable(GL_CULL_FACE);
 
-    mScene = new PrScene(mChart);
+    mScene = new PrScene(nullptr);
 }
 
 void ScOpenGLWidget::resizeGL(int w, int h)

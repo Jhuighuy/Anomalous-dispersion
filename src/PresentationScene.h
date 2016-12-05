@@ -25,7 +25,7 @@ enum class PrPrismMaterial
 /*!
  * @param The prism renderer class.
  */
-class PrPrismRenderer final : public ScMeshRenderer, public OpRefractiveObject
+class PrPrismRenderer final : public ScTransparentMeshRenderer, public OpRefractiveObject
 {
 public:
     float angle() const { return mAngle; }
@@ -88,7 +88,7 @@ public:
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        ScMeshRenderer::render(camera);
+		ScTransparentMeshRenderer::render(camera);
         glDisable(GL_BLEND);
 
         prismHolderBase().render(camera);
@@ -207,12 +207,12 @@ public:
 
 		QVector<ScVertexData> vertices;
 		PresentationGeometry::generateBeamMesh(beamCone, vertices);
-		mesh()->load(vertices.data(), vertices.size());
+		mesh()->setVertices(vertices.data(), vertices.size());
 
 		QVector<ScVertexData> projVertices;
         PresentationGeometry::generateBeamProjMesh(beamCone, screenPlane.normal(), projVertices);
 		mProjectionRenderer.setMesh(ScEditableMesh_p(new ScEditableMesh()));
-		mProjectionRenderer.mesh()->load(projVertices.data(), projVertices.size());
+		mProjectionRenderer.mesh()->setVertices(projVertices.data(), projVertices.size());
     }
 
 	QMatrix4x4 modelMatrix() const override
@@ -277,21 +277,21 @@ public:
 
         // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
         mRoomRenderer
-                .enable()
-                .setPosition({0.0f, 0.0f, -2.0f})
-                .setScale({-1.0f, 1.0f, 1.0f})
                 .setMesh(QSharedPointer<ScEditableMesh>(new ScEditableMesh(roomVertices, _countof(roomVertices))))
                 .setShaderProgram(unlitTexturedShaderProgram)
-                .setTexture(pLoadTexture(":/gfx/roomLightMap.png"));
-        mScreenRenderer
-                .enable()
+                .setDiffuseTexture(pLoadTexture(":/gfx/roomLightMap.png"))
+				.enable()
                 .setPosition({0.0f, 0.0f, -2.0f})
+                .setScale({-1.0f, 1.0f, 1.0f});
+        mScreenRenderer
                 .setMesh(QSharedPointer<ScEditableMesh>(new ScEditableMesh(screenVertices, _countof(screenVertices))))
                 .setShaderProgram(unlitTexturedShaderProgram)
-                .setTexture(pLoadTexture(":/gfx/screenLightMap.png"));
+                .setDiffuseTexture(pLoadTexture(":/gfx/screenLightMap.png"))
+				.enable()
+                .setPosition({0.0f, 0.0f, -2.0f});
 
         // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-        QSharedPointer<ScEditableMesh> prismMesh(new ScEditableMesh(prismVertices, _countof(prismVertices)));
+        QSharedPointer<ScEditableMesh> prismMesh(new ScEditableMesh(prismVertices, _countof(prismVertices), true));
         ScMeshRenderer prismHolderBaseRenderer;
         prismHolderBaseRenderer
                 .enable()
@@ -325,26 +325,26 @@ public:
         // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
         mRaysMesh = QSharedPointer<ScEditableMesh>(new ScEditableMesh());
         mRaysProjMesh = QSharedPointer<ScEditableMesh>(new ScEditableMesh());
-        mRaysRenderer
-                .enable()
-				.setPosition({ 0.0f, 0.72f, 2.0f })
-                .setMesh(mRaysMesh)
-                .setShaderProgram(unlitColoredShaderProgram);
+		mRaysRenderer
+				.setMesh(mRaysMesh)
+				.setShaderProgram(unlitColoredShaderProgram)
+				.enable()
+				.setPosition({ 0.0f, 0.72f, 2.0f });
 		mRaysRenderer.mProjectionRenderer
     			.setShaderProgram(unlitTexturedShaderProgram)
-                .setTexture(pLoadTexture(":/gfx/color_mask.png"));
+                .setDiffuseTexture(pLoadTexture(":/gfx/color_mask.png"));
 
         recalculateRays();
     }
 
     void setOnePrismLayout()
     {
-        mPrismRenderers[0]
-                .setAngle(60.0f)
-                .setMaterial(PrPrismMaterial::NormAir)
-                .setPosition({ 0.0f, 0.75f, -1.3f })
-                .setRotation({ 0.0f, 0.0f, 0.0f })
-                .enable();
+		mPrismRenderers[0]
+			.setAngle(60.0f)
+			.setMaterial(PrPrismMaterial::NormAir)
+			.enable()
+			.setPosition({ 0.0f, 0.75f, -1.3f })
+			.setRotation({ 0.0f, 0.0f, 0.0f });
         mPrismRenderers[1]
                 .disable();
     }
@@ -353,15 +353,15 @@ public:
         mPrismRenderers[0]
                 .setAngle(60.0f)
                 .setMaterial(PrPrismMaterial::NormAir)
+                .enable()
                 .setPosition({ 0.0f, 0.75f, -1.4f })
-                .setRotation({ 0.0f, 0.0f, 0.0f })
-                .enable();
+                .setRotation({ 0.0f, 0.0f, 0.0f });
         mPrismRenderers[1]
                 .setAngle(60.0f)
                 .setMaterial(PrPrismMaterial::AnomCyanine)
+				.enable()
                 .setPosition({ 0.0f, 0.95f, -2.0f })
-                .setRotation({ 0.0f, 0.0f, 90.0f })
-                .enable();
+                .setRotation({ 0.0f, 0.0f, 90.0f });
 
 		mPrismRenderers[0].syncRefractivePlanes();
 		mPrismRenderers[1].syncRefractivePlanes();

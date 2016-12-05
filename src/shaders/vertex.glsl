@@ -7,7 +7,8 @@ attribute vec4 in_Color;
 
 uniform mat4 un_ModelMatrix;
 uniform mat3 un_NormalMatrix;
-uniform mat4 un_ViewProjectionMatrix;
+uniform mat4 un_ViewMatrix;
+uniform mat4 un_ProjectionMatrix;
 
 varying vec4 vr_VertexCoordWS;
 varying vec2 vr_TexCoord;
@@ -21,5 +22,5 @@ void main(void)
     vr_NormalWS = un_NormalMatrix * in_NormalMS;
     vr_Color = in_Color;
 
-    gl_Position = un_ViewProjectionMatrix * vr_VertexCoordWS;
+    gl_Position = un_ProjectionMatrix * un_ViewMatrix * vr_VertexCoordWS;
 }

@@ -6,7 +6,7 @@ varying vec4 vr_Color;
 
 vec4 litWithDirectionalLight(vec3 lightDirectionWS)
 {
-    float ambientComponent = 0.1;
+    float ambientComponent = 0.3;
     float diffuseComponent = max(0.0, dot(vr_NormalWS, lightDirectionWS));
 
     return vec4(ambientComponent + diffuseComponent, ambientComponent + diffuseComponent, ambientComponent + diffuseComponent, 1.0);
@@ -14,6 +14,6 @@ vec4 litWithDirectionalLight(vec3 lightDirectionWS)
 
 void main(void)
 {
-    vec3 lightDirectionWS = vec3(-0.1f, -0.3f, 1.0f);
+    vec3 lightDirectionWS = vec3(-0.1f, -0.3f, -1.0f);
     gl_FragColor = vr_Color * litWithDirectionalLight(normalize(lightDirectionWS));
 }

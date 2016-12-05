@@ -153,7 +153,7 @@ qreal PhUniformMeshIndexFunction::lerp(qreal x, qreal Xminus, qreal Xplus, qreal
  */
 PhComplexIndexFunction& PhComplexIndexFunction::computeRealPartKramersKronig(qreal Xmin, qreal Xmax, int partitioning)
 {
-	Q_ASSERT(imaginaryPart() != Q_NULLPTR);
+	Q_ASSERT(imaginaryPart() != nullptr);
 
 	// Using Kramers-Kronig relations and numerical integration to compute this shit.
 	QVector<qreal> realPartMesh;

@@ -285,12 +285,12 @@ public:
 
     qreal real(qreal x) const override
     {
-        Q_ASSERT(realPart() != Q_NULLPTR);
+        Q_ASSERT(realPart() != nullptr);
         return realPart()->real(x);
     }
     virtual qreal imaginary(qreal x) const
     {
-        Q_ASSERT(imaginaryPart() != Q_NULLPTR);
+        Q_ASSERT(imaginaryPart() != nullptr);
         return imaginaryPart()->real(x);
     }
 

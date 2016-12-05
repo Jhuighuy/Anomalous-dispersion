@@ -12,7 +12,7 @@ class AuthorsWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit AuthorsWindow(QWidget *parent = Q_NULLPTR): QMainWindow(parent) {}
+    explicit AuthorsWindow(QWidget *parent = nullptr): QMainWindow(parent) {}
     ~AuthorsWindow();
 
     void setupUi(QMainWindow* menuWindow);

@@ -6,8 +6,7 @@
 **
 ****************************************************************************/
 
-#ifndef PSCENEWIDGET_H
-#define PSCENEWIDGET_H
+#pragma once
 
 #include <QSharedPointer>
 #include <QRectF>
@@ -19,6 +18,8 @@
 #include <QChartView>
 
 #include <cmath>
+
+#define USE_ADVANCED_RENDERING 0
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -33,6 +34,70 @@
         static Class##_p create(T&&... args) { return Class##_p(new Class(std::forward<T>(args)...)); }\
 	private:
 #endif
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+/*!
+ * The basic transform class. 
+ */
+class ScTransform
+{
+public:
+	virtual ~ScTransform()
+	{
+	}
+
+	const QVector3D& position() const { return mPosition; }
+	virtual ScTransform& setPosition(const QVector3D& position)
+	{
+		mPosition = position;
+		return *this;
+	}
+
+	const QQuaternion& rotation() const { return mRotation; }
+	virtual ScTransform& setRotation(const QQuaternion& rotation)
+	{
+		mRotation = rotation;
+		return *this;
+	}
+	virtual ScTransform& setRotation(const QVector3D& rotation)
+	{
+		return setRotation(QQuaternion::fromEulerAngles(rotation));
+	}
+
+	const QVector3D& scale() const { return mScale; }
+	virtual ScTransform& setScale(const QVector3D& scale)
+	{
+		mScale = scale;
+		return *this;
+	}
+
+	virtual QMatrix4x4 modelMatrix() const;
+	virtual QMatrix3x3 normalMatrix() const;
+
+public:
+	QQuaternion mRotation;
+	QVector3D mPosition, mScale = { 1.0f, 1.0f, 1.0f };
+};
+
+/*!
+ * The transform with an offset class. 
+ */
+class ScOffsetTransform : public ScTransform
+{
+public:
+	const QVector3D& offset() const { return mOffset; }
+	virtual ScTransform& setOffset(const QVector3D& offset)
+	{
+		mOffset = offset;
+		return *this;
+	}
+
+	QMatrix4x4 modelMatrix() const override;
+
+private:
+	QVector3D mOffset;
+};
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -95,26 +160,11 @@ private:
 /*!
  * The projection camera class.
  */
-//! @todo Drive this class from QTransform.
-class ScProjectionCamera final : public ScBasicCamera
+class ScProjectionCamera final : public ScBasicCamera, public ScTransform
 {
     DEFINE_CREATE_FUNC(ScProjectionCamera)
 
 public:
-    const QVector3D& position() const { return mPosition; }
-    ScProjectionCamera& setPosition(const QVector3D& position)
-    {
-        mPosition = position;
-        return *this;
-    }
-
-    const QQuaternion& rotation() const { return mRotation; }
-    ScProjectionCamera& setRotation(const QQuaternion& rotation)
-    {
-        mRotation = rotation;
-        return *this;
-    }
-
     float size() const { return mSize; }
     ScProjectionCamera& setSize(float size)
     {
@@ -212,6 +262,7 @@ DEFINE_SHARED_PTR(QOpenGLShaderProgram)
 DEFINE_SHARED_PTR(QOpenGLTexture)
 DEFINE_SHARED_PTR(ScEditableMesh)
 DEFINE_SHARED_PTR(ScMeshRenderer)
+DEFINE_SHARED_PTR(ScTransparentMeshRenderer)
 
 extern QOpenGLShaderProgram_p pLoadShaderProgram(const char* vertexShaderPath, const char* pixelShaderPath);
 extern QOpenGLTexture_p pLoadTexture(const char* texturePath);
@@ -230,8 +281,7 @@ struct ScVertexData
 /*!
  * The editable mesh class.
  */
-//! @todo Drive this class from QOpenGLBuffer directly.
-class ScEditableMesh final
+class ScEditableMesh final : public QVector<ScVertexData>
 {
     DEFINE_CREATE_FUNC(ScEditableMesh)
 
@@ -239,8 +289,13 @@ public:
     ScEditableMesh() {}
     ScEditableMesh(const ScVertexData* vertices, int count, bool cacheVertices = false, bool computeAABB = false)
 	{
-        load(vertices, count, cacheVertices, computeAABB);
+        setVertices(vertices, count, cacheVertices, computeAABB);
 	}
+
+	const QVector3D& getMinBound() const { return mMinBound; }
+	const QVector3D& getMaxBound() const { return mMaxBound; }
+
+	int uncachedVerticesCount() const { return mVerticesCount; }
 
     /*!
      * Loads a vertices of the editable mesh.
@@ -250,25 +305,36 @@ public:
      * @param cacheVertices Do cache vertices inside the mesh object?
      * @param computeAABB Do compute the bounding box for this mesh?
      */
-    ScEditableMesh& load(const ScVertexData* vertices, int count, bool cacheVertices = false, bool computeAABB = false);
+    ScEditableMesh& setVertices(const ScVertexData* vertices, int count, bool cacheVertices = false, bool computeAABB = false);
 
     /*!
-     * Renders this mesh with the specified shader program.
+     * Renders part of the mesh with the specified shader program.
+     * 
      * @param shaderProgram Program to be used while rendering.
+     * @param firstVertex First vertex to render.
+     * @param count Amount of the vertices to render.
      */
-    void render(QOpenGLShaderProgram& shaderProgram);
+	void render(QOpenGLShaderProgram& shaderProgram, int firstVertex, int count);
 
+	/*!
+	 * Renders this mesh with the specified shader program.
+	 * @param shaderProgram Program to be used while rendering.
+	 */
+	void render(QOpenGLShaderProgram& shaderProgram)
+	{
+		render(shaderProgram, 0, uncachedVerticesCount());
+	}
 
 private:
-    int mVerticesCount = 0;
-    QOpenGLBuffer mVertexBuffer;
+	int mVerticesCount = 0;
+	QOpenGLBuffer mVertexBuffer;
+	QVector3D mMinBound, mMaxBound;
 };
 
 /*!
  * The mesh renderer class.
  */
-//! @todo Drive this class from QTransform.
-class ScMeshRenderer
+class ScMeshRenderer : public ScOffsetTransform
 {
     DEFINE_CREATE_FUNC(ScMeshRenderer)
 
@@ -292,41 +358,6 @@ public:
         return setEnabled(false);
     }
 
-    const QVector3D& position() const { return mPosition; }
-	virtual ScMeshRenderer& setPosition(const QVector3D& position)
-    {
-        mPosition = position;
-        return *this;
-    }
-
-    const QVector3D& offset() const { return mOffset; }
-	virtual ScMeshRenderer& setOffset(const QVector3D& offset)
-    {
-        mOffset = offset;
-        return *this;
-    }
-
-    const QQuaternion& rotation() const { return mRotation; }
-	virtual ScMeshRenderer& setRotation(const QQuaternion& rotation)
-    {
-        mRotation = rotation;
-        return *this;
-    }
-	virtual ScMeshRenderer& setRotation(const QVector3D& rotation)
-    {
-        return setRotation(QQuaternion::fromEulerAngles(rotation));
-    }
-
-    const QVector3D& scale() const { return mScale; }
-	virtual ScMeshRenderer& setScale(const QVector3D& scale)
-    {
-        mScale = scale;
-        return *this;
-    }
-
-    virtual QMatrix4x4 modelMatrix() const;
-    virtual QMatrix3x3 normalMatrix() const;
-
     ScEditableMesh_p mesh() const { return mMesh; }
     ScMeshRenderer& setMesh(const ScEditableMesh_p& mesh)
     {
@@ -341,10 +372,10 @@ public:
         return *this;
     }
 
-    QOpenGLTexture_p texture() const { return mTexture; }
-    ScMeshRenderer& setTexture(const QOpenGLTexture_p& texture)
+    QOpenGLTexture_p diffuseTexture() const { return mDiffuseTexture; }
+    ScMeshRenderer& setDiffuseTexture(const QOpenGLTexture_p& diffuseTexture)
     {
-        mTexture = texture;
+        mDiffuseTexture = diffuseTexture;
         return *this;
     }
 
@@ -354,14 +385,31 @@ public:
      */
     virtual void render(const ScBasicCamera& camera);
 
+protected:
+	void beginRender(const ScBasicCamera& camera) const;
+	void endRender() const;
+
 private:
     bool mEnabled = true;
-    QQuaternion mRotation;
-    QVector3D mPosition, mOffset;
-    QVector3D mScale = { 1.0f, 1.0f, 1.0f };
     ScEditableMesh_p mMesh;
     QOpenGLShaderProgram_p mShaderProgram;
-    QOpenGLTexture_p mTexture;
+    QOpenGLTexture_p mDiffuseTexture;
+};
+
+/*!
+ * The transparent mesh renderer class.
+ */
+class ScTransparentMeshRenderer : public ScMeshRenderer
+{
+	DEFINE_CREATE_FUNC(ScTransparentMeshRenderer)
+
+public:
+
+	/*!
+	 * Renders this transparent object with the specified camera.
+	 * @param camera The camera to be used while rendering.
+	 */
+	void render(const ScBasicCamera& camera) override;
 };
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -385,7 +433,7 @@ public:
 class ScOpenGLWidget final : public QOpenGLWidget
 {
 public:
-    ScOpenGLWidget(QWidget* parent = Q_NULLPTR):
+    ScOpenGLWidget(QWidget* parent = nullptr):
         QOpenGLWidget(parent)
     {
     }
@@ -404,8 +452,5 @@ private:
 	bool mMouseDragBegan = false;
 	QPointF mMousePressPosition;
 public:
-    ScScene* mScene = Q_NULLPTR;
-	QtCharts::QChartView* mChart;
+    ScScene* mScene = nullptr;
 };
-
-#endif // POPENGLWIDGET_H

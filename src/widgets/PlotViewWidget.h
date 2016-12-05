@@ -6,7 +6,7 @@
 class ScPlotViewWidget : public QtCharts::QChartView
 {
 public:
-    ScPlotViewWidget(QWidget* parent = Q_NULLPTR):
+    ScPlotViewWidget(QWidget* parent = nullptr):
         QtCharts::QChartView(parent)
     {
     }

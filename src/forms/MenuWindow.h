@@ -12,7 +12,7 @@ class MenuWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MenuWindow(QWidget* parent = Q_NULLPTR): QMainWindow(parent) {}
+    explicit MenuWindow(QWidget* parent = nullptr): QMainWindow(parent) {}
     ~MenuWindow();
 
     void setupUi(QMainWindow* sceneWindow, QMainWindow* authorsWindows);
