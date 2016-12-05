@@ -13,7 +13,7 @@
 #include <QtMath>
 #include <QMouseEvent>
 #include <QWheelEvent>
-#include <GL/GL.h>
+//#include <GL/GL.h>
 
 #ifndef _countof
 #define _countof(arr) (sizeof(arr) / sizeof((arr)[0]))

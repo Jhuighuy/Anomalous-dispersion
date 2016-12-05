@@ -6,11 +6,6 @@
 **
 ****************************************************************************/
 
-/*!
- * @todo Fix normal computation issues in here.
- * @todo Implement point thickening algorithm.
- */
-
 #include "PresentationGeometry.h"
 
 class PresentationGeometryImpl final
@@ -33,39 +28,37 @@ public:
 private:
 	template<typename T>
 	static void bridgeLinesImpl(const QVector<T>& lineA, const QVector<T>& lineB, QVector<ScVertexData>& vertices);
-
-private:
 	template<typename T>
 	static void bridgePointLine(const T& point, typename QVector<T>::const_iterator lineBegin, typename QVector<T>::const_iterator lineEnd, QVector<ScVertexData>& vertices);
 	template<typename T>
 	static void bridgePointLine(const T& point, const QVector<T>& line, QVector<ScVertexData>& vertices);
 };
 
+const float PresentationGeometry::defaultThickness = 0.01f;
+
 /*!
  * Generates a mesh the represents the projection of the beam cone to some surface.
- * 
+ *
  * @param beamCone The actual beam cone.
+ * @param screenNormal The normal of the projection plane.
  * @param[out] vertices Output for generated vertices.
  * @param thickness The thickness of the projection line.
  */
-void PresentationGeometry::generateBeamProjMesh(const OpBeamCone& beamCone, QVector<ScVertexData>& vertices, float thickness)
+void PresentationGeometry::generateBeamProjMesh(const OpBeamCone& beamCone, const QVector3D& screenNormal,
+                                                QVector<ScVertexData>& vertices, float thickness)
 {
-	Q_ASSERT(beamCone.collisionLevels() > 1);
+    Q_ASSERT(beamCone.collisionLevels() > 1);
 
 	OpBeamCollisionInfo beamFinalCollision;
 	beamCone.getCollisionLevel(beamFinalCollision, beamCone.collisionLevels() - 1);
 
 	if (beamFinalCollision.size() == 1)
-	{
-		//! @todo
-		QVector3D pointNormal(0.0f, 0.0f, -1.0f);
-		PresentationGeometryImpl::thickenPoint(beamFinalCollision[0], pointNormal, thickness, vertices);
+    {
+        PresentationGeometryImpl::thickenPoint(beamFinalCollision.first(), screenNormal, thickness, vertices);
 	}
 	else
-	{
-		//! @todo
-		QVector3D lineNormal(0.0f, 0.0f, -1.0f);
-		PresentationGeometryImpl::thickenLine(beamFinalCollision, lineNormal, thickness, vertices);
+    {
+        PresentationGeometryImpl::thickenLine(beamFinalCollision, screenNormal, thickness, vertices);
 	}
 }
 
@@ -108,9 +101,27 @@ void PresentationGeometryImpl::thickenPoint(const T& point,
 											const QVector3D& pointNormal, float thickness,
 											QVector<ScVertexData>& vertices)
 {
-	//float halfThickness = 0.5f * thickness;
-	//! @todo implement me.
-	//Q_ASSERT(false);
+    float halfThickness = 0.5f * thickness;
+    static const QVector3D up(0.0f, 1.0f, 0.0f);
+    const QVector3D& P = point.position;
+    const QVector4D& C = point.color;
+
+    QVector3D tangent = QVector3D::normal(up, pointNormal);
+    QVector3D adjHor = halfThickness * tangent;
+    QVector3D adjVert = halfThickness * up;
+
+    ScVertexData VplusPlus = { P + adjHor + adjVert, {1.0f, 1.0f}, pointNormal, C };
+    ScVertexData VplusMinus = { P + adjHor - adjVert, {1.0f, 0.0f}, pointNormal, C };
+    ScVertexData VminusPlus = { P - adjHor + adjVert, {0.0f, 1.0f}, pointNormal, C };
+    ScVertexData VminusMinus = { P - adjHor - adjVert, {0.0f, 0.0f}, pointNormal, C };
+
+    vertices.push_back(VplusPlus);
+    vertices.push_back(VplusMinus);
+    vertices.push_back(VminusPlus);
+    // ----------------------
+    vertices.push_back(VminusPlus);
+    vertices.push_back(VminusMinus);
+    vertices.push_back(VplusMinus);
 }
 
 /*!
@@ -130,14 +141,14 @@ void PresentationGeometryImpl::thickenLine(const QVector<T>& line,
 
 	float halfThickness = 0.5f * thickness;
 
-	auto X = [&](int i) -> const QVector3D& { return line[i].position; };
+    auto P = [&](int i) -> const QVector3D& { return line[i].position; };
 	auto C = [&](int i) -> const QVector4D& { return line[i].color; };
 	int M = line.size() - 1;
 
 	// Part 1: processing first non-bended node.
 	ScVertexData Vplus0 = { { }, { 0.0f, 1.0f }, lineNormal, C(0) };
 	ScVertexData Vminus0 = { { }, { 1.0f, 1.0f }, lineNormal, C(0) };
-	thickenFirstPoint(lineNormal, X(0), X(1), halfThickness, Vplus0.vertexCoord, Vminus0.vertexCoord);
+    thickenFirstPoint(lineNormal, P(0), P(1), halfThickness, Vplus0.vertexCoord, Vminus0.vertexCoord);
 	ScVertexData Vsaved = Vminus0;
 	vertices.push_back(Vplus0);
 	vertices.push_back(Vminus0);
@@ -147,7 +158,7 @@ void PresentationGeometryImpl::thickenLine(const QVector<T>& line,
 	{
 		ScVertexData Vplus = { { }, { 0.0f, 0.5f }, lineNormal, C(i) };
 		ScVertexData Vminus = { { }, { 1.0f, 0.5f }, lineNormal, C(i) };
-		PresentationGeometryImpl::thickenMidPoint(lineNormal, X(i - 1), X(i), X(i + 1), halfThickness, Vplus.vertexCoord, Vminus.vertexCoord);
+        PresentationGeometryImpl::thickenMidPoint(lineNormal, P(i - 1), P(i), P(i + 1), halfThickness, Vplus.vertexCoord, Vminus.vertexCoord);
 
 		vertices.push_back(Vplus);
 		// ----------------------
@@ -163,7 +174,7 @@ void PresentationGeometryImpl::thickenLine(const QVector<T>& line,
 	// Part 3: processing last non-bended node.
 	ScVertexData VplusM = { { }, { 0.0f, 0.0f }, lineNormal, C(M) };
 	ScVertexData VminusM = { { }, { 1.0f, 0.0f }, lineNormal, C(M) };
-	PresentationGeometryImpl::thickenLastPoint(lineNormal, X(M - 1), X(M), halfThickness, VplusM.vertexCoord, VminusM.vertexCoord);
+    PresentationGeometryImpl::thickenLastPoint(lineNormal, P(M - 1), P(M), halfThickness, VplusM.vertexCoord, VminusM.vertexCoord);
 	vertices.push_back(VplusM);
 	// ----------------------
 	vertices.push_back(VplusM);
@@ -175,8 +186,8 @@ void PresentationGeometryImpl::thickenFirstPoint(const QVector3D& lineNormal,
 												 QVector3D& Yplus, QVector3D& Yminus)
 {
 	QVector3D a = Xplus - X;
-	QVector3D normal = QVector3D::normal(a, lineNormal);
-	QVector3D adj = halfThickness * normal;
+    QVector3D tangent = QVector3D::normal(a, lineNormal);
+    QVector3D adj = halfThickness * tangent;
 
 	Yplus = X + adj;
 	Yminus = X - adj;
@@ -186,8 +197,8 @@ void PresentationGeometryImpl::thickenLastPoint(const QVector3D& lineNormal,
 												QVector3D& Yplus, QVector3D& Yminus)
 {
 	QVector3D a = X - Xminus;
-	QVector3D normal = QVector3D::normal(a, lineNormal);
-	QVector3D adj = halfThickness * normal;
+    QVector3D tangent = QVector3D::normal(a, lineNormal);
+    QVector3D adj = halfThickness * tangent;
 
 	Yplus = X + adj;
 	Yminus = X - adj;
@@ -198,8 +209,8 @@ void PresentationGeometryImpl::thickenMidPoint(const QVector3D& lineNormal,
 {
 	QVector3D a = X - Xminus;
 	QVector3D b = Xplus - X;
-	QVector3D averageNormal = 0.5f * (QVector3D::normal(a, lineNormal) + QVector3D::normal(b, lineNormal));
-	QVector3D adj = halfThickness * averageNormal;
+    QVector3D averageTangent = 0.5f * (QVector3D::normal(a, lineNormal) + QVector3D::normal(b, lineNormal));
+    QVector3D adj = halfThickness * averageTangent;
 
 	Yplus = X + adj;
 	Yminus = X - adj;
@@ -234,11 +245,13 @@ void PresentationGeometryImpl::bridgeLinesImpl(const QVector<T>& lineA, const QV
 		if (lineB.size() == 1)
 		{
 			// In this case we have just two points we need to connect.
-			// Lets connect them with thick lines.
-			//! @todo
-			QVector<T> line { lineA[0], lineB[0] };
-			QVector3D lineNormal(1.0f, 0.0f, 1.0f);
-			PresentationGeometryImpl::thickenLine(line, lineNormal, 0.002f, vertices);
+            // Lets connect them with thick lines.
+            static const QVector3D up(0.0f, 1.0f, 0.0f);
+            QVector3D lineDirection = lineB[0].position - lineA[0].position;
+            QVector3D lineNormal = QVector3D::normal(lineDirection, up);
+
+            QVector<T> line { lineA[0], lineB[0] };
+            PresentationGeometryImpl::thickenLine(line, lineNormal, 0.25f * PresentationGeometry::defaultThickness, vertices);
 		}
 		else
 		{
@@ -303,16 +316,16 @@ void PresentationGeometryImpl::bridgePointLine(const T& point,
 		return;
 	}
 
-	const QVector3D& X = point.position;
+    const QVector3D& Px = point.position;
 	const QVector4D& Cx = point.color;
-	auto Y = [&](int i) -> const QVector3D& { return (lineBegin + i)->position; };
+    auto Py = [&](int i) -> const QVector3D& { return (lineBegin + i)->position; };
 	auto Cy = [&](int i) -> const QVector4D& { return (lineBegin + i)->color; };
 	int N = lineEnd - lineBegin - 1;
 
 	for (int i = 0; i < N; ++i)
 	{
-		vertices.push_back({ X, { }, { }, Cx });
-		vertices.push_back({ Y(i), { }, { }, Cy(i) });
-		vertices.push_back({ Y(i + 1), { }, { }, Cy(i + 1) });
+        vertices.push_back({ Px, { }, { }, Cx });
+        vertices.push_back({ Py(i), { }, { }, Cy(i) });
+        vertices.push_back({ Py(i + 1), { }, { }, Cy(i + 1) });
 	}
 }

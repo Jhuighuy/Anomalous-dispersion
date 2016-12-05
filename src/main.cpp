@@ -14,6 +14,6 @@ int main(int argc, char** argv)
     authorsWindow.setupUi(&menuWindow);
     sceneWindow.setupUi(&menuWindow);
 
-    menuWindow.showFullScreen();
+    menuWindow.showMaximized();
     return application.exec();
 }

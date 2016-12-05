@@ -14,15 +14,18 @@
 class PresentationGeometry
 {
 public:
-	
+    static const float defaultThickness;
+
 	/*!
 	 * Generates a mesh the represents the projection of the beam cone to some surface.
 	 * 
 	 * @param beamCone The actual beam cone.
+     * @param screenNormal The normal of the projection plane.
 	 * @param[out] vertices Output for generated vertices.
 	 * @param thickness The thickness of the projection line.
 	 */
-	static void generateBeamProjMesh(const OpBeamCone& beamCone, QVector<ScVertexData>& vertices, float thickness = 0.01f);
+    static void generateBeamProjMesh(const OpBeamCone& beamCone, const QVector3D& screenNormal,
+                                     QVector<ScVertexData>& vertices, float thickness = defaultThickness);
 
 	/*!
 	 * Generates a mesh the represents the the beam cone.

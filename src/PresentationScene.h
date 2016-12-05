@@ -104,8 +104,8 @@ public:
 			mPlanesSynced = true;
 		}
 
-		mFirstPlane.refractBeam(beam, true);
-		mSecondPlane.refractBeam(beam, false);
+        mFirstPlane.refractBeam(beam, true);
+        mSecondPlane.refractBeam(beam, false);
     }
 
 public slots:
@@ -210,7 +210,7 @@ public:
 		mesh()->load(vertices.data(), vertices.size());
 
 		QVector<ScVertexData> projVertices;
-		PresentationGeometry::generateBeamProjMesh(beamCone, projVertices);
+        PresentationGeometry::generateBeamProjMesh(beamCone, screenPlane.normal(), projVertices);
 		mProjectionRenderer.setMesh(ScEditableMesh_p(new ScEditableMesh()));
 		mProjectionRenderer.mesh()->load(projVertices.data(), projVertices.size());
     }

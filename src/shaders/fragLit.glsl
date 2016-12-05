@@ -1,4 +1,4 @@
-#version 140
+#version 120
 
 varying vec2 vr_TexCoord;
 varying vec3 vr_NormalWS;

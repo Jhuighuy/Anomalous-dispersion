@@ -11,10 +11,12 @@ QT += core gui widgets opengl charts
 TARGET = Anomalous-dispresion
 TEMPLATE = app
 
-QMAKE_CXXFLAGS += -fopenmp
-QMAKE_LFLAGS *= -fopenmp
-win32 {
-    LIBS += -lOpengl32
+!macx {
+    QMAKE_CXXFLAGS += -fopenmp
+    QMAKE_LFLAGS *= -fopenmp
+    win32 {
+        LIBS += -lOpengl32
+    }
 }
 
 SOURCES += \

@@ -18,6 +18,8 @@
 #include <QOpenGLTexture>
 #include <QChartView>
 
+#include <cmath>
+
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 #define DEFINE_SHARED_PTR(Class) \
@@ -469,6 +471,12 @@ public:
         model.scale(scale());
         return model;
     }
+    virtual QMatrix3x3 normalMatrix() const
+    {
+        QMatrix4x4 model = modelMatrix();
+        QMatrix3x3 normal(model.normalMatrix());
+        return normal;
+    }
 
     ScEditableMesh_p mesh() { return mMesh; }
     ScEditableMesh_cp mesh() const { return mMesh; }
@@ -513,6 +521,7 @@ public:
         shaderProgram()->bind();
         shaderProgram()->setUniformValue("un_Texture", 0);
         shaderProgram()->setUniformValue("un_ModelMatrix", modelMatrix());
+        shaderProgram()->setUniformValue("un_NormalMatrix", normalMatrix());
         shaderProgram()->setUniformValue("un_ViewProjectionMatrix", camera.projectionMatrix() * camera.viewMatrix());
 		shaderProgram()->release();
         mesh()->render(*shaderProgram());

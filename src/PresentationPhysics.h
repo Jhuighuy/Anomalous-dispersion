@@ -20,6 +20,8 @@
 #include <QChart>
 #include <QLineSeries>
 
+//! @todo
+#ifndef DEFINE_SHARED_PTR
 #define DEFINE_SHARED_PTR(Class) \
 	typedef QSharedPointer<class Class> Class##_p; \
 	typedef QSharedPointer<const Class> Class##_cp;
@@ -28,6 +30,7 @@
 		template<typename... T>\
         static Class##_p create(T&&... args) { return Class##_p(new Class(std::forward<T>(args)...)); }\
 	private:
+#endif
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
