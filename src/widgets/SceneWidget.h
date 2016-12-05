@@ -22,22 +22,31 @@
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//! @todo
+#ifndef DEFINE_SHARED_PTR
 #define DEFINE_SHARED_PTR(Class) \
 	typedef QSharedPointer<class Class> Class##_p; \
 	typedef QSharedPointer<const Class> Class##_cp;
 #define DEFINE_CREATE_FUNC(Class) \
 	public: \
 		template<typename... T>\
-		static Class##_p create(T&&... args) { return Class##_p(new Class(qForward<T>(args)...)); }\
+        static Class##_p create(T&&... args) { return Class##_p(new Class(std::forward<T>(args)...)); }\
 	private:
+#endif
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+DEFINE_SHARED_PTR(ScBasicCamera)
+DEFINE_SHARED_PTR(ScProjectionCamera)
+DEFINE_SHARED_PTR(ScOrbitalCamera)
 
 /*!
  * The basic camera class.
  */
 class ScBasicCamera
 {
+    DEFINE_CREATE_FUNC(ScBasicCamera)
+
 public:
     virtual ~ScBasicCamera()
 	{
@@ -71,32 +80,11 @@ public:
         return *this;
     }
 
-    virtual QMatrix4x4 viewMatrix() const
-    {
-        QMatrix4x4 view;
-        view.setToIdentity();
-        return view;
-    }
-    virtual QMatrix4x4 projectionMatrix() const
-    {
-        QMatrix4x4 projection;
-        projection.perspective(60.0f, width() / height(), 0.01f, 100.0f);
-        return projection;
-    }
+    virtual QMatrix4x4 viewMatrix() const;
+    virtual QMatrix4x4 projectionMatrix() const;
 
-    virtual void beginScene() const
-    {
-        float x = width() * viewport().x(), y = height() * viewport().y();
-        float w = width() * viewport().width(), h = height() * viewport().height();
-
-        glScissor(x, y, w, h);
-        glViewport(x, y, w, h);
-		glClearColor(clearColor().redF(), clearColor().greenF(), clearColor().blueF(), clearColor().alphaF());
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-    virtual void endScene() const
-    {
-    }
+    virtual void beginScene() const;
+    virtual void endScene() const;
 
 private:
     float mWidth = 800.0f, mHeight = 600.0f;
@@ -104,14 +92,14 @@ private:
     QColor mClearColor;
 };
 
-typedef QSharedPointer<ScBasicCamera> ScBasicCamera_p;
-typedef QSharedPointer<const ScBasicCamera> ScBasicCamera_cp;
-
 /*!
  * The projection camera class.
  */
+//! @todo Drive this class from QTransform.
 class ScProjectionCamera final : public ScBasicCamera
 {
+    DEFINE_CREATE_FUNC(ScProjectionCamera)
+
 public:
     const QVector3D& position() const { return mPosition; }
     ScProjectionCamera& setPosition(const QVector3D& position)
@@ -121,7 +109,7 @@ public:
     }
 
     const QQuaternion& rotation() const { return mRotation; }
-    ScProjectionCamera& setScale(const QQuaternion& rotation)
+    ScProjectionCamera& setRotation(const QQuaternion& rotation)
     {
         mRotation = rotation;
         return *this;
@@ -134,35 +122,13 @@ public:
         return *this;
     }
 
-	QMatrix4x4 viewMatrix() const override
-    {
-        QMatrix4x4 world;
-        world.setToIdentity();
-        world.translate(position());
-        world.rotate(rotation());
-        return world.inverted();
-    }
-	QMatrix4x4 projectionMatrix() const override
-    {
-        float left = -0.5f * size();
-        float bottom = left * width() / height();
+    QMatrix4x4 viewMatrix() const override;
+    QMatrix4x4 projectionMatrix() const override;
 
-        QMatrix4x4 projection;
-        projection.ortho(left, -left, bottom, -bottom, 0.01f, 100.0f);
-        return projection;
-    }
-
-    /*virtual void beginScene() const
-    {
-        float a = height() / width();
-        float x = a * width() * viewport().x(), y = height() * viewport().y();
-        float w = a * width() * viewport().width(), h = height() * viewport().height();
-
-        glScissor(x, y, w, h);
-        glViewport(x, y, w, h);
-        glClearColor(clearColor().redF(), clearColor().greenF(), clearColor().blueF(), clearColor().alphaF());
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }*/
+    /*
+    void beginScene() const override;
+    void endScene() const override;
+    */
 
 private:
     float mSize = 5.0f;
@@ -170,25 +136,16 @@ private:
     QQuaternion mRotation;
 };
 
-typedef QSharedPointer<ScProjectionCamera> ScProjectionCamera_p;
-typedef QSharedPointer<const ScProjectionCamera> ScProjectionCamera_cp;
-
 /*!
  * The orbital camera class.
  */
 class ScOrbitalCamera final : public ScBasicCamera
 {
+    DEFINE_CREATE_FUNC(ScOrbitalCamera)
+
 public:
     const QVector2D& rotation() const { return mRotation; }
-    ScOrbitalCamera& rotate(const QVector2D& deltaRotation)
-    {
-		float newX = fmod(rotation().x() + deltaRotation.x(), 360.0f);
-		float newY = fmod(rotation().y() + deltaRotation.y(), 360.0f);
-
-        mRotation.setX(qBound(rotationMinBound().x(), newX, rotationMaxBound().x()));
-        mRotation.setY(qBound(rotationMinBound().y(), newY, rotationMaxBound().y()));
-        return *this;
-    }
+    ScOrbitalCamera& rotate(const QVector2D& deltaRotation);
 
     const QVector2D& rotationMinBound() const { return mRotationMinBound; }
     ScOrbitalCamera& setRotationMinBound(const QVector2D& rotationMinBound)
@@ -242,28 +199,22 @@ public:
         return *this;
     }
 
-	QMatrix4x4 viewMatrix() const override
-    {
-        QMatrix4x4 cameraRotation;
-        cameraRotation.setToIdentity();
-        cameraRotation.rotate(QQuaternion::fromEulerAngles(rotation().x(), rotation().y(), 0.0f));
-
-        QMatrix4x4 view;
-        view.setToIdentity();
-		view.lookAt(cameraRotation * rotationOrbit() + rotationCenter(), rotationCenter(),
-                    cameraRotation * QVector3D(0.0f, 1.0f, 0.0f));
-        return view;
-    }
+    QMatrix4x4 viewMatrix() const override;
 
 private:
     QVector2D mRotation, mRotationMinBound = { -90.0f, -360.0f }, mRotationMaxBound = { 90.0f, 360.0f };
     QVector3D mRotationCenter, mRotationOrbit = { 0.0f, 0.0f, 5.0f };
 };
 
-typedef QSharedPointer<ScOrbitalCamera> ScOrbitalCamera_p;
-typedef QSharedPointer<const ScOrbitalCamera> ScOrbitalCamera_cp;
-
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+DEFINE_SHARED_PTR(QOpenGLShaderProgram)
+DEFINE_SHARED_PTR(QOpenGLTexture)
+DEFINE_SHARED_PTR(ScEditableMesh)
+DEFINE_SHARED_PTR(ScMeshRenderer)
+
+extern QOpenGLShaderProgram_p pLoadShaderProgram(const char* vertexShaderPath, const char* pixelShaderPath);
+extern QOpenGLTexture_p pLoadTexture(const char* texturePath);
 
 /*!
  * The vertex data structure.
@@ -279,136 +230,48 @@ struct ScVertexData
 /*!
  * The editable mesh class.
  */
+//! @todo Drive this class from QOpenGLBuffer directly.
 class ScEditableMesh final
 {
+    DEFINE_CREATE_FUNC(ScEditableMesh)
+
 public:
     ScEditableMesh() {}
-    ScEditableMesh(const ScVertexData* vertices, int count)
+    ScEditableMesh(const ScVertexData* vertices, int count, bool cacheVertices = false, bool computeAABB = false)
 	{
-		load(vertices, count);
+        load(vertices, count, cacheVertices, computeAABB);
 	}
 
-    void load(const ScVertexData* vertices, int count)
-    {
-        int size = count * sizeof(*vertices);
-        mVerticesCount = count;
-        if (!mVertexBuffer.isCreated())
-        {
-            mVertexBuffer.create();
-            mVertexBuffer.bind();
-            mVertexBuffer.allocate(vertices, size);
-        }
-        else
-        {
-            int existingSize = mVertexBuffer.size();
+    /*!
+     * Loads a vertices of the editable mesh.
+     *
+     * @param vertices The actual array of the vertex data.
+     * @param count The amount of the vertices.
+     * @param cacheVertices Do cache vertices inside the mesh object?
+     * @param computeAABB Do compute the bounding box for this mesh?
+     */
+    ScEditableMesh& load(const ScVertexData* vertices, int count, bool cacheVertices = false, bool computeAABB = false);
 
-            mVertexBuffer.bind();
-            if (size < existingSize)
-            {
-                mVertexBuffer.write(0, vertices, size);
-            }
-            else
-            {
-				mVertexBuffer.allocate(vertices, size);
-            }
-        }
-    }
+    /*!
+     * Renders this mesh with the specified shader program.
+     * @param shaderProgram Program to be used while rendering.
+     */
+    void render(QOpenGLShaderProgram& shaderProgram);
 
-    void render(QOpenGLShaderProgram& shaderProgram)
-    {
-        if (!mVertexBuffer.isCreated() || mVerticesCount == 0)
-        {
-            return;
-        }
-
-        shaderProgram.bind();
-        mVertexBuffer.bind();
-
-        int vertexLocation = shaderProgram.attributeLocation("in_VertexCoordMS");
-        if (vertexLocation != -1)
-        {
-            shaderProgram.enableAttributeArray(vertexLocation);
-            shaderProgram.setAttributeBuffer(vertexLocation, GL_FLOAT, offsetof(ScVertexData, vertexCoord),
-                                             sizeof(ScVertexData::vertexCoord) / sizeof(ScVertexData::vertexCoord.x()),
-                                             sizeof(ScVertexData));
-        }
-
-        int texCoordLocation = shaderProgram.attributeLocation("in_TexCoord");
-        if (texCoordLocation != -1)
-        {
-            shaderProgram.enableAttributeArray(texCoordLocation);
-            shaderProgram.setAttributeBuffer(texCoordLocation, GL_FLOAT, offsetof(ScVertexData, textureCord),
-                                             sizeof(ScVertexData::textureCord) / sizeof(ScVertexData::textureCord.x()),
-                                             sizeof(ScVertexData));
-        }
-
-        int normalLocation = shaderProgram.attributeLocation("in_NormalMS");
-        if (normalLocation != -1)
-        {
-            shaderProgram.enableAttributeArray(normalLocation);
-            shaderProgram.setAttributeBuffer(normalLocation, GL_FLOAT, offsetof(ScVertexData, normal),
-                                             sizeof(ScVertexData::normal) / sizeof(ScVertexData::normal.x()),
-                                             sizeof(ScVertexData));
-        }
-
-        int colorLocation = shaderProgram.attributeLocation("in_Color");
-		if (colorLocation != -1)
-		{
-			shaderProgram.enableAttributeArray(colorLocation);
-            shaderProgram.setAttributeBuffer(colorLocation, GL_FLOAT, offsetof(ScVertexData, color),
-                                             sizeof(ScVertexData::color) / sizeof(ScVertexData::color.x()),
-                                             sizeof(ScVertexData));
-		}
-
-        glDrawArrays(GL_TRIANGLES, 0, mVerticesCount);
-    }
 
 private:
     int mVerticesCount = 0;
     QOpenGLBuffer mVertexBuffer;
 };
 
-typedef QSharedPointer<ScEditableMesh> ScEditableMesh_p;
-typedef QSharedPointer<const ScEditableMesh> ScEditableMesh_cp;
-
-typedef QSharedPointer<QOpenGLShaderProgram> QOpenGLShaderProgram_p;
-typedef QSharedPointer<const QOpenGLShaderProgram> QOpenGLShaderProgram_cp;
-
-typedef QSharedPointer<QOpenGLTexture> QOpenGLTexture_p;
-typedef QSharedPointer<const QOpenGLTexture> QOpenGLTexture_cp;
-
-static QOpenGLShaderProgram_p pLoadShaderProgram(const char* vertexShaderPath, const char* pixelShaderPath)
-{
-    QOpenGLShaderProgram_p shaderProgram(new QOpenGLShaderProgram());
-
-    if (!shaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, vertexShaderPath))
-    {
-        qDebug() << "Failed to load a vertex shader " << vertexShaderPath;
-		abort();
-    }
-    if (!shaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, pixelShaderPath))
-    {
-        qDebug() << "Failed to load a pixel shader " << pixelShaderPath;
-		abort();
-	}
-    if (!shaderProgram->link())
-    {
-        qDebug() << "Failed to load link a shader program " << pixelShaderPath << " + " << pixelShaderPath;
-		abort();
-	}
-    return shaderProgram;
-}
-static QOpenGLTexture_p pLoadTexture(const char* texturePath)
-{
-    QOpenGLTexture_p texture(new QOpenGLTexture(QImage(texturePath)));
-    return texture;
-}
-
 /*!
  * The mesh renderer class.
  */
+//! @todo Drive this class from QTransform.
 class ScMeshRenderer
 {
+    DEFINE_CREATE_FUNC(ScMeshRenderer)
+
 public:
     virtual ~ScMeshRenderer()
 	{
@@ -461,77 +324,35 @@ public:
         return *this;
     }
 
-    virtual QMatrix4x4 modelMatrix() const
-    {
-        QMatrix4x4 model;
-        model.setToIdentity();
-        model.translate(position());
-        model.rotate(rotation());
-        model.translate(offset());
-        model.scale(scale());
-        return model;
-    }
-    virtual QMatrix3x3 normalMatrix() const
-    {
-        QMatrix4x4 model = modelMatrix();
-        QMatrix3x3 normal(model.normalMatrix());
-        return normal;
-    }
+    virtual QMatrix4x4 modelMatrix() const;
+    virtual QMatrix3x3 normalMatrix() const;
 
-    ScEditableMesh_p mesh() { return mMesh; }
-    ScEditableMesh_cp mesh() const { return mMesh; }
+    ScEditableMesh_p mesh() const { return mMesh; }
     ScMeshRenderer& setMesh(const ScEditableMesh_p& mesh)
     {
         mMesh = mesh;
         return *this;
     }
 
-    QOpenGLShaderProgram_p shaderProgram() { return mShaderProgram; }
-    QOpenGLShaderProgram_cp shaderProgram() const { return mShaderProgram; }
+    QOpenGLShaderProgram_p shaderProgram() const { return mShaderProgram; }
     ScMeshRenderer& setShaderProgram(const QOpenGLShaderProgram_p& shaderProgram)
     {
         mShaderProgram = shaderProgram;
         return *this;
     }
 
-    QOpenGLTexture_p texture() { return mTexture; }
-    QOpenGLTexture_cp texture() const { return mTexture; }
+    QOpenGLTexture_p texture() const { return mTexture; }
     ScMeshRenderer& setTexture(const QOpenGLTexture_p& texture)
     {
         mTexture = texture;
         return *this;
     }
 
-    virtual void render(const ScBasicCamera& camera)
-    {
-        Q_ASSERT(mesh() != nullptr);
-		Q_ASSERT(shaderProgram() != nullptr);
-
-        if (!enabled())
-        {
-            return;
-        }
-
-        if (texture() != nullptr)
-        {
-            glEnable(GL_TEXTURE_2D);
-            texture()->bind(0);
-        }
-
-        shaderProgram()->bind();
-        shaderProgram()->setUniformValue("un_Texture", 0);
-        shaderProgram()->setUniformValue("un_ModelMatrix", modelMatrix());
-        shaderProgram()->setUniformValue("un_NormalMatrix", normalMatrix());
-        shaderProgram()->setUniformValue("un_ViewProjectionMatrix", camera.projectionMatrix() * camera.viewMatrix());
-		shaderProgram()->release();
-        mesh()->render(*shaderProgram());
-
-        if (texture() != nullptr)
-        {
-            texture()->release(0);
-            glDisable(GL_TEXTURE_2D);
-        }
-    }
+    /*!
+     * Renders this object with the specified camera.
+     * @param camera The camera to be used while rendering.
+     */
+    virtual void render(const ScBasicCamera& camera);
 
 private:
     bool mEnabled = true;
@@ -542,9 +363,6 @@ private:
     QOpenGLShaderProgram_p mShaderProgram;
     QOpenGLTexture_p mTexture;
 };
-
-typedef QSharedPointer<ScMeshRenderer> ScMeshRenderer_p;
-typedef QSharedPointer<const ScMeshRenderer> ScMeshRenderer_cp;
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

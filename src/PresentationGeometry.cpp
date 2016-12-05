@@ -98,7 +98,7 @@ void PresentationGeometry::generateBeamMesh(const OpBeamCone& beamCone, QVector<
  */
 template<typename T>
 void PresentationGeometryImpl::thickenPoint(const T& point,
-											const QVector3D& pointNormal, float thickness,
+                                            const QVector3D& projNormal, float thickness,
 											QVector<ScVertexData>& vertices)
 {
     float halfThickness = 0.5f * thickness;
@@ -106,35 +106,35 @@ void PresentationGeometryImpl::thickenPoint(const T& point,
     const QVector3D& P = point.position;
     const QVector4D& C = point.color;
 
-    QVector3D tangent = QVector3D::normal(up, pointNormal);
+    QVector3D tangent = QVector3D::normal(up, projNormal);
     QVector3D adjHor = halfThickness * tangent;
     QVector3D adjVert = halfThickness * up;
 
-    ScVertexData VplusPlus = { P + adjHor + adjVert, {1.0f, 1.0f}, pointNormal, C };
-    ScVertexData VplusMinus = { P + adjHor - adjVert, {1.0f, 0.0f}, pointNormal, C };
-    ScVertexData VminusPlus = { P - adjHor + adjVert, {0.0f, 1.0f}, pointNormal, C };
-    ScVertexData VminusMinus = { P - adjHor - adjVert, {0.0f, 0.0f}, pointNormal, C };
+    ScVertexData Vpp = { P + adjHor + adjVert, {1.0f, 1.0f}, projNormal, C };
+    ScVertexData Vpm = { P + adjHor - adjVert, {1.0f, 0.0f}, projNormal, C };
+    ScVertexData Vmp = { P - adjHor + adjVert, {0.0f, 1.0f}, projNormal, C };
+    ScVertexData Vmm = { P - adjHor - adjVert, {0.0f, 0.0f}, projNormal, C };
 
-    vertices.push_back(VplusPlus);
-    vertices.push_back(VplusMinus);
-    vertices.push_back(VminusPlus);
+    vertices.push_back(Vpp);
+    vertices.push_back(Vpm);
+    vertices.push_back(Vmp);
     // ----------------------
-    vertices.push_back(VminusPlus);
-    vertices.push_back(VminusMinus);
-    vertices.push_back(VplusMinus);
+    vertices.push_back(Vmp);
+    vertices.push_back(Vmm);
+    vertices.push_back(Vpm);
 }
 
 /*!
  * Generates a thick triangle shape from the specified line.
  * 
  * @param line The actual line.
- * @param lineNormal Normal of the resulting shape.
+ * @param projNormal Normal of the resulting shape.
  * @param thickness The thickness of the resulting shape.
  * @param[out] vertices Output for generated vertices.
  */
 template<typename T>
 void PresentationGeometryImpl::thickenLine(const QVector<T>& line,
-										   const QVector3D& lineNormal, float thickness, 
+                                           const QVector3D& projNormal, float thickness,
 										   QVector<ScVertexData>& vertices)
 {
 	Q_ASSERT(line.size() > 1);
@@ -146,9 +146,9 @@ void PresentationGeometryImpl::thickenLine(const QVector<T>& line,
 	int M = line.size() - 1;
 
 	// Part 1: processing first non-bended node.
-	ScVertexData Vplus0 = { { }, { 0.0f, 1.0f }, lineNormal, C(0) };
-	ScVertexData Vminus0 = { { }, { 1.0f, 1.0f }, lineNormal, C(0) };
-    thickenFirstPoint(lineNormal, P(0), P(1), halfThickness, Vplus0.vertexCoord, Vminus0.vertexCoord);
+    ScVertexData Vplus0 = { { }, { 0.0f, 1.0f }, projNormal, C(0) };
+    ScVertexData Vminus0 = { { }, { 1.0f, 1.0f }, projNormal, C(0) };
+    thickenFirstPoint(projNormal, P(0), P(1), halfThickness, Vplus0.vertexCoord, Vminus0.vertexCoord);
 	ScVertexData Vsaved = Vminus0;
 	vertices.push_back(Vplus0);
 	vertices.push_back(Vminus0);
@@ -156,9 +156,9 @@ void PresentationGeometryImpl::thickenLine(const QVector<T>& line,
 	// Part 2: processing mid bended nodes.
 	for (int i = 1; i < M; ++i)
 	{
-		ScVertexData Vplus = { { }, { 0.0f, 0.5f }, lineNormal, C(i) };
-		ScVertexData Vminus = { { }, { 1.0f, 0.5f }, lineNormal, C(i) };
-        PresentationGeometryImpl::thickenMidPoint(lineNormal, P(i - 1), P(i), P(i + 1), halfThickness, Vplus.vertexCoord, Vminus.vertexCoord);
+        ScVertexData Vplus = { { }, { 0.0f, 0.5f }, projNormal, C(i) };
+        ScVertexData Vminus = { { }, { 1.0f, 0.5f }, projNormal, C(i) };
+        PresentationGeometryImpl::thickenMidPoint(projNormal, P(i - 1), P(i), P(i + 1), halfThickness, Vplus.vertexCoord, Vminus.vertexCoord);
 
 		vertices.push_back(Vplus);
 		// ----------------------
@@ -172,45 +172,45 @@ void PresentationGeometryImpl::thickenLine(const QVector<T>& line,
 	}
 
 	// Part 3: processing last non-bended node.
-	ScVertexData VplusM = { { }, { 0.0f, 0.0f }, lineNormal, C(M) };
-	ScVertexData VminusM = { { }, { 1.0f, 0.0f }, lineNormal, C(M) };
-    PresentationGeometryImpl::thickenLastPoint(lineNormal, P(M - 1), P(M), halfThickness, VplusM.vertexCoord, VminusM.vertexCoord);
+    ScVertexData VplusM = { { }, { 0.0f, 0.0f }, projNormal, C(M) };
+    ScVertexData VminusM = { { }, { 1.0f, 0.0f }, projNormal, C(M) };
+    PresentationGeometryImpl::thickenLastPoint(projNormal, P(M - 1), P(M), halfThickness, VplusM.vertexCoord, VminusM.vertexCoord);
 	vertices.push_back(VplusM);
 	// ----------------------
 	vertices.push_back(VplusM);
 	vertices.push_back(VminusM);
 	vertices.push_back(Vsaved);
 }
-void PresentationGeometryImpl::thickenFirstPoint(const QVector3D& lineNormal,
+void PresentationGeometryImpl::thickenFirstPoint(const QVector3D& projNormal,
 												 const QVector3D& X, const QVector3D& Xplus, float halfThickness,
 												 QVector3D& Yplus, QVector3D& Yminus)
 {
 	QVector3D a = Xplus - X;
-    QVector3D tangent = QVector3D::normal(a, lineNormal);
-    QVector3D adj = halfThickness * tangent;
+    QVector3D normal = QVector3D::normal(a, projNormal);
+    QVector3D adj = halfThickness * normal;
 
 	Yplus = X + adj;
 	Yminus = X - adj;
 }
-void PresentationGeometryImpl::thickenLastPoint(const QVector3D& lineNormal,
+void PresentationGeometryImpl::thickenLastPoint(const QVector3D& projNormal,
 												const QVector3D& Xminus, const QVector3D& X, float halfThickness, 
 												QVector3D& Yplus, QVector3D& Yminus)
 {
 	QVector3D a = X - Xminus;
-    QVector3D tangent = QVector3D::normal(a, lineNormal);
-    QVector3D adj = halfThickness * tangent;
+    QVector3D normal = QVector3D::normal(a, projNormal);
+    QVector3D adj = halfThickness * normal;
 
 	Yplus = X + adj;
 	Yminus = X - adj;
 }
-void PresentationGeometryImpl::thickenMidPoint(const QVector3D& lineNormal,
+void PresentationGeometryImpl::thickenMidPoint(const QVector3D& projNormal,
 											   const QVector3D& Xminus, const QVector3D& X, const QVector3D& Xplus, float halfThickness, 
 											   QVector3D& Yplus, QVector3D& Yminus)
 {
 	QVector3D a = X - Xminus;
 	QVector3D b = Xplus - X;
-    QVector3D averageTangent = 0.5f * (QVector3D::normal(a, lineNormal) + QVector3D::normal(b, lineNormal));
-    QVector3D adj = halfThickness * averageTangent;
+    QVector3D averageNormal = 0.5f * (QVector3D::normal(a, projNormal) + QVector3D::normal(b, projNormal));
+    QVector3D adj = halfThickness * averageNormal;
 
 	Yplus = X + adj;
 	Yminus = X - adj;
@@ -251,7 +251,9 @@ void PresentationGeometryImpl::bridgeLinesImpl(const QVector<T>& lineA, const QV
             QVector3D lineNormal = QVector3D::normal(lineDirection, up);
 
             QVector<T> line { lineA[0], lineB[0] };
-            PresentationGeometryImpl::thickenLine(line, lineNormal, 0.25f * PresentationGeometry::defaultThickness, vertices);
+            float thickness = 0.5f * PresentationGeometry::defaultThickness;
+            float halfThickness = 0.5f * thickness;
+            PresentationGeometryImpl::thickenLine(line, lineNormal, halfThickness, vertices);
 		}
 		else
 		{
