@@ -1,7 +1,6 @@
 /****************************************************************************
 **
 ** Copyright (C) 2016 Plaxin Gleb, Butakov Oleg.
-** Contact: kandidov_i_chickishev@ublidky.com
 ** License: MIT.
 **
 ****************************************************************************/
@@ -55,12 +54,18 @@ public:
 	}
 
 	const QQuaternion& rotation() const { return mRotation; }
-	ScTransform& setRotation(const QQuaternion& rotation)
+    ScTransform& setRotation(const QQuaternion& rotation)
 	{
 		mRotation = rotation;
 		return *this;
 	}
-	ScTransform& setRotation(const QVector3D& rotation)
+
+    QVector3D rotationDegrees() const
+    {
+        QQuaternion rotationQuat = rotation();
+        return rotationQuat.toEulerAngles();
+    }
+    ScTransform& setRotationDegrees(const QVector3D& rotation)
 	{
 		return setRotation(QQuaternion::fromEulerAngles(rotation));
 	}
@@ -206,13 +211,13 @@ public:
     float rotationMinBoundX() const { return rotationMinBound().x(); }
     ScOrbitalCamera& setRotationMinBoundX(float x)
     {
-        setRotationMinBound({ x, rotationMinBoundY() });
+        mRotationMinBound.setX(x);
         return *this;
     }
     float rotationMinBoundY() const { return rotationMinBound().y(); }
     ScOrbitalCamera& setRotationMinBoundY(float y)
     {
-        setRotationMinBound({ rotationMinBoundX(), y });
+        mRotationMinBound.setY(y);
         return *this;
     }
 
@@ -225,13 +230,13 @@ public:
     float rotationMaxBoundX() const { return rotationMaxBound().x(); }
     ScOrbitalCamera& setRotationMaxBoundX(float x)
     {
-        setRotationMaxBound({ x, rotationMaxBoundY() });
+        mRotationMaxBound.setX(x);
         return *this;
     }
     float rotationMaxBoundY() const { return rotationMaxBound().y(); }
     ScOrbitalCamera& setRotationMaxBoundY(float y)
     {
-        setRotationMaxBound({ rotationMaxBoundX(), y });
+        mRotationMaxBound.setY(y);
         return *this;
     }
 

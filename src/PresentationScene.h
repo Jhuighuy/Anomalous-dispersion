@@ -8,10 +8,14 @@
 #include "widgets/SceneWidgetAdvanced.h"
 #include "PresentationPhysics.h"
 #include "PresentationGeometry.h"
+
 #include <QChart>
 #include <QChartView>
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+DEFINE_SHARED_PTR(PrPrismRenderer)
+DEFINE_SHARED_PTR(PrScreenRenderer)
 
 /*!
  * The prism material enum.
@@ -28,6 +32,8 @@ enum class PrPrismMaterial
  */
 class PrPrismRenderer final : public ScTransparentMeshRenderer, public OpRefractiveObject
 {
+    DEFINE_CREATE_FUNC(PrPrismRenderer)
+
 public:
     float angle() const { return mAngle; }
     PrPrismRenderer& setAngle(float angle)
@@ -85,7 +91,7 @@ public:
         prismHolderGimbal()
                 .setEnabled(enabled())
                 .setPosition(position())
-                .setRotation({ rotation().x(), rotation().y(), rotation().z() });
+                .setRotationDegrees({ rotation().x(), rotation().y(), rotation().z() });
 
         ScTransparentMeshRenderer::render(camera);
 		prismHolderBase().render(camera);
@@ -154,7 +160,7 @@ public:
 				.setNormal(-QVector3D::normal(sp1, sp2, sp3));
 	}
 
-private:
+public:
     float mAngle = 30.0f;
     PrPrismMaterial mMaterial = PrPrismMaterial::NormAir;
     ScMeshRenderer mPrismHolderBase, mPrismHolderLeg, mPrismHolderGimbal;
@@ -162,6 +168,23 @@ public:
 	mutable bool mPlanesSynced = false;
 	mutable OpRefractivePlane mFirstPlane;
 	mutable OpRefractivePlane mSecondPlane;
+};
+
+/*!
+ * The screen renderer class.
+ */
+class PrScreenRenderer final : public ScMeshRenderer, public OpRefractivePlane
+{
+public:
+    PrScreenRenderer()
+    {
+        //! @todo Compute correct values here.
+        (*this)
+                .setOpaque(true)
+                .setMinBound({ -1.77f, 0.485f, -3.49f })
+                .setMaxBound({ 1.77f, 2.07f, -3.49f })
+                .setNormal({ 0.0f, 0.0f, -1.0f });
+    }
 };
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -172,8 +195,7 @@ public:
 class PrBeamsRenderer final : public ScMeshRenderer
 {
 public:
-    template<int N>
-    void recalculate(PrPrismRenderer (&prismRenderers)[N])
+    void recalculate(const QVector<PrPrismRenderer>& prismRenderers)
     {
 		OpBeamCone beamCone;
 		beamCone
@@ -181,7 +203,7 @@ public:
 				.setStartPosition(position())
 				.setStartDirection(QVector3D(0.0f, 0.0f, -1.0f));
 
-		for (PrPrismRenderer& prismRenderer : prismRenderers)
+        for (const PrPrismRenderer& prismRenderer : prismRenderers)
 		{
 			if (!prismRenderer.enabled())
 			{
@@ -242,19 +264,18 @@ public:
 class PrScene final : public ScScene
 {
 public:
-	QtCharts::QChartView* mCharts;
     ScOrbitalCamera mMainCamera;
     ScProjectionCamera mProjCamera;
 
     ScMeshRenderer mRoomRenderer;
     ScMeshRenderer mScreenRenderer;
-    PrPrismRenderer mPrismRenderers[2];
+    QVector<PrPrismRenderer> mPrismRenderers;
 
     QSharedPointer<ScEditableMesh> mRaysMesh, mRaysProjMesh;
     PrBeamsRenderer mRaysRenderer;
 
 public:
-    PrScene(QtCharts::QChartView* chart): mCharts(chart)
+    PrScene(void* chart)
     {
         auto unlitTexturedShaderProgram = scLoadShaderProgram(":/shaders/vertex.glsl", ":/shaders/fragUnlitTextured.glsl");
         auto unlitColoredShaderProgram = scLoadShaderProgram(":/shaders/vertex.glsl", ":/shaders/fragUnlit.glsl");
@@ -305,6 +326,7 @@ public:
                 .enable()
                 .setMesh(QSharedPointer<ScEditableMesh>(new ScEditableMesh(prismHolderGimbalVertices, _countof(prismHolderGimbalVertices))))
                 .setShaderProgram(litColoredShaderProgram);
+        mPrismRenderers.resize(2);
         for (PrPrismRenderer& prismRenderer : mPrismRenderers)
         {
             prismRenderer
@@ -343,7 +365,7 @@ public:
 			.setMaterial(PrPrismMaterial::NormAir)
 			.enable()
 			.setPosition({ 0.0f, 0.75f, -1.3f })
-			.setRotation({ 0.0f, 0.0f, 0.0f });
+            .setRotationDegrees({ 0.0f, 0.0f, 0.0f });
         mPrismRenderers[1]
                 .disable();
     }
@@ -354,13 +376,13 @@ public:
                 .setMaterial(PrPrismMaterial::NormAir)
                 .enable()
                 .setPosition({ 0.0f, 0.75f, -1.4f })
-                .setRotation({ 0.0f, 0.0f, 0.0f });
+                .setRotationDegrees({ 0.0f, 0.0f, 0.0f });
         mPrismRenderers[1]
                 .setAngle(60.0f)
                 .setMaterial(PrPrismMaterial::AnomCyanine)
 				.enable()
                 .setPosition({ 0.0f, 0.95f, -2.0f })
-                .setRotation({ 0.0f, 0.0f, 90.0f });
+                .setRotationDegrees({ 0.0f, 0.0f, 90.0f });
 
 		mPrismRenderers[0].syncRefractivePlanes();
 		mPrismRenderers[1].syncRefractivePlanes();

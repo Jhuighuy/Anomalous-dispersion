@@ -1,6 +1,8 @@
 #include "SceneWindow.h"
 #include "ui_SceneWindow.h"
 
+#include "PresentationScene.h"
+
 SceneWindow::~SceneWindow()
 {
     delete ui;
@@ -50,15 +52,39 @@ void SceneWindow::onApplyTwoPrismsSetup()
 
 void SceneWindow::onFirstPrismRotationChanged(int value)
 {
+    PrScene* scene = dynamic_cast<PrScene*>(ui->sceneWidget->mScene);
+    Q_ASSERT(scene != nullptr);
+
+    PrPrismRenderer& firstPrism = scene->mPrismRenderers.first();
+    QVector3D rotationDegrees = firstPrism.rotationDegrees();
+    rotationDegrees.setX((float)value);
+    firstPrism.setRotationDegrees(-rotationDegrees);
 }
 void SceneWindow::onFirstPrismAngleChanged(int value)
 {
+    PrScene* scene = dynamic_cast<PrScene*>(ui->sceneWidget->mScene);
+    Q_ASSERT(scene != nullptr);
+
+    PrPrismRenderer& firstPrism = scene->mPrismRenderers.first();
+    firstPrism.setAngle((float)value);
 }
 void SceneWindow::onSecondPrismRotationChanged(int value)
 {
+    PrScene* scene = dynamic_cast<PrScene*>(ui->sceneWidget->mScene);
+    Q_ASSERT(scene != nullptr);
+
+    PrPrismRenderer& secondPrism = scene->mPrismRenderers.last();
+    QVector3D rotationDegrees = secondPrism.rotationDegrees();
+    rotationDegrees.setX((float)value);
+    secondPrism.setRotationDegrees(-rotationDegrees);
 }
 void SceneWindow::onSecondPrismAngleChanged(int value)
 {
+    PrScene* scene = dynamic_cast<PrScene*>(ui->sceneWidget->mScene);
+    Q_ASSERT(scene != nullptr);
+
+    PrPrismRenderer& secondPrism = scene->mPrismRenderers.last();
+    secondPrism.setAngle((float)value);
 }
 void SceneWindow::onSecondPrismAnomDispEnable(bool value)
 {
@@ -78,6 +104,12 @@ void SceneWindow::onAbsorptionSpectrumHeightChanged(int value)
 
 void SceneWindow::setSecondPrismEnabled(bool enable)
 {
+    PrScene* scene = dynamic_cast<PrScene*>(ui->sceneWidget->mScene);
+    if (scene)
+    {
+        ui->chartRefractiveIndex->bindWithComplexFunction(scene->mPrismRenderers[enable].mFirstPlane.refractiveIndex());
+    }
+
     QWidget* widgetsToEnable[] = {
         ui->labelSecondPrism, ui->labelSecondPrismRotation, ui->labelSecondPrismAngle,
         ui->spinBoxSecondPrismAngle, ui->spinBoxSecondPrismRotation, ui->checkBoxSceneParamsSecondPrismAnomalous,

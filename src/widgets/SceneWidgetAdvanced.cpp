@@ -8,6 +8,10 @@
 
 #include "SceneWidgetAdvanced.h"
 
+#ifndef _countof
+#define _countof(arr) (sizeof(arr) / sizeof((arr)[0]))
+#endif
+
 QOpenGLTexture_p scLoadCubemap(const char* texturePath, const char* extension,
 							   const char* leftSuffix, const char* rightSuffix,
 							   const char* upSuffix, const char* downSuffix,

@@ -251,7 +251,7 @@ void PresentationGeometryImpl::bridgeLinesImpl(const QVector<T>& lineA, const QV
             QVector3D lineNormal = QVector3D::normal(lineDirection, up);
 
             QVector<T> line { lineA[0], lineB[0] };
-            float thickness = 0.5f * PresentationGeometry::defaultThickness;
+            static const float thickness = 0.5f * PresentationGeometry::defaultThickness;
             float halfThickness = 0.5f * thickness;
             PresentationGeometryImpl::thickenLine(line, lineNormal, halfThickness, vertices);
 		}
@@ -325,9 +325,11 @@ void PresentationGeometryImpl::bridgePointLine(const T& point,
 	int N = lineEnd - lineBegin - 1;
 
 	for (int i = 0; i < N; ++i)
-	{
-        vertices.push_back({ Px, { }, { }, Cx });
-        vertices.push_back({ Py(i), { }, { }, Cy(i) });
-        vertices.push_back({ Py(i + 1), { }, { }, Cy(i + 1) });
+    {
+        QVector3D normal = QVector3D::normal(Px, Py(i), Py(i + 1));
+
+        vertices.push_back({ Px, normal, { 0.5f, 0.5f }, Cx });
+        vertices.push_back({ Py(i), normal, { 0.5f, 0.5f  }, Cy(i) });
+        vertices.push_back({ Py(i + 1), normal, { 0.5f, 0.5f }, Cy(i + 1) });
 	}
 }
