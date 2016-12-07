@@ -6,6 +6,7 @@
 ****************************************************************************/
 
 #include "SceneWidget.h"
+#include "forms/SceneWindow.h"
 
 #include <QSharedPointer>
 #include <QMouseEvent>
@@ -102,9 +103,8 @@ QMatrix4x4 ScProjectionCamera::projectionMatrix() const
 
 void ScProjectionCamera::beginScene() const
 {
-	//! @todo
     float a = height() / width();
-	float x = a * width() * viewport().x(), y = height() * viewport().y();
+	float x = (a * viewport().x() + (1.0f - a)) * width(), y = height() * viewport().y();
 	float w = a * width() * viewport().width(), h = height() * viewport().height();
 
     glScissor(x, y, w, h);
@@ -447,6 +447,7 @@ void ScOpenGLWidget::initializeGL()
 
 	Q_ASSERT(scene() != nullptr);
 	scene()->init();
+	gScene->setSecondPrismEnabled(false);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_SCISSOR_TEST);

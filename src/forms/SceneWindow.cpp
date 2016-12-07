@@ -3,6 +3,8 @@
 
 #include "PresentationScene.h"
 
+SceneWindow* gScene;
+
 SceneWindow::~SceneWindow()
 {
     delete ui;
@@ -10,6 +12,8 @@ SceneWindow::~SceneWindow()
 
 void SceneWindow::setupUi(QMainWindow* menuWindow)
 {
+	gScene = this;
+
     ui = new Ui::SceneWindow();
     ui->setupUi(this);
 	ui->sceneWidget->setScene(PrScene::create());
@@ -36,6 +40,13 @@ void SceneWindow::setupUi(QMainWindow* menuWindow)
             this, &SceneWindow::onAbsorptionSpectrumWidthChanged);
     connect(ui->sliderAbspSpectrumHeight, &QSlider::valueChanged,
             this, &SceneWindow::onAbsorptionSpectrumHeightChanged);
+
+	defaultFirstPrismRotation = ui->spinBoxFirstPrismRotation->value(), defaultFirstPrismAngle = ui->spinBoxFirstPrismAngle->value();
+	defaultSecondPrismRotation = ui->spinBoxSecondPrismRotation->value(), defaultSecondPrismAngle  = ui->spinBoxSecondPrismAngle->value();
+	defaultSecondPrismAnomalous = ui->checkBoxSecondPrismAnomalous->isChecked();
+	defaultAbsorptionSpectrumCenter = ui->sliderAbspSpectrumCenter->value();
+	defaultAbsorptionSpectrumWidth = ui->sliderAbspSpectrumWidth->value();
+	defaultAbsorptionSpectrumHeight = ui->sliderAbspSpectrumHeight->value();
 }
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -74,6 +85,7 @@ void SceneWindow::onSecondPrismRotationChanged(int value)
 	PrScene_p scene = ui->sceneWidget->scene().dynamicCast<PrScene>();
 	Q_ASSERT(scene != nullptr);
 
+	//! @todo
 	PrPrismRenderer_p secondPrism = scene->secondPrism();
 	QVector3D rotationDegrees = secondPrism->rotationDegrees();
 	rotationDegrees.setX(static_cast<float>(-value));
@@ -97,10 +109,31 @@ void SceneWindow::onSecondPrismAnomalousToggled(bool value)
 	PrPrismRenderer_p secondPrism = scene->secondPrism();
 	secondPrism->setAnomaluos(value);
 	scene->recalculateBeams();
+	if (value)
+	{
+		ui->chartRefractiveIndex->bindWithComplexFunction(scene->secondPrism()->refractiveIndex());
+	}
+	else
+	{
+		ui->chartRefractiveIndex->bindWithComplexFunction(scene->firstPrism()->refractiveIndex());
+	}
+
+	skip = true;
+	ui->sliderAbspSpectrumCenter->setValue(defaultAbsorptionSpectrumCenter);
+	ui->sliderAbspSpectrumWidth->setValue(defaultAbsorptionSpectrumWidth);
+	ui->sliderAbspSpectrumHeight->setValue(defaultAbsorptionSpectrumHeight);
+	skip = false;
+
+	setSecondPrismAnomalous(value);
 }
 
 void SceneWindow::onAbsorptionSpectrumCenterChanged(int value)
 {
+	if (skip)
+	{
+		return;
+	}
+
 	qreal valueMcm = value / 1000.0;
 
 	PrScene_p scene = ui->sceneWidget->scene().dynamicCast<PrScene>();
@@ -113,6 +146,11 @@ void SceneWindow::onAbsorptionSpectrumCenterChanged(int value)
 }
 void SceneWindow::onAbsorptionSpectrumWidthChanged(int value)
 {
+	if (skip)
+	{
+		return;
+	}
+
 	PrScene_p scene = ui->sceneWidget->scene().dynamicCast<PrScene>();
 	if (scene != nullptr)
 	{
@@ -123,6 +161,11 @@ void SceneWindow::onAbsorptionSpectrumWidthChanged(int value)
 }
 void SceneWindow::onAbsorptionSpectrumHeightChanged(int value)
 {
+	if (skip)
+	{
+		return;
+	}
+
 	PrScene_p scene = ui->sceneWidget->scene().dynamicCast<PrScene>();
 	if (scene != nullptr)
 	{
@@ -134,6 +177,21 @@ void SceneWindow::onAbsorptionSpectrumHeightChanged(int value)
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+void SceneWindow::setSecondPrismAnomalous(bool enable)
+{
+	QWidget* widgetsToEnable[] = {
+		ui->labelAbspSpectrumCenter, ui->labelAbspSpectrumCenterMin, ui->labelAbspSpectrumCenterMid, ui->labelAbspSpectrumCenterMax,
+		ui->sliderAbspSpectrumCenter,
+		ui->labelAbspSpectrumWidth, ui->labelAbspSpectrumWidthMin, ui->labelAbspSpectrumWidthMid, ui->labelAbspSpectrumWidthMax,
+		ui->sliderAbspSpectrumWidth,
+		ui->labelAbspSpectrumHeight, ui->labelAbspSpectrumHeightMin, ui->labelAbspSpectrumHeightMid, ui->labelAbspSpectrumHeightMax,
+		ui->sliderAbspSpectrumHeight,
+	};
+	for (QWidget* widget : widgetsToEnable)
+	{
+		widget->setEnabled(enable);
+	}
+}
 void SceneWindow::setSecondPrismEnabled(bool enable)
 {
 	PrScene_p scene = ui->sceneWidget->scene().dynamicCast<PrScene>();
@@ -152,10 +210,15 @@ void SceneWindow::setSecondPrismEnabled(bool enable)
 		scene->recalculateBeams();
 	}
 
-    QWidget* widgetsToEnable[] = {
-        ui->labelSecondPrism, ui->labelSecondPrismRotation, ui->labelSecondPrismAngle,
-        ui->spinBoxSecondPrismAngle, ui->spinBoxSecondPrismRotation, ui->checkBoxSecondPrismAnomalous,
+	ui->spinBoxFirstPrismRotation->setValue(defaultFirstPrismRotation), ui->spinBoxFirstPrismAngle->setValue(defaultFirstPrismAngle);
+	ui->spinBoxSecondPrismRotation->setValue(defaultSecondPrismRotation), ui->spinBoxSecondPrismAngle->setValue(defaultSecondPrismAngle);
+	if (defaultSecondPrismAnomalous != ui->checkBoxSecondPrismAnomalous->isChecked())
+		ui->checkBoxSecondPrismAnomalous->toggle();
+	ui->sliderAbspSpectrumCenter->setValue(defaultAbsorptionSpectrumCenter);
+	ui->sliderAbspSpectrumWidth->setValue(defaultAbsorptionSpectrumWidth);
+	ui->sliderAbspSpectrumHeight->setValue(defaultAbsorptionSpectrumHeight);
 
+    QWidget* widgetsToEnable[] = {
         ui->labelAbspSpectrumCenter, ui->labelAbspSpectrumCenterMin, ui->labelAbspSpectrumCenterMid, ui->labelAbspSpectrumCenterMax,
         ui->sliderAbspSpectrumCenter,
         ui->labelAbspSpectrumWidth, ui->labelAbspSpectrumWidthMin, ui->labelAbspSpectrumWidthMid, ui->labelAbspSpectrumWidthMax,
@@ -167,4 +230,7 @@ void SceneWindow::setSecondPrismEnabled(bool enable)
     {
         widget->setEnabled(enable);
     }
+
+	setSecondPrismAnomalous(ui->checkBoxSecondPrismAnomalous->isChecked());
 }
+

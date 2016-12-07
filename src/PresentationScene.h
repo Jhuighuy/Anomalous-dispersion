@@ -133,7 +133,7 @@ DEFINE_SHARED_PTR(PrBeamConeRenderer)
 /*!
  * The light beam renderer class.
  */
-class PrBeamConeRenderer final : public ScTransparentMeshRenderer
+class PrBeamConeRenderer final : public ScMeshRenderer
 {
 	DEFINE_CREATE_FUNC(PrBeamConeRenderer)
 

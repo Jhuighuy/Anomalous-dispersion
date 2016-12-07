@@ -358,7 +358,7 @@ void PrBeamConeRenderer::recalculateMesh(const QVector<PrPrismRenderer_p>& prism
 	beamCone
 		.setPartitioning(sRaysCount)
 		.setStartPosition(position())
-		.setStartDirection({ 0.0f, 0.0f, -1.0f });
+		.setStartDirection(screenRenderer->normal());
 
 	for (const PrPrismRenderer_p& prismRenderer : prismRenderers)
 	{
@@ -394,7 +394,7 @@ void PrBeamConeRenderer::render(const ScBasicCamera& camera)
 	if (typeid(camera) == typeid(ScOrbitalCamera))
 	{
 		// We want our mesh been rendered only by main camera.
-		ScTransparentMeshRenderer::render(camera);
+		ScMeshRenderer::render(camera);
 	}
 
 	glDisable(GL_BLEND);
@@ -480,7 +480,7 @@ void PrScene::setTwoPrismsScene()
 		.setRotationDegrees({ 0.0f, 0.0f, 0.0f });
 	mPrismRenderers.last()
 		->setAngle(60.0f)
-		.setMaterial(PrPrismMaterial::AnomCyanine)
+		.setMaterial(PrPrismMaterial::NormGlass)
 		.enable()
 		.setPosition({ 0.0f, 0.95f, -2.0f })
 		.setRotationDegrees({ 0.0f, 0.0f, 90.0f });

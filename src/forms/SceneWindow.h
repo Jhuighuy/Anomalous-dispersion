@@ -30,9 +30,21 @@ private slots:
     void onAbsorptionSpectrumCenterChanged(int value);
     void onAbsorptionSpectrumWidthChanged(int value);
     void onAbsorptionSpectrumHeightChanged(int value);
+public:
+	void setSecondPrismAnomalous(bool enable);
+	void setSecondPrismEnabled(bool enable);
+
 private:
-    void setSecondPrismEnabled(bool enable);
-    Ui::SceneWindow *ui;
+	int defaultFirstPrismRotation, defaultFirstPrismAngle;
+	int defaultSecondPrismRotation, defaultSecondPrismAngle;
+	bool defaultSecondPrismAnomalous;
+	int defaultAbsorptionSpectrumCenter;
+	int defaultAbsorptionSpectrumWidth;
+	int defaultAbsorptionSpectrumHeight;
+	bool skip = false;
+    Ui::SceneWindow *ui = nullptr;
 };
+
+extern SceneWindow* gScene;
 
 #endif // PRESENTATIONWINDOW_H
