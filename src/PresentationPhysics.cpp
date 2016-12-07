@@ -16,7 +16,7 @@
  * @param waveLengthMcm Wave length in micrometers.
  * @param alpha The alpha channel value for the converted color.
  */
-QVector4D PhSpectrum::convertWavelengthToRGB(qreal waveLengthMcm, qreal alpha)
+QVector4D PhSpectrum::convertWavelengthToRGBA(qreal waveLengthMcm, qreal alpha)
 {
 	qreal waveLength = waveLengthMcm * 1000.0f;
 
@@ -51,7 +51,7 @@ QVector4D PhSpectrum::convertWavelengthToRGB(qreal waveLengthMcm, qreal alpha)
 		green = -(waveLength - OrangeMaxWaveLength) / (OrangeMaxWaveLength - YellowMinWaveLength);
 		blue = 0.0;
 	}
-	else if (waveLength >= RedMinWavelength && waveLength <= RedMaxWavelength)
+	else if (waveLength >= RedMinWaveLength && waveLength <= RedMaxWaveLength)
 	{
 		red = 1.0;
 		green = 0.0;
@@ -215,12 +215,12 @@ qreal PhComplexIndexFunction::simpsonIntegrate(qreal Xmin, qreal Xmax, int parti
  * @param beam The actual beam to refract.
  * @param enters Determines whether the beam enters or leaves the object. 
  */
-void OpRefractivePlane::refractBeam(OpBeam& beam, bool enters) const
+void PhRefractivePlane::refractBeam(PhBeam& beam, bool enters) const
 {
 	Q_ASSERT(!beam.empty());
 
-	const OpBeamPart& prevPart = beam.last();
-	OpBeamPart newPart = prevPart;
+	const PhBeamPart& prevPart = beam.last();
+	PhBeamPart newPart = prevPart;
 	if (intersect(newPart, prevPart))
 	{
 		if (!opaque())
@@ -235,8 +235,11 @@ void OpRefractivePlane::refractBeam(OpBeam& beam, bool enters) const
 	beam.push_back(newPart);
 }
 
-bool OpRefractivePlane::refract(qreal waveLength, OpBeamPart& newBeam, const OpBeamPart& beam, bool enters) const
+bool PhRefractivePlane::refract(qreal waveLength, PhBeamPart& newBeam, const PhBeamPart& beam, bool enters) const
 {
+	Q_ASSERT(refractiveIndex() != nullptr);
+	Q_ASSERT(refractiveIndex()->realPart() != nullptr);
+
 	qreal refrIndex = refractiveIndex()->real(waveLength);
 	if (!enters)
 	{
@@ -253,27 +256,29 @@ bool OpRefractivePlane::refract(qreal waveLength, OpBeamPart& newBeam, const OpB
 	}
 
 	qreal angleAfter = qAsin(sinAngleAfter);
-	qreal deltaAngle = angleBefore - angleAfter;
+	qreal angleDelta = angleBefore - angleAfter;
 
 	// Rotating the direction towards the ray normal.
 	QVector3D rayNormal = QVector3D::crossProduct(beam.direction, normal());
 	QMatrix4x4 rayRotationMatrix;
 	rayRotationMatrix.setToIdentity();
-	rayRotationMatrix.rotate(static_cast<float>(qRadiansToDegrees(deltaAngle)), rayNormal);
+	rayRotationMatrix.rotate(static_cast<float>(qRadiansToDegrees(angleDelta)), rayNormal);
 	newBeam.direction = rayRotationMatrix * beam.direction;
 
 	// Absorbing the color.
-	if (!enters)
+	if (!enters && refractiveIndex()->imaginaryPart() != nullptr)
 	{
+		static const qreal magicConstant = 5.5;
+
 		qreal abspIndex = refractiveIndex()->imaginary(waveLength);
-		qreal distance = 5.5f * newBeam.position.distanceToPoint(beam.position);
+		qreal distance = magicConstant * newBeam.position.distanceToPoint(beam.position);
 		newBeam.alpha *= static_cast<float>(qExp(-abspIndex * distance));
 	}
 
 	return true;
 }
 
-bool OpRefractivePlane::intersect(OpBeamPart& newBeam, const OpBeamPart& beam) const
+bool PhRefractivePlane::intersect(PhBeamPart& newBeam, const PhBeamPart& beam) const
 {
 	float dp1 = QVector3D::dotProduct(point() - beam.position, normal());
 	float dp2 = QVector3D::dotProduct(beam.direction, normal());
@@ -286,11 +291,12 @@ bool OpRefractivePlane::intersect(OpBeamPart& newBeam, const OpBeamPart& beam) c
 	return false;
 }
 
-bool OpRefractivePlane::isInBound(const QVector3D& v) const
+bool PhRefractivePlane::isInBound(const QVector3D& v) const
 {
 	for (int i = 0; i < 3; ++i)
 	{
-		float min = qMin(minBound()[i], maxBound()[i]), max = qMax(minBound()[i], maxBound()[i]);
+		float min = qMin(minBound()[i], maxBound()[i]);
+		float max = qMax(minBound()[i], maxBound()[i]);
 		if (min > v[i] || v[i] > max)
 		{
 			return false;
@@ -299,7 +305,7 @@ bool OpRefractivePlane::isInBound(const QVector3D& v) const
 	return true;
 }
 
-OpBeamCone& OpBeamCone::setPartitioning(int partitioning)
+PhBeamCone& PhBeamCone::setPartitioning(int partitioning)
 {
 	Q_ASSERT(size() == 0 && "Partitioning was already set!");
 	resize(partitioning);
@@ -314,20 +320,20 @@ OpBeamCone& OpBeamCone::setPartitioning(int partitioning)
 	return *this;
 }
 
-OpBeamCone& OpBeamCone::setStartPosition(const QVector3D& startPosition)
+PhBeamCone& PhBeamCone::setStartPosition(const QVector3D& startPosition)
 {
 	Q_ASSERT(partitioning() != 0 && "Partitioning was not set!");
-	for (OpBeam& beam : *this)
+	for (PhBeam& beam : *this)
 	{
 		beam.setStartPosition(startPosition);
 	}
 	return *this;
 }
 
-OpBeamCone& OpBeamCone::setStartDirection(const QVector3D& startDirection)
+PhBeamCone& PhBeamCone::setStartDirection(const QVector3D& startDirection)
 {
 	Q_ASSERT(partitioning() != 0 && "Partitioning was not set!");
-	for (OpBeam& beam : *this)
+	for (PhBeam& beam : *this)
 	{
 		beam.setStartDirection(startDirection);
 	}
@@ -338,12 +344,12 @@ OpBeamCone& OpBeamCone::setStartDirection(const QVector3D& startDirection)
  * Collides a beam cone with the object.
  * @param object The actual object to refract.
  */
-void OpBeamCone::collide(const OpRefractiveObject& object)
+void PhBeamCone::collide(const IPhRefractiveObject& object)
 {
 #pragma omp parallel for
 	for (int i = 0; i < size(); ++i)
 	{
-		OpBeam& beam = (*this)[i];
+		PhBeam& beam = (*this)[i];
 		object.refractBeam(beam);
 	}
 }
@@ -351,17 +357,17 @@ void OpBeamCone::collide(const OpRefractiveObject& object)
 /*!
  * Extracts the collision data from the cone.
  *
- * @param[out] levelCollision Output for the collision level.
+ * @param[out] levelSlice Output for the collision level.
  * @param levelIndex Index of the collision.
  * @param alphaMultiplier Alpha multiplier for the generated colors.
  */
-void OpBeamCone::getCollisionLevel(OpBeamCollisionInfo& levelSlice, int levelIndex, float alphaMultiplier) const
+void PhBeamCone::getCollisionLevel(PhBeamCollisionInfo& levelSlice, int levelIndex, float alphaMultiplier) const
 {
 	Q_ASSERT(partitioning() != 0 && "Partitioning was not set!");
 	Q_ASSERT(first().size() > levelIndex && "Level index was out of bounds!");
 
 	levelSlice.clear();
-    levelSlice.push_back({ first().at(levelIndex).position, PhSpectrum::convertWavelengthToRGB(first().waveLengthMcm(),
+    levelSlice.push_back({ first().at(levelIndex).position, PhSpectrum::convertWavelengthToRGBA(first().waveLengthMcm(),
                            first().at(levelIndex).alpha * alphaMultiplier) });
 	for (int i = 1; i < partitioning(); ++i)
 	{
@@ -370,14 +376,14 @@ void OpBeamCone::getCollisionLevel(OpBeamCollisionInfo& levelSlice, int levelInd
 			continue;
 		}
 
-		OpBeamInfo& prevInfo = levelSlice.last();
-        OpBeamInfo info = { at(i).at(levelIndex).position, PhSpectrum::convertWavelengthToRGB(at(i).waveLengthMcm(),
+		PhBeamInfo& prevInfo = levelSlice.last();
+        PhBeamInfo info = { at(i).at(levelIndex).position, PhSpectrum::convertWavelengthToRGBA(at(i).waveLengthMcm(),
                             at(i).at(levelIndex).alpha * alphaMultiplier) };
 
+		// Merging to nearby points because of both optimization and color blending.
 		const float eps = 1e-3f / partitioning();
 		if (info.position.distanceToPoint(prevInfo.position) < eps)
 		{
-			// Compressing.
 			prevInfo.position = 0.5f * (prevInfo.position + info.position);
 			prevInfo.color = prevInfo.color + 0.2f * info.color;
             prevInfo.color.setW(alphaMultiplier);

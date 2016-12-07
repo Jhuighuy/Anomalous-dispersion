@@ -44,12 +44,12 @@ const float PresentationGeometry::defaultThickness = 0.01f;
  * @param[out] vertices Output for generated vertices.
  * @param thickness The thickness of the projection line.
  */
-void PresentationGeometry::generateBeamProjMesh(const OpBeamCone& beamCone, const QVector3D& screenNormal,
+void PresentationGeometry::generateBeamProjMesh(const PhBeamCone& beamCone, const QVector3D& screenNormal,
                                                 QVector<ScVertexData>& vertices, float thickness)
 {
     Q_ASSERT(beamCone.collisionLevels() > 1);
 
-	OpBeamCollisionInfo beamFinalCollision;
+	PhBeamCollisionInfo beamFinalCollision;
 	beamCone.getCollisionLevel(beamFinalCollision, beamCone.collisionLevels() - 1);
 
 	if (beamFinalCollision.size() == 1)
@@ -68,11 +68,11 @@ void PresentationGeometry::generateBeamProjMesh(const OpBeamCone& beamCone, cons
  * @param beamCone The actual beam cone.
  * @param[out] vertices Output for generated vertices.
  */
-void PresentationGeometry::generateBeamMesh(const OpBeamCone& beamCone, QVector<ScVertexData>& vertices)
+void PresentationGeometry::generateBeamMesh(const PhBeamCone& beamCone, QVector<ScVertexData>& vertices)
 {
 	Q_ASSERT(beamCone.collisionLevels() > 1);
 
-	OpBeamCollisionInfo beamPrevCollision;
+	PhBeamCollisionInfo beamPrevCollision;
 	beamCone.getCollisionLevel(beamPrevCollision, 0);
 
 	for (int i = 1; i < beamCone.collisionLevels(); ++i)
@@ -80,7 +80,7 @@ void PresentationGeometry::generateBeamMesh(const OpBeamCone& beamCone, QVector<
 		bool isLastLevel = i == beamCone.collisionLevels() - 1;
 		float alphaMultiplier = static_cast<float>(!isLastLevel);
 
-		OpBeamCollisionInfo beamCollision;
+		PhBeamCollisionInfo beamCollision;
 		beamCone.getCollisionLevel(beamCollision, i, alphaMultiplier);
 
 		PresentationGeometryImpl::bridgeLines(beamCollision, beamPrevCollision, vertices);
@@ -328,8 +328,8 @@ void PresentationGeometryImpl::bridgePointLine(const T& point,
     {
         QVector3D normal = QVector3D::normal(Px, Py(i), Py(i + 1));
 
-        vertices.push_back({ Px, normal, { 0.5f, 0.5f }, Cx });
-        vertices.push_back({ Py(i), normal, { 0.5f, 0.5f  }, Cy(i) });
-        vertices.push_back({ Py(i + 1), normal, { 0.5f, 0.5f }, Cy(i + 1) });
+        vertices.push_back({ Px, { 0.5f, 0.5f }, normal, Cx });
+        vertices.push_back({ Py(i), { 0.5f, 0.5f  }, normal, Cy(i) });
+        vertices.push_back({ Py(i + 1), { 0.5f, 0.5f }, normal, Cy(i + 1) });
 	}
 }

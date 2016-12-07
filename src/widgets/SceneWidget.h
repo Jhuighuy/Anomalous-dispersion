@@ -9,7 +9,6 @@
 
 #include <QSharedPointer>
 #include <QRectF>
-#include <QColor>
 #include <QOpenGLWidget>
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
@@ -47,14 +46,14 @@ public:
 	}
 
 	const QVector3D& position() const { return mPosition; }
-	ScTransform& setPosition(const QVector3D& position)
+	virtual ScTransform& setPosition(const QVector3D& position)
 	{
 		mPosition = position;
 		return *this;
 	}
 
 	const QQuaternion& rotation() const { return mRotation; }
-    ScTransform& setRotation(const QQuaternion& rotation)
+	virtual ScTransform& setRotation(const QQuaternion& rotation)
 	{
 		mRotation = rotation;
 		return *this;
@@ -71,7 +70,7 @@ public:
 	}
 
 	const QVector3D& scale() const { return mScale; }
-	ScTransform& setScale(const QVector3D& scale)
+	virtual ScTransform& setScale(const QVector3D& scale)
 	{
 		mScale = scale;
 		return *this;
@@ -143,8 +142,8 @@ public:
         return *this;
     }
 
-    const QColor& clearColor() const { return mClearColor; }
-    ScBasicCamera& setClearColor(const QColor& clearColor)
+    const QVector4D& clearColor() const { return mClearColor; }
+    ScBasicCamera& setClearColor(const QVector4D& clearColor)
     {
         mClearColor = clearColor;
         return *this;
@@ -159,7 +158,7 @@ public:
 private:
     float mWidth = 800.0f, mHeight = 600.0f;
     QRectF mViewport = {0.0f, 0.0f, 1.0f, 1.0f};
-    QColor mClearColor;
+    QVector4D mClearColor;
 };
 
 /*!
@@ -180,10 +179,8 @@ public:
     QMatrix4x4 viewMatrix() const override;
     QMatrix4x4 projectionMatrix() const override;
 
-    /*
     void beginScene() const override;
     void endScene() const override;
-    */
 
 private:
     float mSize = 5.0f;
@@ -297,8 +294,8 @@ public:
         setVertices(vertices, count, cacheVertices, computeAABB);
 	}
 
-	const QVector3D& getMinBound() const { return mMinBound; }
-	const QVector3D& getMaxBound() const { return mMaxBound; }
+	const QVector3D& minBound() const { return mMinBound; }
+	const QVector3D& maxBound() const { return mMaxBound; }
 
 	int uncachedVerticesCount() const { return mVerticesCount; }
 
@@ -308,7 +305,7 @@ public:
      * @param vertices The actual array of the vertex data.
      * @param count The amount of the vertices.
      * @param cacheVertices Do cache vertices inside the mesh object?
-     * @param computeAABB Do compute the bounding box for this mesh?
+     * @param boundsDim How many dimension use while computing the AABB.
      */
     ScEditableMesh& setVertices(const ScVertexData* vertices, int count, bool cacheVertices = false, bool computeAABB = false);
 
@@ -349,7 +346,7 @@ public:
 	}
 
     bool enabled() const { return mEnabled; }
-    ScMeshRenderer& setEnabled(bool enabled)
+    virtual ScMeshRenderer& setEnabled(bool enabled)
     {
         mEnabled = enabled;
         return *this;
@@ -419,17 +416,23 @@ public:
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+DEFINE_SHARED_PTR(ScScene)
+
 /*!
  * The abstract scene class.
  */
 class ScScene
 {
+	DEFINE_CREATE_FUNC(ScScene)
+
 public:
     virtual ~ScScene() { }
 
+	virtual void init() {}
+	virtual void render() {}
+
     virtual void onMouseDrag(const QVector2D&) {}
 	virtual void onResize(float, float) {}
-    virtual void render() {}
 };
 
 /*!
@@ -442,6 +445,14 @@ public:
         QOpenGLWidget(parent)
     {
     }
+
+public:
+	ScScene_p scene() const { return mScene; }
+	ScOpenGLWidget& setScene(const ScScene_p& scene)
+	{
+		mScene = scene;
+		return *this;
+	}
 
 protected:
 	void mousePressEvent(QMouseEvent* event) override final;
@@ -456,6 +467,5 @@ protected:
 private:
 	bool mMouseDragBegan = false;
 	QPointF mMousePressPosition;
-public:
-    ScScene* mScene = nullptr;
+    ScScene_p mScene;
 };

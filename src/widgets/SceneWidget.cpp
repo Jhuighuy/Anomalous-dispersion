@@ -1,17 +1,20 @@
+/****************************************************************************
+**
+** Copyright (C) 2016 Plaxin Gleb, Butakov Oleg.
+** License: MIT.
+**
+****************************************************************************/
+
 #include "SceneWidget.h"
-#include "SceneMeshes.h"
-#include "PresentationScene.h"
 
 #include <QSharedPointer>
+#include <QMouseEvent>
+
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLBuffer>
 #include <QOpenGLShader>
 #include <QOpenGLTexture>
-
-#include <QtMath>
-#include <QMouseEvent>
-#include <QWheelEvent>
 
 #ifndef _countof
 #define _countof(arr) (sizeof(arr) / sizeof((arr)[0]))
@@ -31,7 +34,7 @@ QMatrix4x4 ScTransform::modelMatrix() const
 QMatrix3x3 ScTransform::normalMatrix() const
 {
 	QMatrix4x4 model = modelMatrix();
-	QMatrix3x3 normal(model.normalMatrix());
+	QMatrix3x3 normal = model.normalMatrix();
 	return normal;
 }
 
@@ -70,7 +73,7 @@ void ScBasicCamera::beginScene() const
 
     glScissor(x, y, w, h);
     glViewport(x, y, w, h);
-    glClearColor(clearColor().redF(), clearColor().greenF(), clearColor().blueF(), clearColor().alphaF());
+    glClearColor(clearColor().x(), clearColor().y(), clearColor().z(), clearColor().w());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 void ScBasicCamera::endScene() const
@@ -97,22 +100,21 @@ QMatrix4x4 ScProjectionCamera::projectionMatrix() const
     return projection;
 }
 
-/*
 void ScProjectionCamera::beginScene() const
 {
+	//! @todo
     float a = height() / width();
-    float x = a * width() * viewport().x(), y = height() * viewport().y();
-    float w = a * width() * viewport().width(), h = height() * viewport().height();
+	float x = a * width() * viewport().x(), y = height() * viewport().y();
+	float w = a * width() * viewport().width(), h = height() * viewport().height();
 
     glScissor(x, y, w, h);
     glViewport(x, y, w, h);
-    glClearColor(clearColor().redF(), clearColor().greenF(), clearColor().blueF(), clearColor().alphaF());
+    glClearColor(clearColor().x(), clearColor().y(), clearColor().z(), clearColor().w());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 void ScProjectionCamera::endScene() const
 {
 }
-*/
 
 // ----------------------
 
@@ -181,8 +183,6 @@ QOpenGLTexture_p scLoadTexture(const char* texturePath)
  */
 ScEditableMesh& ScEditableMesh::setVertices(const ScVertexData* vertices, int count, bool cacheVertices, bool computeAABB)
 {
-	mVerticesCount = count;
-
 	// Caching the vertices.
 	if (cacheVertices)
 	{
@@ -224,7 +224,7 @@ ScEditableMesh& ScEditableMesh::setVertices(const ScVertexData* vertices, int co
     }
     else
     {
-        int existingSize = mVertexBuffer.size();
+        int existingSize = mVerticesCount * sizeof(*vertices);
 
 		mVertexBuffer.bind();
         if (newSize < existingSize)
@@ -236,6 +236,8 @@ ScEditableMesh& ScEditableMesh::setVertices(const ScVertexData* vertices, int co
 			mVertexBuffer.allocate(vertices, newSize);
         }
     }
+	
+	mVerticesCount = count;
     return *this;
 }
 
@@ -300,6 +302,11 @@ void ScEditableMesh::render(QOpenGLShaderProgram& shaderProgram, int firstVertex
  */
 void ScMeshRenderer::render(const ScBasicCamera& camera)
 {
+	if (!enabled())
+	{
+		return;
+	}
+
 	beginRender(camera);
     mesh()->render(*shaderProgram());
 	endRender();
@@ -309,11 +316,6 @@ void ScMeshRenderer::beginRender(const ScBasicCamera& camera) const
 {
 	Q_ASSERT(mesh() != nullptr);
 	Q_ASSERT(shaderProgram() != nullptr);
-
-	if (!enabled())
-	{
-		return;
-	}
 
 	if (diffuseTexture() != nullptr)
 	{
@@ -356,6 +358,11 @@ void ScMeshRenderer::endRender() const
  */
 void ScTransparentMeshRenderer::render(const ScBasicCamera& camera)
 {
+	if (!enabled())
+	{
+		return;
+	}
+
 	Q_ASSERT(mesh()->size() != 0);
 
 	QMatrix4x4 modelView = camera.viewMatrix() * modelMatrix();
@@ -388,6 +395,7 @@ void ScTransparentMeshRenderer::render(const ScBasicCamera& camera)
     });
 
 	// Rendering the sorted triangles.
+	//glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -399,6 +407,7 @@ void ScTransparentMeshRenderer::render(const ScBasicCamera& camera)
 	}
 	endRender();
 
+	//glEnable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 }
 
@@ -436,20 +445,22 @@ void ScOpenGLWidget::initializeGL()
     context()->setFormat(format);
     context()->functions()->initializeOpenGLFunctions();
 
+	Q_ASSERT(scene() != nullptr);
+	scene()->init();
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_SCISSOR_TEST);
-    //glEnable(GL_CULL_FACE);
-
-    mScene = new PrScene(nullptr);
 }
 
 void ScOpenGLWidget::resizeGL(int w, int h)
 {
-	mScene->onResize(static_cast<float>(w), static_cast<float>(h));
+	Q_ASSERT(scene() != nullptr);
+	scene()->onResize(static_cast<float>(w), static_cast<float>(h));
 }
 
 void ScOpenGLWidget::paintGL()
 {
-    mScene->render();
+	Q_ASSERT(scene() != nullptr);
+	scene()->render();
     update();
 }

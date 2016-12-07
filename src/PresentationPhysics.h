@@ -11,7 +11,6 @@
 #include <QTime>
 #include <QDebug>
 #include <QtMath>
-#include <QColor>
 #include <QVector>
 #include <QSharedPointer>
 
@@ -56,7 +55,7 @@ public:
         GreenYellowMinWaveLength = GreenMaxWaveLength, GreenYellowMaxWaveLength = 580,
         YellowMinWaveLength = GreenYellowMaxWaveLength, YellowMaxWaveLength = 590,
         OrangeMinWaveLength = YellowMaxWaveLength, OrangeMaxWaveLength = 645,
-        RedMinWavelength = OrangeMaxWaveLength, RedMaxWavelength = VisibleSpectrumMaxWaveLength
+        RedMinWaveLength = OrangeMaxWaveLength, RedMaxWaveLength = VisibleSpectrumMaxWaveLength
     };
 
     /*!
@@ -65,7 +64,7 @@ public:
      * @param waveLengthMcm Wave length in micrometers.
      * @param alpha The alpha channel value for the converted color.
      */
-	static QVector4D convertWavelengthToRGB(qreal waveLengthMcm, qreal alpha = 1.0);
+	static QVector4D convertWavelengthToRGBA(qreal waveLengthMcm, qreal alpha = 1.0);
 };
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -281,7 +280,9 @@ public:
 	 * @param Xmax Ending point of the integration range.
 	 * @param partitioning The integration range partitioning.
 	 */
-	PhComplexIndexFunction& computeRealPartKramersKronig(qreal Xmin, qreal Xmax, int partitioning = 100);
+	PhComplexIndexFunction& computeRealPartKramersKronig(qreal Xmin = PhSpectrum::VisibleSpectrumMinWaveLength / 1000.0,
+														 qreal Xmax = PhSpectrum::VisibleSpectrumMaxWaveLength / 1000.0,
+														 int partitioning = 100);
 
     qreal real(qreal x) const override
     {
@@ -307,7 +308,7 @@ private:
 /*!
  * The beam part struct.
  */
-struct OpBeamPart
+struct PhBeamPart
 {
     QVector3D position;
     QVector3D direction;
@@ -318,33 +319,33 @@ struct OpBeamPart
 /*!
  * The beam simplified info struct.
  */
-struct OpBeamInfo
+struct PhBeamInfo
 {
 	QVector3D position;
 	QVector4D color;
 };
-typedef QVector<OpBeamInfo> OpBeamCollisionInfo;
+typedef QVector<PhBeamInfo> PhBeamCollisionInfo;
 
 /*!
  * The single beam class.
  */
-class OpBeam final : public QVector<OpBeamPart>
+class PhBeam final : public QVector<PhBeamPart>
 {
 public:
-	OpBeam()
+	PhBeam()
 	{
 		push_back({});
 	}
 
 	qreal waveLengthMcm() const { return mWaveLengthMcm; }
-	OpBeam& setWaveLengthMcm(qreal waveLength)
+	PhBeam& setWaveLengthMcm(qreal waveLength)
 	{
 		mWaveLengthMcm = waveLength;
 		return *this;
 	}
 
 	const QVector3D& startPosition() const { return first().position; }
-	OpBeam& setStartPosition(const QVector3D& startPosition)
+	PhBeam& setStartPosition(const QVector3D& startPosition)
 	{
 		Q_ASSERT(size() == 1);
 		first().position = startPosition;
@@ -352,7 +353,7 @@ public:
 	}
 
 	const QVector3D& startDirection() const { return first().direction; }
-	OpBeam& setStartDirection(const QVector3D& startDirection)
+	PhBeam& setStartDirection(const QVector3D& startDirection)
 	{
 		Q_ASSERT(size() == 1);
 		first().direction = startDirection;
@@ -366,18 +367,18 @@ private:
 /*!
  * The base refractive object class.
  */
-class OpRefractiveObject
+class IPhRefractiveObject
 {
 public:
-	virtual ~OpRefractiveObject()
+	virtual ~IPhRefractiveObject()
 	{
 	}
 
-	virtual void refractBeam(OpBeam& beam, bool enters = true) const
+	virtual void refractBeam(PhBeam& beam, bool enters = true) const
 	{
 		(void)enters;
-		const OpBeamPart& prevPart = beam.last();
-		OpBeamPart newPart = prevPart;
+		const PhBeamPart& prevPart = beam.last();
+		PhBeamPart newPart = prevPart;
 		beam.push_back(newPart);
 	}
 };
@@ -385,18 +386,18 @@ public:
 /*!
  * The refractive plane class.
  */
-class OpRefractivePlane : public OpRefractiveObject
+class PhRefractivePlane : public IPhRefractiveObject
 {
 public:
 	bool opaque() const { return mOpaque; }
-	OpRefractivePlane& setOpaque(bool opaque)
+	PhRefractivePlane& setOpaque(bool opaque)
 	{
 		mOpaque = opaque;
 		return *this;
 	}
 
     const QVector3D& normal() const { return mNormal; }
-    OpRefractivePlane& setNormal(const QVector3D& normal)
+    PhRefractivePlane& setNormal(const QVector3D& normal)
     {
         mNormal = normal;
         return *this;
@@ -404,20 +405,20 @@ public:
 
 	const QVector3D& point() const { return minBound(); }
     const QVector3D& minBound() const { return mMinBound; }
-    OpRefractivePlane& setMinBound(const QVector3D& minBound)
+    PhRefractivePlane& setMinBound(const QVector3D& minBound)
     {
         mMinBound = minBound;
         return *this;
     }
     const QVector3D& maxBound() const { return mMaxBound; }
-    OpRefractivePlane& setMaxBound(const QVector3D& maxBound)
+    PhRefractivePlane& setMaxBound(const QVector3D& maxBound)
     {
         mMaxBound = maxBound;
         return *this;
     }
 
 	PhComplexIndexFunction_p refractiveIndex() const { return mRefractiveIndex; }
-	OpRefractivePlane& setRefractiveIndex(const PhComplexIndexFunction_p& refractiveIndex)
+	PhRefractivePlane& setRefractiveIndex(const PhComplexIndexFunction_p& refractiveIndex)
     {
         mRefractiveIndex = refractiveIndex;
         return *this;
@@ -429,11 +430,11 @@ public:
 	 * @param beam The actual beam to refract.
 	 * @param enters Determines whether the beam enters or leaves the object. 
 	 */
-	void refractBeam(OpBeam& beam, bool enters = true) const override;
+	void refractBeam(PhBeam& beam, bool enters = true) const override;
 
 private:
-	bool refract(qreal waveLength, OpBeamPart& newBeam, const OpBeamPart& beam, bool enters) const;
-	bool intersect(OpBeamPart& newBeam, const OpBeamPart& beam) const;
+	bool refract(qreal waveLength, PhBeamPart& newBeam, const PhBeamPart& beam, bool enters) const;
+	bool intersect(PhBeamPart& newBeam, const PhBeamPart& beam) const;
 	bool isInBound(const QVector3D& v) const;
 
 private:
@@ -446,7 +447,7 @@ private:
 /*!
  * The beam cone class.
  */
-class OpBeamCone final : public QVector<OpBeam>
+class PhBeamCone final : public QVector<PhBeam>
 {
 public:
 	void reset()
@@ -455,16 +456,16 @@ public:
 	}
 
 	int partitioning() const { return size(); }
-	OpBeamCone& setPartitioning(int partitioning);
+	PhBeamCone& setPartitioning(int partitioning);
 
-	OpBeamCone& setStartPosition(const QVector3D& startPosition);
+	PhBeamCone& setStartPosition(const QVector3D& startPosition);
 	const QVector3D& startPosition() const
 	{
 		Q_ASSERT(partitioning() != 0 && "Partitioning was not set!");
 		return first().startPosition();
 	}
 
-	OpBeamCone& setStartDirection(const QVector3D& startDirection);
+	PhBeamCone& setStartDirection(const QVector3D& startDirection);
 	const QVector3D& startDirection() const
 	{
 		Q_ASSERT(partitioning() != 0 && "Partitioning was not set!");
@@ -475,16 +476,16 @@ public:
 	 * Collides a beam cone with the object.
 	 * @param object The actual object to refract.
 	 */
-	void collide(const OpRefractiveObject& object);
+	void collide(const IPhRefractiveObject& object);
 
 	/*!
 	 * Extracts the collision data from the cone.
 	 *
-	 * @param[out] levelCollision Output for the collision level.
+	 * @param[out] levelSlice Output for the collision level.
 	 * @param levelIndex Index of the collision.
 	 * @param alphaMultiplier Alpha multiplier for the generated colors.
 	 */
-	void getCollisionLevel(OpBeamCollisionInfo& levelCollision, int levelIndex, float alphaMultiplier = 1.0) const;
+	void getCollisionLevel(PhBeamCollisionInfo& levelCollision, int levelIndex, float alphaMultiplier = 1.0) const;
 	int collisionLevels() const
 	{
 		Q_ASSERT(partitioning() != 0 && "Partitioning was not set!");

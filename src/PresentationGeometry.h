@@ -24,7 +24,7 @@ public:
 	 * @param[out] vertices Output for generated vertices.
 	 * @param thickness The thickness of the projection line.
 	 */
-    static void generateBeamProjMesh(const OpBeamCone& beamCone, const QVector3D& screenNormal,
+    static void generateBeamProjMesh(const PhBeamCone& beamCone, const QVector3D& screenNormal,
                                      QVector<ScVertexData>& vertices, float thickness = defaultThickness);
 
 	/*!
@@ -33,6 +33,6 @@ public:
 	 * @param beamCone The actual beam cone.
 	 * @param[out] vertices Output for generated vertices.
 	 */
-	static void generateBeamMesh(const OpBeamCone& beamCone, QVector<ScVertexData>& vertices);
+	static void generateBeamMesh(const PhBeamCone& beamCone, QVector<ScVertexData>& vertices);
 
 };

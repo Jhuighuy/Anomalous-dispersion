@@ -73,7 +73,7 @@
       </widget>
      </item>
      <item row="12" column="0" colspan="2">
-      <widget class="QCheckBox" name="checkBoxSceneParamsSecondPrismAnomalous">
+      <widget class="QCheckBox" name="checkBoxSecondPrismAnomalous">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -246,7 +246,7 @@
        </property>
       </widget>
      </item>
-     <item row="13" column="0">
+     <item row="13" column="0" colspan="2">
       <spacer name="spacerSceneParams">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -289,73 +289,33 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0" colspan="2">
-      <widget class="QComboBox" name="comboBoxMaterial">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <item>
-        <property name="text">
-         <string>Цианин</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Модельный</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="10" column="1">
+     <item row="9" column="1">
       <widget class="QLabel" name="labelAbspSpectrumWidthMid">
        <property name="enabled">
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>0</string>
+        <string>550</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignHCenter|Qt::AlignTop</set>
        </property>
       </widget>
      </item>
-     <item row="0" column="2">
-      <widget class="QPushButton" name="pushButtonMaterialSelect">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>Выбрать</string>
-       </property>
-      </widget>
-     </item>
-     <item row="10" column="2">
+     <item row="9" column="2">
       <widget class="QLabel" name="labelAbspSpectrumWidthMax">
        <property name="enabled">
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>1488</string>
+        <string>1000</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
        </property>
       </widget>
      </item>
-     <item row="7" column="2">
-      <widget class="QLabel" name="labelAbspSpectrumCenterMax">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>780</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="0" colspan="3">
+     <item row="7" column="0" colspan="3">
       <widget class="QLabel" name="labelAbspSpectrumWidth">
        <property name="enabled">
         <bool>true</bool>
@@ -371,21 +331,8 @@
        </property>
       </widget>
      </item>
-     <item row="10" column="0">
-      <widget class="QLabel" name="labelAbspSpectrumWidthMin">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>-1488</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-       </property>
-      </widget>
-     </item>
-     <item row="13" column="1">
-      <widget class="QLabel" name="labelAbspSpectrumHeightMid">
+     <item row="12" column="0">
+      <widget class="QLabel" name="labelAbspSpectrumHeightMin">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -393,24 +340,66 @@
         <string>0</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignHCenter|Qt::AlignTop</set>
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
        </property>
       </widget>
      </item>
-     <item row="13" column="0">
-      <widget class="QLabel" name="labelAbspSpectrumHeightMin">
+     <item row="9" column="0">
+      <widget class="QLabel" name="labelAbspSpectrumWidthMin">
        <property name="enabled">
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>-228</string>
+        <string>100</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
        </property>
       </widget>
      </item>
-     <item row="7" column="0">
+     <item row="12" column="1">
+      <widget class="QLabel" name="labelAbspSpectrumHeightMid">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>100</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignHCenter|Qt::AlignTop</set>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="2">
+      <widget class="QLabel" name="labelAbspSpectrumCenterMax">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>780</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="3">
+      <widget class="QLabel" name="labelAbspSpectrumCenter">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Центр спектра поглощения (нм)</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
       <widget class="QLabel" name="labelAbspSpectrumCenterMin">
        <property name="enabled">
         <bool>true</bool>
@@ -423,7 +412,20 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="0" colspan="3">
+     <item row="12" column="2">
+      <widget class="QLabel" name="labelAbspSpectrumHeightMax">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>200</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="3">
       <widget class="QSlider" name="sliderAbspSpectrumCenter">
        <property name="enabled">
         <bool>true</bool>
@@ -448,36 +450,32 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0" colspan="3">
-      <widget class="QLabel" name="labelAbspSpectrumCenter">
+     <item row="11" column="0" colspan="3">
+      <widget class="QSlider" name="sliderAbspSpectrumHeight">
        <property name="enabled">
         <bool>true</bool>
        </property>
-       <property name="text">
-        <string>Центр спектра поглощения (нм)</string>
+       <property name="minimum">
+        <number>0</number>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
+       <property name="maximum">
+        <number>200</number>
        </property>
-       <property name="wordWrap">
-        <bool>true</bool>
+       <property name="value">
+        <number>100</number>
        </property>
-      </widget>
-     </item>
-     <item row="13" column="2">
-      <widget class="QLabel" name="labelAbspSpectrumHeightMax">
-       <property name="enabled">
-        <bool>true</bool>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
-       <property name="text">
-        <string>228</string>
+       <property name="tickPosition">
+        <enum>QSlider::TicksBelow</enum>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+       <property name="tickInterval">
+        <number>50</number>
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
+     <item row="6" column="1">
       <widget class="QLabel" name="labelAbspSpectrumCenterMid">
        <property name="enabled">
         <bool>true</bool>
@@ -490,42 +488,7 @@
        </property>
       </widget>
      </item>
-     <item row="12" column="0" colspan="3">
-      <widget class="QSlider" name="sliderAbspSpectrumHeight">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="minimum">
-        <number>-228</number>
-       </property>
-       <property name="maximum">
-        <number>228</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="tickPosition">
-        <enum>QSlider::TicksBelow</enum>
-       </property>
-       <property name="tickInterval">
-        <number>114</number>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="0" colspan="3">
-      <spacer name="spacerRefractiveIndexParams">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="0" colspan="3">
+     <item row="0" column="0" colspan="3">
       <widget class="ScPlotViewWidget" name="chartRefractiveIndex">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -535,7 +498,7 @@
        </property>
       </widget>
      </item>
-     <item row="11" column="0" colspan="3">
+     <item row="10" column="0" colspan="3">
       <widget class="QLabel" name="labelAbspSpectrumHeight">
        <property name="enabled">
         <bool>true</bool>
@@ -551,16 +514,19 @@
        </property>
       </widget>
      </item>
-     <item row="9" column="0" colspan="3">
+     <item row="8" column="0" colspan="3">
       <widget class="QSlider" name="sliderAbspSpectrumWidth">
        <property name="enabled">
         <bool>true</bool>
        </property>
        <property name="minimum">
-        <number>-1488</number>
+        <number>100</number>
        </property>
        <property name="maximum">
-        <number>1488</number>
+        <number>1000</number>
+       </property>
+       <property name="value">
+        <number>450</number>
        </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -569,7 +535,7 @@
         <enum>QSlider::TicksBelow</enum>
        </property>
        <property name="tickInterval">
-        <number>744</number>
+        <number>225</number>
        </property>
       </widget>
      </item>

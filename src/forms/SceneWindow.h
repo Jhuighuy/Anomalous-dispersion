@@ -25,7 +25,7 @@ private slots:
     void onFirstPrismAngleChanged(int value);
     void onSecondPrismRotationChanged(int value);
     void onSecondPrismAngleChanged(int value);
-    void onSecondPrismAnomDispEnable(bool value);
+    void onSecondPrismAnomalousToggled(bool value);
 
     void onAbsorptionSpectrumCenterChanged(int value);
     void onAbsorptionSpectrumWidthChanged(int value);
