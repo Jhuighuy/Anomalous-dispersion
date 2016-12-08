@@ -109,11 +109,6 @@ PrPrismRenderer& PrPrismRenderer::setRotation(const QQuaternion& rotation)
 	mPlanesSynced = false;
 	return *this;
 }
-PrPrismRenderer& PrPrismRenderer::setScale(const QVector3D&)
-{
-	Q_ASSERT(!"Scaling should not be manipulated directly.");
-	return *this;
-}
 PrPrismRenderer& PrPrismRenderer::setOffset(const QVector3D&)
 {
 	Q_ASSERT(!"Offsetting should not be manipulated directly.");
@@ -163,7 +158,7 @@ PrPrismRenderer& PrPrismRenderer::setAbsorptionIndexHeight(qreal height)
 PrPrismRenderer& PrPrismRenderer::setAngle(float angle)
 {
 	ScOffsetTransform::setOffset({ 0.0f, -sGimbalHeight / 6.0f, 0.0f, });
-	ScOffsetTransform::setScale({ 1.0f, 1.0f, tanf(qDegreesToRadians(angle / 2.0f)) });
+	ScOffsetTransform::setScale(QVector3D(1.0f, 1.0f, tanf(qDegreesToRadians(angle / 2.0f))) * scale());
 
 	mAngle = angle;
 	mPlanesSynced = false;
@@ -388,8 +383,7 @@ void PrBeamConeRenderer::recalculateMesh(const QVector<PrPrismRenderer_p>& prism
 void PrBeamConeRenderer::render(const ScBasicCamera& camera)
 {
 	glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	mProjectionRenderer->render(camera);
 	if (typeid(camera) == typeid(ScOrbitalCamera))

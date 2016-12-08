@@ -353,75 +353,6 @@ void ScMeshRenderer::endRender() const
 
 // ----------------------
 
-//! @todo rewrite using SSE.
-struct Vector3D
-{
-    union {
-        struct { qreal x, y, z; };
-        qreal v[3];
-    };
-
-    Vector3D(): x(0.0), y(0.0), z(0.0) {}
-    Vector3D(const QVector3D& vector):
-        x(vector.x()), y(vector.y()), z(vector.z())
-    {
-
-    }
-
-    static qreal dotProduct(const Vector3D& a, const Vector3D& b)
-    {
-        return a.x * b.x + a.y * b.y + a.z * b.z;
-    }
-    qreal length() const
-    {
-        return qSqrt(dotProduct(*this, *this));
-    }
-
-    Vector3D& operator+= (const Vector3D& other)
-    {
-        x += other.x;
-        y += other.y;
-        z += other.z;
-        return *this;
-    }
-};
-
-//! @todo rewrite using SSE.
-struct Matrix4x4
-{
-    qreal m[4][4];
-
-    Matrix4x4(): m{} {}
-    Matrix4x4(const QMatrix4x4& matrix)
-    {
-        for (int row = 0; row < 4; ++row)
-        {
-            for (int column = 0; column < 4; ++column)
-            {
-                m[row][column] = matrix(row, column);
-            }
-        }
-    }
-
-    Vector3D operator* (const Vector3D& vector) const
-    {
-           qreal result[4];
-           for (int row = 0; row < 4; ++row)
-           {
-               for (int column = 0; column < 4; ++column)
-               {
-                   result[row] += m[row][column] * vector.v[row];
-               }
-           }
-
-           Vector3D r;
-           r.x = result[0] /= result[3],
-           r.y = result[1] /= result[3],
-           r.z = result[2] /= result[3];
-           return r;
-    }
-};
-
 /*!
  * Renders this transparent object with the specified camera.
  * @param camera The camera to be used while rendering.
@@ -435,7 +366,7 @@ void ScTransparentMeshRenderer::render(const ScBasicCamera& camera)
 
 	Q_ASSERT(mesh()->size() != 0);
 
-    Matrix4x4 modelView = camera.viewMatrix() * modelMatrix();
+    ScMatrix4x4 modelView = camera.viewMatrix() * modelMatrix();
 	
 	struct ScTraingleInfo
 	{
@@ -448,11 +379,11 @@ void ScTransparentMeshRenderer::render(const ScBasicCamera& camera)
 #pragma omp parallel for
 	for (int i = 0; i < trianglesInfo.size(); ++i)
 	{
-        Vector3D trianglePositionVS;
+        ScVector3D trianglePositionVS;
 		for (int j = 0; j < 3; ++j)
 		{
 			const ScVertexData& vertex = mesh()->at(3 * i + j);
-            Vector3D vertexPositionVS = modelView * vertex.vertexCoord;
+            ScVector3D vertexPositionVS = modelView * vertex.vertexCoord;
 			trianglePositionVS += vertexPositionVS;
 		}
 		trianglesInfo[i] = { 3 * i, trianglePositionVS.length() };

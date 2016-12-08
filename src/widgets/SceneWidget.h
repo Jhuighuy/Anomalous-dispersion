@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <QtMath>
+
 #include <QSharedPointer>
 #include <QRectF>
 #include <QOpenGLWidget>
@@ -34,6 +36,75 @@
 #endif
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//! @todo rewrite using SSE.
+struct ScVector3D
+{
+	union {
+		struct { qreal x, y, z; };
+		qreal v[3];
+	};
+
+	ScVector3D() : x(0.0), y(0.0), z(0.0) {}
+	ScVector3D(const QVector3D& vector) :
+		x(vector.x()), y(vector.y()), z(vector.z())
+	{
+
+	}
+
+	static qreal dotProduct(const ScVector3D& a, const ScVector3D& b)
+	{
+		return a.x * b.x + a.y * b.y + a.z * b.z;
+	}
+	qreal length() const
+	{
+		return qSqrt(dotProduct(*this, *this));
+	}
+
+	ScVector3D& operator+= (const ScVector3D& other)
+	{
+		x += other.x;
+		y += other.y;
+		z += other.z;
+		return *this;
+	}
+};
+
+//! @todo rewrite using SSE.
+struct ScMatrix4x4
+{
+	qreal m[4][4];
+
+	ScMatrix4x4() : m{} {}
+	ScMatrix4x4(const QMatrix4x4& matrix)
+	{
+		for (int row = 0; row < 4; ++row)
+		{
+			for (int column = 0; column < 4; ++column)
+			{
+				m[row][column] = matrix(row, column);
+			}
+		}
+	}
+
+	ScVector3D operator* (const ScVector3D& vector) const
+	{
+		qreal result[4];
+		for (int row = 0; row < 4; ++row)
+		{
+			for (int column = 0; column < 4; ++column)
+			{
+				result[row] += m[row][column] * vector.v[row];
+			}
+		}
+
+		ScVector3D r;
+		r.x = result[0] /= result[3],
+			r.y = result[1] /= result[3],
+			r.z = result[2] /= result[3];
+		return r;
+	}
+};
 
 /*!
  * The basic transform class. 
