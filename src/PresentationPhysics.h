@@ -64,7 +64,7 @@ public:
      * @param waveLengthMcm Wave length in micrometers.
      * @param alpha The alpha channel value for the converted color.
      */
-	static QVector4D convertWavelengthToRGBA(qreal waveLengthMcm, qreal alpha = 1.0);
+    static QVector4D convertWavelengthToRGBA(qreal waveLengthMcm, qreal alpha = 0.7);
 };
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

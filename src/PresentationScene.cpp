@@ -388,13 +388,14 @@ void PrBeamConeRenderer::recalculateMesh(const QVector<PrPrismRenderer_p>& prism
 void PrBeamConeRenderer::render(const ScBasicCamera& camera)
 {
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
 	mProjectionRenderer->render(camera);
 	if (typeid(camera) == typeid(ScOrbitalCamera))
 	{
 		// We want our mesh been rendered only by main camera.
-		ScMeshRenderer::render(camera);
+        ScTransparentMeshRenderer::render(camera);
 	}
 
 	glDisable(GL_BLEND);
