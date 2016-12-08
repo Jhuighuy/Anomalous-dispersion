@@ -512,7 +512,6 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>шире</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
@@ -525,7 +524,6 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>уже</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

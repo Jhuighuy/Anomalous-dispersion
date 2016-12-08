@@ -59,12 +59,22 @@ public:
     };
 
     /*!
-     * Converts wave length to RGB color.
+     * Converts wave length to RGBA color.
      * 
      * @param waveLengthMcm Wave length in micrometers.
      * @param alpha The alpha channel value for the converted color.
      */
-    static QVector4D convertWavelengthToRGBA(qreal waveLengthMcm, qreal alpha = 0.7);
+	static QVector4D convertWavelengthToRGBA(qreal waveLengthMcm, qreal alpha = 0.7);
+	static QColor convertWavelengthToColorRGBA(qreal waveLengthMcm, qreal alpha = 0.7)
+	{
+		QVector4D colorVector = convertWavelengthToRGBA(waveLengthMcm, alpha);
+		QColor color;
+		color.setRedF(colorVector.x());
+		color.setGreenF(colorVector.y());
+		color.setBlueF(colorVector.z());
+		color.setAlphaF(colorVector.w());
+		return color;
+	}
 };
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

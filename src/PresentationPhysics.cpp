@@ -11,7 +11,7 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 /*!
- * Converts wave length to RGB color.
+ * Converts wave length to RGBA color.
  * 
  * @param waveLengthMcm Wave length in micrometers.
  * @param alpha The alpha channel value for the converted color.
@@ -172,7 +172,7 @@ PhComplexIndexFunction& PhComplexIndexFunction::computeRealPartKramersKronig(qre
 		static const qreal delta = 1e-8;
 
 		qreal x = Xmin + i * (Xmax - Xmin) / partitioning;
-		qreal y = 1.0 + simpsonIntegrate(delta, inf, partitioning * 20, [&](qreal z)
+		qreal y = 1.0 + simpsonIntegrate(delta, inf, partitioning * 10, [&](qreal z)
 		                                 {
 			                                 return 1.0 / M_PI * (imaginary(x + z) / -z + imaginary(x - z) / +z);
 		                                 });
@@ -381,7 +381,7 @@ void PhBeamCone::getCollisionLevel(PhBeamCollisionInfo& levelSlice, int levelInd
                             at(i).at(levelIndex).alpha * alphaMultiplier) };
 
 		// Merging to nearby points because of both optimization and color blending.
-		const float eps = 1e-4f / partitioning();
+		const float eps = 1e-3f / partitioning();
 		if (info.position.distanceToPoint(prevInfo.position) < eps)
 		{
 			prevInfo.position = 0.5f * (prevInfo.position + info.position);
