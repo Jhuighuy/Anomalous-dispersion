@@ -81,7 +81,10 @@ PrPrismRenderer::PrPrismRenderer()
 	setShaderProgram(prLitRefrShaderProgram());
 	setDiffuseTexture(prismEnvironmentCubemap);
 	// ----------------------
-	setAngle(mAngle);
+
+	//! @todo
+	ScOffsetTransform::setScale(QVector3D(1.0f, 1.0f, tanf(qDegreesToRadians(mAngle / 2.0f))) * scale());
+	//setAngle(mAngle);
 	setMaterial(mMaterial);
 }
 
@@ -107,6 +110,12 @@ PrPrismRenderer& PrPrismRenderer::setRotation(const QQuaternion& rotation)
 	ScMeshRenderer::setRotation(rotation);
 	mPrismHolderGimbal->setRotationDegrees({ 0.0f, 0.0f, rotationDegrees().z() });
 	mPlanesSynced = false;
+	return *this;
+}
+PrPrismRenderer& PrPrismRenderer::setScale(const QVector3D& scale)
+{
+	ScMeshRenderer::setScale(scale);
+	setAngle(mAngle);
 	return *this;
 }
 PrPrismRenderer& PrPrismRenderer::setOffset(const QVector3D&)
@@ -157,8 +166,11 @@ PrPrismRenderer& PrPrismRenderer::setAbsorptionIndexHeight(qreal height)
 
 PrPrismRenderer& PrPrismRenderer::setAngle(float angle)
 {
+	QVector3D anglingScale(1.0f, 1.0f, tanf(qDegreesToRadians(angle / 2.0f)));
+	QVector3D prevAnglingScale(1.0f, 1.0f, tanf(qDegreesToRadians(mAngle / 2.0f)));
+
 	ScOffsetTransform::setOffset({ 0.0f, -sGimbalHeight / 6.0f, 0.0f, });
-	ScOffsetTransform::setScale(QVector3D(1.0f, 1.0f, tanf(qDegreesToRadians(angle / 2.0f))) * scale());
+	ScOffsetTransform::setScale(anglingScale / prevAnglingScale * scale());
 
 	mAngle = angle;
 	mPlanesSynced = false;
@@ -423,6 +435,7 @@ void PrScene::init()
 		.setPosition({ 0.0f, 0.0f, -2.0f });
 	// ----------------------
 	mPrismRenderers = { PrPrismRenderer::create(), PrPrismRenderer::create() };
+	mPrismRenderers[0]->setScale({ 2.0f, 2.0f, 2.0f });
 	setOnePrismScene();
 	// ----------------------
 	mBeamsRenderer = PrBeamConeRenderer::create();

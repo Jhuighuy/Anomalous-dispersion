@@ -46,6 +46,7 @@ public:
 	PrPrismRenderer& setEnabled(bool enabled) override;
 	PrPrismRenderer& setPosition(const QVector3D& position) override;
 	PrPrismRenderer& setRotation(const QQuaternion& rotation) override;
+	PrPrismRenderer& setScale(const QVector3D& scale) override;
 	PrPrismRenderer& setOffset(const QVector3D& offset) override;
 
 	PhComplexIndexFunction_p refractiveIndex() const { return mFirstPlane.refractiveIndex(); }
