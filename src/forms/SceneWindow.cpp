@@ -219,12 +219,8 @@ void SceneWindow::setSecondPrismEnabled(bool enable)
 	ui->sliderAbspSpectrumHeight->setValue(defaultAbsorptionSpectrumHeight);
 
     QWidget* widgetsToEnable[] = {
-        ui->labelAbspSpectrumCenter, ui->labelAbspSpectrumCenterMin, ui->labelAbspSpectrumCenterMid, ui->labelAbspSpectrumCenterMax,
-        ui->sliderAbspSpectrumCenter,
-        ui->labelAbspSpectrumWidth, ui->labelAbspSpectrumWidthMin, ui->labelAbspSpectrumWidthMid, ui->labelAbspSpectrumWidthMax,
-        ui->sliderAbspSpectrumWidth,
-        ui->labelAbspSpectrumHeight, ui->labelAbspSpectrumHeightMin, ui->labelAbspSpectrumHeightMid, ui->labelAbspSpectrumHeightMax,
-        ui->sliderAbspSpectrumHeight,
+		ui->checkBoxSecondPrismAnomalous,
+		ui->spinBoxSecondPrismRotation, ui->spinBoxSecondPrismAngle,
     };
     for (QWidget* widget : widgetsToEnable)
     {

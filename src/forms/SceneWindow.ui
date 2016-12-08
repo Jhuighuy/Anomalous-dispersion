@@ -512,7 +512,7 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>3000</string>
+        <string>шире</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
@@ -525,7 +525,7 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>100</string>
+        <string>уже</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -538,7 +538,7 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>550</string>
+        <string/>
        </property>
        <property name="alignment">
         <set>Qt::AlignHCenter|Qt::AlignTop</set>

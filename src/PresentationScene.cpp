@@ -64,13 +64,15 @@ PrPrismRenderer::PrPrismRenderer()
 	mPrismHolderBase
 		->enable()
 		.setMesh(prismHolderBaseMesh)
-		.setShaderProgram(prLitColoredShaderProgram());
+		.setShaderProgram(prLitColoredShaderProgram())
+		.setScale({0.5f, 0.5f, 0.5f});
 	// ----------------------
 	mPrismHolderLeg = ScMeshRenderer::create();
 	mPrismHolderLeg
 		->enable()
 		.setMesh(prismHolderLegMesh)
-		.setShaderProgram(prLitColoredShaderProgram());
+		.setShaderProgram(prLitColoredShaderProgram())
+		.setScale({ 0.5f, 1.0f, 0.5f });
 	// ----------------------
 	mPrismHolderGimbal = ScMeshRenderer::create();
 	mPrismHolderGimbal
@@ -102,7 +104,7 @@ PrPrismRenderer& PrPrismRenderer::setPosition(const QVector3D& position)
 {
 	ScMeshRenderer::setPosition(position);
 	mPrismHolderBase->setPosition({ position.x(), 0.0f, position.z() });
-	mPrismHolderLeg->setPosition({ position.x(), position.y() - sLegHeight - sGimbalHeight, position.z() });
+	mPrismHolderLeg->setPosition({ position.x(), position.y() - sLegHeight - sGimbalHeight * scale().y(), position.z() });
 	mPrismHolderGimbal->setPosition(position);
 	mPlanesSynced = false;
 	return *this;
@@ -117,7 +119,9 @@ PrPrismRenderer& PrPrismRenderer::setRotation(const QQuaternion& rotation)
 PrPrismRenderer& PrPrismRenderer::setScale(const QVector3D& scale)
 {
 	ScMeshRenderer::setScale(scale);
-	setAngle(mAngle);
+	mPrismHolderGimbal->setScale(scale);
+	setAngle(angle());
+	setPosition(position());
 	return *this;
 }
 PrPrismRenderer& PrPrismRenderer::setOffset(const QVector3D&)
@@ -517,6 +521,7 @@ void PrScene::setTwoPrismsScene()
 		.setMaterial(PrPrismMaterial::NormGlass)
 		.enable()
         .setPosition({ 0.0f, 0.95f, -2.0f })
+		.setScale({0.5f, 0.5f, 0.5f})
 		.setRotationDegrees({ 0.0f, 0.0f, 90.0f });
 #else
     mPrismRenderers.first()

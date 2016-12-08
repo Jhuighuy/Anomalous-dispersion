@@ -157,9 +157,8 @@ public:
     }
 
 private:
-    const qreal magicConstant = 0.91;
-    qreal mQuadratic = 0.27 * magicConstant, mLinear = -0.45 * magicConstant, mConstant = 1.61 * magicConstant;
-    //qreal mQuadratic = 0.2227273 * magicConstant, mLinear = -0.363636 * magicConstant, mConstant = 1.63536 * magicConstant;
+    const qreal mMagicConstant = 0.91;
+    qreal mQuadratic = 0.27 * mMagicConstant, mLinear = -0.45 * mMagicConstant, mConstant = 1.61 * mMagicConstant;
 };
 
 /*!
