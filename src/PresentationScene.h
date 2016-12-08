@@ -49,6 +49,8 @@ public:
 	PrPrismRenderer& setScale(const QVector3D& scale) override;
 	PrPrismRenderer& setOffset(const QVector3D& offset) override;
 
+	QMatrix4x4 modelMatrix() const override;
+
 	PhComplexIndexFunction_p refractiveIndex() const { return mFirstPlane.refractiveIndex(); }
 	PrPrismRenderer& setAbsorptionIndexCenter(qreal center);
 	PrPrismRenderer& setAbsorptionIndexWidth(qreal width);

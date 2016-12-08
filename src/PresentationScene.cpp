@@ -83,8 +83,8 @@ PrPrismRenderer::PrPrismRenderer()
 	// ----------------------
 
 	//! @todo
-	ScOffsetTransform::setScale(QVector3D(1.0f, 1.0f, tanf(qDegreesToRadians(mAngle / 2.0f))) * scale());
-	//setAngle(mAngle);
+	ScOffsetTransform::setOffset({ 0.0f, -sGimbalHeight / 6.0f, 0.0f, });
+	setAngle(mAngle);
 	setMaterial(mMaterial);
 }
 
@@ -122,6 +122,19 @@ PrPrismRenderer& PrPrismRenderer::setOffset(const QVector3D&)
 {
 	Q_ASSERT(!"Offsetting should not be manipulated directly.");
 	return *this;
+}
+
+QMatrix4x4 PrPrismRenderer::modelMatrix() const
+{
+	QVector3D anglingScale(1.0f, 1.0f, tanf(qDegreesToRadians(angle() / 2.0f)));
+
+	QMatrix4x4 model;
+	model.setToIdentity();
+	model.translate(position());
+	model.rotate(rotation());
+	model.translate(offset());
+	model.scale(scale() * anglingScale);
+	return model;
 }
 
 PrPrismRenderer& PrPrismRenderer::setAbsorptionIndexCenter(qreal center)
@@ -166,12 +179,6 @@ PrPrismRenderer& PrPrismRenderer::setAbsorptionIndexHeight(qreal height)
 
 PrPrismRenderer& PrPrismRenderer::setAngle(float angle)
 {
-	QVector3D anglingScale(1.0f, 1.0f, tanf(qDegreesToRadians(angle / 2.0f)));
-	QVector3D prevAnglingScale(1.0f, 1.0f, tanf(qDegreesToRadians(mAngle / 2.0f)));
-
-	ScOffsetTransform::setOffset({ 0.0f, -sGimbalHeight / 6.0f, 0.0f, });
-	ScOffsetTransform::setScale(anglingScale / prevAnglingScale * scale());
-
 	mAngle = angle;
 	mPlanesSynced = false;
 	return *this;
@@ -435,7 +442,6 @@ void PrScene::init()
 		.setPosition({ 0.0f, 0.0f, -2.0f });
 	// ----------------------
 	mPrismRenderers = { PrPrismRenderer::create(), PrPrismRenderer::create() };
-	mPrismRenderers[0]->setScale({ 2.0f, 2.0f, 2.0f });
 	setOnePrismScene();
 	// ----------------------
 	mBeamsRenderer = PrBeamConeRenderer::create();
