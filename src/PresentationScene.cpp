@@ -428,39 +428,38 @@ void PrScene::init()
 	mMainCamera
 		->setRotationMinBound({ -24.0f, -145.0f })
 		.setRotationMaxBound({ +15.0f, +145.0f })
-		.setRotationCenter({ 0.0f, 1.0f, -2.0f })
-		.setRotationOrbit({ 0.0f, 0.0f, 1.8f })
-		.rotate({ 0.0f, 45.0f })
+        .setRotationCenter({ 0.0f, 0.6f, -1.4f })
+        .setRotationOrbit({ 0.0f, 0.0f, 1.3f })
+        .rotate({ 4.0f, 25.0f })
 		.setClearColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 	mProjCamera = ScProjectionCamera::create();
 	mProjCamera
 		->setClearColor({ 0.0f, 0.0f, 0.0f, 1.0f })
 		.setViewport({ 1.0f - 0.35f - 0.05f, 0.05f, 0.35f, 0.35f });
 	// ----------------------
-	mRoomRenderer = PrRoomRenderer::create();
+    mRoomRenderer = PrRoomRenderer::create();
 	mRoomRenderer
 		->enable()
 		.setPosition({ 0.0f, 0.0f, -2.0f })
-		.setScale({ -1.0f, 1.0f, 1.0f });
+        .setScale({ -1.5f, 1.0f, 1.0f });
 	mScreenRenderer = PrScreenRenderer::create();
 	mScreenRenderer
 		->enable()
 		.setPosition({ 0.0f, 0.0f, -2.0f });
 	// ----------------------
 	mPrismRenderers = { PrPrismRenderer::create(), PrPrismRenderer::create() };
-	setOnePrismScene();
 	// ----------------------
 	mBeamsRenderer = PrBeamConeRenderer::create();
 #ifndef ROTATED_PRISMS
-	mBeamsRenderer
-		->enable()
-		.setPosition({ 0.0f, 0.72f, 2.0f });
+    mBeamsRenderer
+        ->enable()
+        .setPosition({ 0.0f, 0.35f, 2.0f });
 #else
     mBeamsRenderer
         ->enable()
         .setPosition({ 0.4f, 0.75f, 2.0f });
 #endif
-
+    setOnePrismScene();
 	recalculateBeams();
 }
 void PrScene::render()
@@ -492,10 +491,12 @@ void PrScene::setOnePrismScene()
 		->setAngle(60.0f)
 		.setMaterial(PrPrismMaterial::NormGlass)
 		.enable()
-		.setPosition({ 0.0f, 0.75f, -1.3f })
-		.setRotationDegrees({ 0.0f, 0.0f, 0.0f });
+        .setPosition({ 0.0f, 0.37f, -0.65f })
+        .setRotationDegrees({ 0.0f, 0.0f, 0.0f })
+        .setScale({0.5f, 0.5f, 0.5f});
 	mPrismRenderers.last()
 		->disable();
+    mBeamsRenderer->setPosition({0.0f, 0.35f, 2.0f});
 #else
     mPrismRenderers.first()
         ->setAngle(60.0f)
@@ -514,15 +515,18 @@ void PrScene::setTwoPrismsScene()
 		->setAngle(60.0f)
 		.setMaterial(PrPrismMaterial::NormGlass)
 		.enable()
-		.setPosition({ 0.0f, 0.75f, -1.4f })
-		.setRotationDegrees({ 0.0f, 0.0f, 0.0f });
+        .setPosition({ 0.1f, 0.37f, -0.7f })
+        .setRotationDegrees({ 0.0f, 0.0f, 0.0f })
+        .setScale({0.5f, 0.5f, 0.5f});
 	mPrismRenderers.last()
 		->setAngle(60.0f)
 		.setMaterial(PrPrismMaterial::NormGlass)
 		.enable()
-        .setPosition({ 0.0f, 0.95f, -2.0f })
+        .setPosition({ 0.07f, 0.475f, -1.0f })
 		.setScale({0.5f, 0.5f, 0.5f})
 		.setRotationDegrees({ 0.0f, 0.0f, 90.0f });
+    mBeamsRenderer->setPosition({0.1f, 0.35f, 2.0f});
+    //recalculateBeams();
 #else
     mPrismRenderers.first()
         ->setAngle(60.0f)
