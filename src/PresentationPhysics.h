@@ -69,9 +69,9 @@ public:
 	{
 		QVector4D colorVector = convertWavelengthToRGBA(waveLengthMcm, alpha);
 		QColor color;
-		color.setRedF(colorVector.x());
-		color.setGreenF(colorVector.y());
-		color.setBlueF(colorVector.z());
+		color.setRedF(0.5 * colorVector.x());
+		color.setGreenF(0.5 * colorVector.y());
+		color.setBlueF(0.5 * colorVector.z());
 		color.setAlphaF(colorVector.w());
 		return color;
 	}

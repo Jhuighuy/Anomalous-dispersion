@@ -119,14 +119,14 @@
        <item>
         <widget class="QPushButton" name="pushButtonToMenu">
          <property name="text">
-          <string>В меню</string>
+          <string>Показатель преломления</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="pushButtonSetupOnePrism">
          <property name="text">
-          <string>Одна призма</string>
+          <string>Показатаель поглащения</string>
          </property>
         </widget>
        </item>

@@ -2,6 +2,7 @@
 #define PLOTVIEWWIDGET_H
 
 #include <QChartView>
+#include <QValueAxis>
 #include <QSplineSeries>
 
 #include "PresentationPhysics.h"
@@ -16,28 +17,28 @@ public:
 
     void bindWithComplexFunction(PhComplexIndexFunction_p indexFunction, qreal c = 1)
     {
+		static const QString spec("\320\224\320\273\320\270\320\275\320\260 \320\262\320\276\320\273\320\275\321\213 (\320\275\320\274)");
+		static const QString refr("\320\237\320\276\320\272\320\260\320\267\320\260\321\202\320\265\320\273\321\214 \320\277\321\200\320\265\320\273\320\276\320\274\320\273\320\265\320\275\320\270\321\217");
+		static const QString absp("\320\237\320\276\320\272\320\260\320\267\320\260\321\202\320\265\320\273\321\214 \320\277\320\276\320\263\320\273\320\276\321\211\320\265\320\275\320\270\321\217");
+
 		QtCharts::QChart* chart = new QtCharts::QChart();
+		chart->legend()->hide();
 
-        mIndexFunction = indexFunction;
-        QtCharts::QSplineSeries* lineSeries = new QtCharts::QSplineSeries();
-		for (qreal x = 0.38; x < 0.78; x += 0.01)
-        {
-            lineSeries->append(x * 1000.0, indexFunction->real(x) / c);
-		}
-        lineSeries->setName("Govno");
-		chart->addSeries(lineSeries);
+		QtCharts::QValueAxis* axisX = new QtCharts::QValueAxis();
+		QtCharts::QValueAxis* axisY = new QtCharts::QValueAxis();
+		//QtCharts::QValueAxis* axisY2 = new QtCharts::QValueAxis();
 
-		if (indexFunction->imaginaryPart() != nullptr)
-		{
-			QtCharts::QSplineSeries* lineSeries2 = new QtCharts::QSplineSeries();
-			for (qreal x = 0.38; x < 0.78; x += 0.01)
-			{
-				lineSeries2->append(x * 1000.0, indexFunction->imaginary(x));
-			}
-			lineSeries2->setName("Jopa");
-			chart->addSeries(lineSeries2);
-		}
+		axisX->setRange(380, 780);
+		axisX->setTickCount(5);
+		axisX->setTitleText(spec);
+		axisY->setTitleText(refr);
+		//axisY2->setTitleText(absp);
 
+		QPen pen;
+		pen.setColor(Qt::black);
+		pen.setWidth(5);
+
+		// ----------------------
 		{
 			QLinearGradient chartAreaGradient;
 			chartAreaGradient.setStart(QPointF(0, 0.1));
@@ -51,11 +52,81 @@ public:
 
 			chartAreaGradient.setCoordinateMode(QGradient::ObjectBoundingMode);
 			chart->setPlotAreaBackgroundBrush(chartAreaGradient);
+			
 			chart->setPlotAreaBackgroundVisible(true);
 		}
 
-		chart->createDefaultAxes();
+		// ----------------------
+		qreal min = 1000.0, max = -1000.0;
+
+        mIndexFunction = indexFunction;
+		QtCharts::QSplineSeries* refrIndexSeries = new QtCharts::QSplineSeries();
+		QtCharts::QSplineSeries* refrIndexSeries2 = new QtCharts::QSplineSeries();
+		refrIndexSeries2->setPen(pen);
+		for (qreal x = 0.38; x < 0.78; x += 0.01)
+        {
+			qreal y = indexFunction->real(x) / c;
+			min = qMin(min, y);
+			max = qMax(max, y);
+			refrIndexSeries->append(x * 1000.0, y);
+			refrIndexSeries2->append(x * 1000.0, y);
+		}
+		chart->addSeries(refrIndexSeries2);
+		chart->addSeries(refrIndexSeries);
+
+		QtCharts::QSplineSeries* abspIndexSeries = nullptr;
+		QtCharts::QSplineSeries* abspIndexSeries2 = nullptr;
+		if (indexFunction->imaginaryPart() != nullptr)
+		{
+			abspIndexSeries = new QtCharts::QSplineSeries();
+			abspIndexSeries2 = new QtCharts::QSplineSeries();
+			abspIndexSeries2->setPen(pen);
+
+			for (qreal x = 0.38; x < 0.78; x += 0.01)
+			{
+				qreal y = indexFunction->imaginary(x);
+				min = qMin(min, y);
+				max = qMax(max, y);
+				abspIndexSeries->append(x * 1000.0, y);
+				abspIndexSeries2->append(x * 1000.0, y);
+			}
+			chart->addSeries(abspIndexSeries2);
+			chart->addSeries(abspIndexSeries);
+		}
+
+		axisY->setGridLineVisible(true);
+		axisX->setLabelFormat("%i");
+		axisY->setTickCount(5);
+
+		chart->addAxis(axisX, Qt::AlignBottom);
+		chart->addAxis(axisY, Qt::AlignLeft);
+		if (abspIndexSeries)
+		{
+			//chart->addAxis(axisY2, Qt::AlignRight);
+		}
+
+		axisY->setRange(min, max + 0.02);
+		if (abspIndexSeries)
+		{
+			//axisY2->setRange(min, max + 0.02);
+		}
+
+		refrIndexSeries->attachAxis(axisX);
+		refrIndexSeries->attachAxis(axisY);
+		refrIndexSeries2->attachAxis(axisX);
+		refrIndexSeries2->attachAxis(axisY);
+
+		if (abspIndexSeries)
+		{
+			abspIndexSeries->attachAxis(axisX);
+			abspIndexSeries->attachAxis(axisY);
+
+			abspIndexSeries2->attachAxis(axisX);
+			abspIndexSeries2->attachAxis(axisY);
+		}
+
 		setChart(chart);
+		setRenderHint(QPainter::Antialiasing);
     }
 
 	void rebind()
