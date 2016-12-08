@@ -169,6 +169,7 @@ public:
 private:
     const qreal mMagicConstant = 0.91;
     qreal mQuadratic = 0.27 * mMagicConstant, mLinear = -0.45 * mMagicConstant, mConstant = 1.61 * mMagicConstant;
+    //qreal mQuadratic = 0.227273 * mMagicConstant, mLinear = -0.363636 * mMagicConstant, mConstant = 1.63536 * mMagicConstant;
 };
 
 /*!

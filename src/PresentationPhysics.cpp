@@ -268,7 +268,7 @@ bool PhRefractivePlane::refract(qreal waveLength, PhBeamPart& newBeam, const PhB
 	// Absorbing the color.
 	if (!enters && refractiveIndex()->imaginaryPart() != nullptr)
 	{
-        static const qreal magicConstant = 50.5;
+        static const qreal magicConstant = 150.5;
 
 		qreal abspIndex = refractiveIndex()->imaginary(waveLength);
         qreal distance = newBeam.position.distanceToPoint(beam.position);
