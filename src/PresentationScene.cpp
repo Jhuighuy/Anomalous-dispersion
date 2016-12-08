@@ -12,6 +12,8 @@
 
 #include <typeinfo>
 
+//#define ROTATED_PRISMS
+
 static QOpenGLShaderProgram_p prUnlitColoredShaderProgram()
 {
 	static const QOpenGLShaderProgram_p unlitColoredShaderProgram = scLoadShaderProgram(":/shaders/vertex.glsl",
@@ -445,9 +447,15 @@ void PrScene::init()
 	setOnePrismScene();
 	// ----------------------
 	mBeamsRenderer = PrBeamConeRenderer::create();
+#ifndef ROTATED_PRISMS
 	mBeamsRenderer
 		->enable()
 		.setPosition({ 0.0f, 0.72f, 2.0f });
+#else
+    mBeamsRenderer
+        ->enable()
+        .setPosition({ 0.4f, 0.75f, 2.0f });
+#endif
 
 	recalculateBeams();
 }
@@ -475,6 +483,7 @@ void PrScene::render()
 
 void PrScene::setOnePrismScene()
 {
+#ifndef ROTATED_PRISMS
 	mPrismRenderers.first()
 		->setAngle(60.0f)
 		.setMaterial(PrPrismMaterial::NormGlass)
@@ -483,9 +492,20 @@ void PrScene::setOnePrismScene()
 		.setRotationDegrees({ 0.0f, 0.0f, 0.0f });
 	mPrismRenderers.last()
 		->disable();
+#else
+    mPrismRenderers.first()
+        ->setAngle(60.0f)
+        .setMaterial(PrPrismMaterial::NormGlass)
+        .enable()
+        .setPosition({ 0.4f, 0.8f, -1.3f })
+        .setRotationDegrees({ 0.0f, 0.0f, 90.0f });
+    mPrismRenderers.last()
+        ->disable();
+#endif
 }
 void PrScene::setTwoPrismsScene()
 {
+#ifndef ROTATED_PRISMS
 	mPrismRenderers.first()
 		->setAngle(60.0f)
 		.setMaterial(PrPrismMaterial::NormGlass)
@@ -496,8 +516,22 @@ void PrScene::setTwoPrismsScene()
 		->setAngle(60.0f)
 		.setMaterial(PrPrismMaterial::NormGlass)
 		.enable()
-		.setPosition({ 0.0f, 0.95f, -2.0f })
+        .setPosition({ 0.0f, 0.95f, -2.0f })
 		.setRotationDegrees({ 0.0f, 0.0f, 90.0f });
+#else
+    mPrismRenderers.first()
+        ->setAngle(60.0f)
+        .setMaterial(PrPrismMaterial::NormGlass)
+        .enable()
+        .setPosition({ 0.4f, 0.75f, -1.4f })
+        .setRotationDegrees({ 0.0f, 0.0f, 90.0f });
+    mPrismRenderers.last()
+        ->setAngle(60.0f)
+        .setMaterial(PrPrismMaterial::NormGlass)
+        .enable()
+        .setPosition({ 0.1f, 0.75f, -2.0f })
+        .setRotationDegrees({ 0.0f, 0.0f, 0.0f });
+#endif
 }
 void PrScene::recalculateBeams()
 {

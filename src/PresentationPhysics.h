@@ -157,7 +157,9 @@ public:
     }
 
 private:
-	qreal mQuadratic = 0.27 * 0.9, mLinear = -0.45 * 0.9, mConstant = 1.61 * 0.9;
+    const qreal magicConstant = 0.91;
+    qreal mQuadratic = 0.27 * magicConstant, mLinear = -0.45 * magicConstant, mConstant = 1.61 * magicConstant;
+    //qreal mQuadratic = 0.2227273 * magicConstant, mLinear = -0.363636 * magicConstant, mConstant = 1.63536 * magicConstant;
 };
 
 /*!
@@ -196,7 +198,7 @@ public:
 
 private:
 	qreal mCenter = 0.58;
-	qreal mWidth = 450.0, mHeight = 1.0;
+    qreal mWidth = 450.0, mHeight = 0.35;
 };
 
 /*!

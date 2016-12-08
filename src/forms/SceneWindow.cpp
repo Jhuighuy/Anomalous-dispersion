@@ -97,7 +97,7 @@ void SceneWindow::onSecondPrismAngleChanged(int value)
 	PrScene_p scene = ui->sceneWidget->scene().dynamicCast<PrScene>();
     Q_ASSERT(scene != nullptr);
 
-	PrPrismRenderer_p secondPrism = scene->firstPrism();
+    PrPrismRenderer_p secondPrism = scene->secondPrism();
 	secondPrism->setAngle(static_cast<float>(value));
 	scene->recalculateBeams();
 }

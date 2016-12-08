@@ -456,7 +456,11 @@ void ScOpenGLWidget::initializeGL()
 void ScOpenGLWidget::resizeGL(int w, int h)
 {
 	Q_ASSERT(scene() != nullptr);
+#ifndef __APPLE__
 	scene()->onResize(static_cast<float>(w), static_cast<float>(h));
+#else
+    scene()->onResize(static_cast<float>(2*w), static_cast<float>(2 * h));
+#endif
 }
 
 void ScOpenGLWidget::paintGL()
