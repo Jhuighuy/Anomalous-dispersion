@@ -366,12 +366,12 @@ void ScTransparentMeshRenderer::render(const ScBasicCamera& camera)
 
 	Q_ASSERT(mesh()->size() != 0);
 
-    ScMatrix4x4 modelView = camera.viewMatrix() * modelMatrix();
+    QMatrix4x4 modelView = camera.viewMatrix() * modelMatrix();
 	
 	struct ScTraingleInfo
 	{
 		int vertexIndex;
-        qreal distance;
+        float distance;
 	};
 
 	// Building the mesh triangle info.
@@ -379,11 +379,11 @@ void ScTransparentMeshRenderer::render(const ScBasicCamera& camera)
 #pragma omp parallel for
 	for (int i = 0; i < trianglesInfo.size(); ++i)
 	{
-        ScVector3D trianglePositionVS;
+		QVector3D trianglePositionVS;
 		for (int j = 0; j < 3; ++j)
 		{
 			const ScVertexData& vertex = mesh()->at(3 * i + j);
-            ScVector3D vertexPositionVS = modelView * vertex.vertexCoord;
+			QVector3D vertexPositionVS = modelView * vertex.vertexCoord * vertex.color.w();
 			trianglePositionVS += vertexPositionVS;
 		}
 		trianglesInfo[i] = { 3 * i, trianglePositionVS.length() };
@@ -440,6 +440,7 @@ void ScOpenGLWidget::initializeGL()
     format.setMajorVersion(2);
     format.setMajorVersion(1);
     format.setSamples(4);
+	format.setAlphaBufferSize(0);
     format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
 
     context()->setFormat(format);
@@ -459,7 +460,7 @@ void ScOpenGLWidget::resizeGL(int w, int h)
 #ifndef __APPLE__
 	scene()->onResize(static_cast<float>(w), static_cast<float>(h));
 #else
-    scene()->onResize(static_cast<float>(2*w), static_cast<float>(2 * h));
+    scene()->onResize(static_cast<float>(2 * w), static_cast<float>(2 * h));
 #endif
 }
 

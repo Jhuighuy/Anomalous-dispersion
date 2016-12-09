@@ -89,19 +89,20 @@ struct ScMatrix4x4
 
 	ScVector3D operator* (const ScVector3D& vector) const
 	{
-		qreal result[4];
+		qreal v[4] = { vector.x, vector.y, vector.z, 1.0 };
+		qreal result[4] = {0.0f};
 		for (int row = 0; row < 4; ++row)
 		{
 			for (int column = 0; column < 4; ++column)
 			{
-				result[row] += m[row][column] * vector.v[row];
+				result[row] += m[row][column] * v[row];
 			}
 		}
 
 		ScVector3D r;
-		r.x = result[0] /= result[3],
-			r.y = result[1] /= result[3],
-			r.z = result[2] /= result[3];
+		r.x = result[0] / result[3];
+		r.y = result[1] / result[3];
+		r.z = result[2] / result[3];
 		return r;
 	}
 };

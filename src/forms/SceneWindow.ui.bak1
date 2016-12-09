@@ -13,7 +13,7 @@
   <property name="font">
    <font>
     <family>Courant</family>
-    <pointsize>14</pointsize>
+    <pointsize>12</pointsize>
    </font>
   </property>
   <property name="windowTitle">
@@ -27,18 +27,6 @@
    </layout>
   </widget>
   <widget class="QDockWidget" name="dockSceneParams">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="maximumSize">
-    <size>
-     <width>405</width>
-     <height>524287</height>
-    </size>
-   </property>
    <property name="floating">
     <bool>false</bool>
    </property>
@@ -263,12 +251,6 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockRefractiveIndexParams">
-   <property name="maximumSize">
-    <size>
-     <width>405</width>
-     <height>524287</height>
-    </size>
-   </property>
    <property name="floating">
     <bool>false</bool>
    </property>
