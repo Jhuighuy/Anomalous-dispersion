@@ -311,8 +311,8 @@ PrScreenRenderer& PrScreenRenderer::setPosition(const QVector3D& position)
 	static const QVector3D defaultMaxBound(+1.77f, 2.070f, -1.49f);
 
 	mPlane
-		.setMinBound(defaultMinBound + position)
-		.setMaxBound(defaultMaxBound + position);
+		.setMinBound(defaultMinBound * scale() + position)
+		.setMaxBound(defaultMaxBound * scale() + position);
 
 	ScMeshRenderer::setPosition(position);
 	return *this;
@@ -322,9 +322,10 @@ PrScreenRenderer& PrScreenRenderer::setRotation(const QQuaternion&)
 	Q_ASSERT(!"Rotation should not be manipulated directly.");
 	return *this;
 }
-PrScreenRenderer& PrScreenRenderer::setScale(const QVector3D&)
+PrScreenRenderer& PrScreenRenderer::setScale(const QVector3D& scale)
 {
-	Q_ASSERT(!"Scaling should not be manipulated directly.");
+	//Q_ASSERT(!"Scaling should not be manipulated directly.");
+	ScMeshRenderer::setScale(scale);
 	return *this;
 }
 PrScreenRenderer& PrScreenRenderer::setOffset(const QVector3D&)
@@ -445,7 +446,8 @@ void PrScene::init()
 	mScreenRenderer = PrScreenRenderer::create();
 	mScreenRenderer
 		->enable()
-		.setPosition({ 0.0f, 0.0f, -2.0f });
+		.setPosition({ 0.0f, 0.0f, -2.0f })
+		.setScale({ 1.5f, 1.0f, 1.0f });
 	// ----------------------
 	mPrismRenderers = { PrPrismRenderer::create(), PrPrismRenderer::create() };
 	// ----------------------

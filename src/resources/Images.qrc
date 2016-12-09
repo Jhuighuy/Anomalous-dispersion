@@ -6,5 +6,7 @@
         <file>../../gfx/gleba.png</file>
         <file>../../gfx/oleja.png</file>
         <file>../../gfx/spectrum.jpg</file>
+        <file>../../gfx/blue.png</file>
+        <file>../../gfx/green.png</file>
     </qresource>
 </RCC>

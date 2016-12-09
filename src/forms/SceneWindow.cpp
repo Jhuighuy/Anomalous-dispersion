@@ -19,7 +19,7 @@ void SceneWindow::setupUi(QMainWindow* menuWindow)
 	ui->sceneWidget->setScene(PrScene::create());
 
     connect(ui->pushButtonToMenu, &QPushButton::clicked, this, &QMainWindow::hide);
-    connect(ui->pushButtonToMenu, &QPushButton::clicked, menuWindow, &QMainWindow::showMaximized);
+    connect(ui->pushButtonToMenu, &QPushButton::clicked, menuWindow, &QMainWindow::showFullScreen);
     connect(ui->pushButtonSetupOnePrism, &QPushButton::clicked, this, &SceneWindow::onApplyOnePrismSetup);
     connect(ui->pushButtonSetupTwoPrisms, &QPushButton::clicked, this, &SceneWindow::onApplyTwoPrismsSetup);
 
@@ -115,7 +115,7 @@ void SceneWindow::onSecondPrismAnomalousToggled(bool value)
 	}
 	else
 	{
-		ui->chartRefractiveIndex->bindWithComplexFunction(scene->firstPrism()->refractiveIndex());
+		ui->chartRefractiveIndex->bindWithComplexFunction(scene->firstPrism()->refractiveIndex(), 0.9);
 	}
 
 	skip = true;
@@ -186,10 +186,22 @@ void SceneWindow::setSecondPrismAnomalous(bool enable)
 		ui->sliderAbspSpectrumWidth,
 		ui->labelAbspSpectrumHeight, ui->labelAbspSpectrumHeightMin, ui->labelAbspSpectrumHeightMid, ui->labelAbspSpectrumHeightMax,
 		ui->sliderAbspSpectrumHeight,
+
 	};
 	for (QWidget* widget : widgetsToEnable)
 	{
 		widget->setEnabled(enable);
+	}
+
+	if (enable)
+	{
+		ui->imageLabelPlotAbsp->show();
+		ui->labelPlotAbsp->show();
+	}
+	else
+	{
+		ui->imageLabelPlotAbsp->hide();
+		ui->labelPlotAbsp->hide();
 	}
 }
 void SceneWindow::setSecondPrismEnabled(bool enable)

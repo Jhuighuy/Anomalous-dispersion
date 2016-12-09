@@ -12,6 +12,6 @@ void AuthorsWindow::setupUi(QMainWindow* menuWindow)
     ui->setupUi(this);
 
     connect(ui->pushButtonToMenu, &QPushButton::clicked, this, &QMainWindow::hide);
-    connect(ui->pushButtonToMenu, &QPushButton::clicked, menuWindow, &QMainWindow::showMaximized);
+    connect(ui->pushButtonToMenu, &QPushButton::clicked, menuWindow, &QMainWindow::showFullScreen);
 }
 
