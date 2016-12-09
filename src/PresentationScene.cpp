@@ -429,9 +429,9 @@ void PrScene::init()
 	mMainCamera
 		->setRotationMinBound({ -24.0f, -145.0f })
 		.setRotationMaxBound({ +15.0f, +145.0f })
-        .setRotationCenter({ 0.0f, 0.6f, -1.4f })
-        .setRotationOrbit({ 0.0f, 0.0f, 1.3f })
-        .rotate({ 4.0f, 25.0f })
+        .setRotationCenter({ 0.0f, 0.5f, -1.3f })
+        .setRotationOrbit({ 0.0f, 0.0f, 1.2f })
+        .rotate({ 4.0f, 14.0f })
 		.setClearColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 	mProjCamera = ScProjectionCamera::create();
 	mProjCamera
@@ -493,12 +493,12 @@ void PrScene::setOnePrismScene()
 		->setAngle(60.0f)
 		.setMaterial(PrPrismMaterial::NormGlass)
 		.enable()
-        .setPosition({ 0.0f, 0.37f, -0.65f })
+        .setPosition({ 0.1f, 0.37f, -0.65f })
         .setRotationDegrees({ 0.0f, 0.0f, 0.0f })
         .setScale({0.5f, 0.5f, 0.5f});
 	mPrismRenderers.last()
 		->disable();
-    mBeamsRenderer->setPosition({0.0f, 0.35f, 2.0f});
+    mBeamsRenderer->setPosition({0.1f, 0.35f, 2.0f});
 #else
     mPrismRenderers.first()
         ->setAngle(60.0f)

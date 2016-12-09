@@ -12,7 +12,11 @@ void MenuWindow::setupUi(QMainWindow* sceneWindow, QMainWindow* authorsWindows)
     ui->setupUi(this);
 
     connect(ui->pushButtonStart, &QPushButton::clicked, this, &QMainWindow::hide);
+#ifndef __APPLE__
     connect(ui->pushButtonStart, &QPushButton::clicked, sceneWindow, &QMainWindow::showFullScreen);
+#else
+    connect(ui->pushButtonStart, &QPushButton::clicked, sceneWindow, &QMainWindow::show);
+#endif
 
     connect(ui->pushButtonAuthors, &QPushButton::clicked, this, &QMainWindow::hide);
     connect(ui->pushButtonAuthors, &QPushButton::clicked, authorsWindows, &QMainWindow::showFullScreen);
