@@ -165,6 +165,10 @@ PhComplexIndexFunction& PhComplexIndexFunction::computeRealPartKramersKronig(qre
 	QTime time;
 	time.start();
 #endif
+	
+	//! @todo
+	PhParabolicIndexFunction baseRefractiveIndex;
+	//! @todo
 
 #pragma omp parallel for
 	for (int i = 0; i < partitioning; ++i)
@@ -172,7 +176,7 @@ PhComplexIndexFunction& PhComplexIndexFunction::computeRealPartKramersKronig(qre
 		static const qreal delta = 1e-8;
 
 		qreal x = Xmin + i * (Xmax - Xmin) / partitioning;
-		qreal y = 1.0 + simpsonIntegrate(delta, inf, partitioning * 10, [&](qreal z)
+		qreal y = baseRefractiveIndex.real(x) + simpsonIntegrate(delta, inf, partitioning * 10, [&](qreal z)
 		                                 {
 			                                 return 1.0 / M_PI * (imaginary(x + z) / -z + imaginary(x - z) / +z);
 		                                 });
