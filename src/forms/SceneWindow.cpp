@@ -88,7 +88,7 @@ void SceneWindow::onSecondPrismRotationChanged(int value)
 	//! @todo
 	PrPrismRenderer_p secondPrism = scene->secondPrism();
 	QVector3D rotationDegrees = secondPrism->rotationDegrees();
-	rotationDegrees.setX(static_cast<float>(-value));
+    rotationDegrees.setY(static_cast<float>(-value)); //Олег, я здесь выставил setY вместо setX, все ок.
 	secondPrism->setRotationDegrees(rotationDegrees);
 	scene->recalculateBeams();
 }
@@ -106,7 +106,18 @@ void SceneWindow::onSecondPrismAnomalousToggled(bool value)
 	PrScene_p scene = ui->sceneWidget->scene().dynamicCast<PrScene>();
 	Q_ASSERT(scene != nullptr);
 
-	PrPrismRenderer_p secondPrism = scene->secondPrism();
+    PrPrismRenderer_p firstPrism = scene->firstPrism();
+    PrPrismRenderer_p secondPrism = scene->secondPrism();
+
+    //! @todo Олег, исправь хуйню, которую я тут нахуярил, все работает, но хуй знает, че тебе там по вкусу
+    auto firstRotationDegrees = firstPrism->rotationDegrees();
+    auto secondRotationDegrees = secondPrism->rotationDegrees();
+    firstRotationDegrees.setX(value? 20.0f : 0.0f);
+    secondRotationDegrees.setY(value? 20.0f : 0.0f);
+    firstPrism->setRotationDegrees(firstRotationDegrees);
+    secondPrism->setRotationDegrees(secondRotationDegrees);
+
+
 	secondPrism->setAnomaluos(value);
 	scene->recalculateBeams();
 	if (value)
@@ -122,6 +133,9 @@ void SceneWindow::onSecondPrismAnomalousToggled(bool value)
 	ui->sliderAbspSpectrumCenter->setValue(defaultAbsorptionSpectrumCenter);
 	ui->sliderAbspSpectrumWidth->setValue(defaultAbsorptionSpectrumWidth);
 	ui->sliderAbspSpectrumHeight->setValue(defaultAbsorptionSpectrumHeight);
+
+
+
 	skip = false;
 
 	setSecondPrismAnomalous(value);
@@ -187,11 +201,11 @@ void SceneWindow::setSecondPrismAnomalous(bool enable)
 		ui->labelAbspSpectrumHeight, ui->labelAbspSpectrumHeightMin, ui->labelAbspSpectrumHeightMid, ui->labelAbspSpectrumHeightMax,
 		ui->sliderAbspSpectrumHeight,
 
-	};
+    };
 	for (QWidget* widget : widgetsToEnable)
 	{
 		widget->setEnabled(enable);
-	}
+    }
 
 	if (enable)
 	{
@@ -202,7 +216,8 @@ void SceneWindow::setSecondPrismAnomalous(bool enable)
 	{
 		ui->imageLabelPlotAbsp->hide();
 		ui->labelPlotAbsp->hide();
-	}
+    }
+
 }
 void SceneWindow::setSecondPrismEnabled(bool enable)
 {
@@ -232,7 +247,7 @@ void SceneWindow::setSecondPrismEnabled(bool enable)
 
     QWidget* widgetsToEnable[] = {
 		ui->checkBoxSecondPrismAnomalous,
-		ui->spinBoxSecondPrismRotation, ui->spinBoxSecondPrismAngle,
+        ui->spinBoxSecondPrismRotation, ui->spinBoxSecondPrismAngle,
     };
     for (QWidget* widget : widgetsToEnable)
     {

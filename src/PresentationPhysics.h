@@ -208,7 +208,7 @@ public:
 
 private:
 	qreal mCenter = 0.58;
-    qreal mWidth = 450.0, mHeight = 0.35;
+    qreal mWidth = 450.0, mHeight = 0.3;
 };
 
 /*!
