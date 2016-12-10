@@ -26,13 +26,16 @@ public:
 
 		QtCharts::QValueAxis* axisX = new QtCharts::QValueAxis();
 		QtCharts::QValueAxis* axisY = new QtCharts::QValueAxis();
-		//QtCharts::QValueAxis* axisY2 = new QtCharts::QValueAxis();
+		QtCharts::QValueAxis* axisY2 = new QtCharts::QValueAxis();
 
 		axisX->setRange(380, 780);
 		axisX->setTickCount(5);
 		axisX->setTitleText(spec);
 		axisY->setTitleText(refr);
-		//axisY2->setTitleText(absp);
+		axisY2->setTitleText(absp);
+		axisX->setGridLineVisible(false);
+		axisY->setGridLineVisible(false);
+		axisY2->setGridLineVisible(false);
 
 		QPen pen;
 		pen.setColor(Qt::black);
@@ -62,6 +65,7 @@ public:
         mIndexFunction = indexFunction;
 		QtCharts::QSplineSeries* refrIndexSeries = new QtCharts::QSplineSeries();
 		QtCharts::QSplineSeries* refrIndexSeries2 = new QtCharts::QSplineSeries();
+		refrIndexSeries->setColor(Qt::white);
 		refrIndexSeries2->setPen(pen);
 		for (qreal x = 0.38; x < 0.78; x += 0.01)
         {
@@ -71,7 +75,7 @@ public:
 			refrIndexSeries->append(x * 1000.0, y);
 			refrIndexSeries2->append(x * 1000.0, y);
 		}
-		chart->addSeries(refrIndexSeries2);
+		//chart->addSeries(refrIndexSeries2);
 		chart->addSeries(refrIndexSeries);
 
 		QtCharts::QSplineSeries* abspIndexSeries = nullptr;
@@ -80,6 +84,10 @@ public:
 		{
 			abspIndexSeries = new QtCharts::QSplineSeries();
 			abspIndexSeries2 = new QtCharts::QSplineSeries();
+			
+			QPen p = abspIndexSeries->pen();
+			p.setColor(Qt::black);
+			abspIndexSeries->setPen(p);
 			abspIndexSeries2->setPen(pen);
 
 			for (qreal x = 0.38; x < 0.78; x += 0.01)
@@ -90,11 +98,10 @@ public:
 				abspIndexSeries->append(x * 1000.0, y);
 				abspIndexSeries2->append(x * 1000.0, y);
 			}
-			chart->addSeries(abspIndexSeries2);
+			//chart->addSeries(abspIndexSeries2);
 			chart->addSeries(abspIndexSeries);
 		}
 
-		axisY->setGridLineVisible(true);
 		axisX->setLabelFormat("%i");
 		axisY->setTickCount(5);
 
@@ -102,14 +109,14 @@ public:
 		chart->addAxis(axisY, Qt::AlignLeft);
 		if (abspIndexSeries)
 		{
-			//chart->addAxis(axisY2, Qt::AlignRight);
+			chart->addAxis(axisY2, Qt::AlignRight);
 		}
 
-		axisY->setRange(min, max + 0.02);
+		/*axisY->setRange(min, max + 0.02);
 		if (abspIndexSeries)
 		{
-			//axisY2->setRange(min, max + 0.02);
-		}
+			axisY2->setRange(min, max + 0.02);
+		}*/
 
 		refrIndexSeries->attachAxis(axisX);
 		refrIndexSeries->attachAxis(axisY);
@@ -119,10 +126,10 @@ public:
 		if (abspIndexSeries)
 		{
 			abspIndexSeries->attachAxis(axisX);
-			abspIndexSeries->attachAxis(axisY);
+			abspIndexSeries->attachAxis(axisY2);
 
 			abspIndexSeries2->attachAxis(axisX);
-			abspIndexSeries2->attachAxis(axisY);
+			abspIndexSeries2->attachAxis(axisY2);
 		}
 
 		setChart(chart);

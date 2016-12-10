@@ -23,8 +23,6 @@ private slots:
 
     void onFirstPrismRotationChanged(int value);
     void onFirstPrismAngleChanged(int value);
-    void onSecondPrismRotationChanged(int value);
-    void onSecondPrismAngleChanged(int value);
     void onSecondPrismAnomalousToggled(bool value);
 
     void onAbsorptionSpectrumCenterChanged(int value);
@@ -42,6 +40,7 @@ private:
 	int defaultAbsorptionSpectrumWidth;
 	int defaultAbsorptionSpectrumHeight;
 	bool skip = false;
+	bool second = false;
     Ui::SceneWindow *ui = nullptr;
 };
 

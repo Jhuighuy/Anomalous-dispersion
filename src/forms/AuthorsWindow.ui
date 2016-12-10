@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Авторы | Нормальная и Аномальная дисперсия</string>
+   <string>Авторы | Дисперсия в скрещенных призмах</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="font">
@@ -86,36 +86,15 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="font">
+           <font>
+            <pointsize>22</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string>Московский государственный университет имени М.В. Ломоносова
 Компьютерные презентации по курсу лекций
 «Физика Волновых Процессов»</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-          <property name="wordWrap">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="labelHeaderPresentation">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>33</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Нормальная и аномальная дисперсия</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -207,6 +186,39 @@
     </item>
     <item>
      <layout class="QVBoxLayout" name="layoutAuthors">
+      <item>
+       <widget class="QLabel" name="labelHeaderPresentation">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>33</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Дисперсия в скрещенных призмах</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QLabel" name="labelAuthors">
         <property name="font">
@@ -348,8 +360,8 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>200</width>
-          <height>50</height>
+          <width>150</width>
+          <height>75</height>
          </size>
         </property>
         <property name="font">
@@ -359,7 +371,7 @@
          </font>
         </property>
         <property name="text">
-         <string>В меню</string>
+         <string>Меню</string>
         </property>
        </widget>
       </item>
