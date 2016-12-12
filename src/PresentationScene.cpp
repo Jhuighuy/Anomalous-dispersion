@@ -65,7 +65,7 @@ PrPrismRenderer::PrPrismRenderer()
 		->enable()
 		.setMesh(prismHolderBaseMesh)
 		.setShaderProgram(prLitColoredShaderProgram())
-		.setScale({0.5f, 0.5f, 0.5f});
+        .setScale({0.5f, 0.5f, 0.5f});
 	// ----------------------
 	mPrismHolderLeg = ScMeshRenderer::create();
 	mPrismHolderLeg
@@ -78,8 +78,7 @@ PrPrismRenderer::PrPrismRenderer()
 	mPrismHolderGimbal
 		->enable()
 		.setMesh(prismHolderGimbalMesh)
-		.setShaderProgram(prLitColoredShaderProgram());
-
+        .setShaderProgram(prLitColoredShaderProgram());
 	enable();
 	setMesh(prismMesh);
 	setShaderProgram(prLitRefrShaderProgram());
@@ -119,14 +118,14 @@ PrPrismRenderer& PrPrismRenderer::setRotation(const QQuaternion& rotation)
 PrPrismRenderer& PrPrismRenderer::setScale(const QVector3D& scale)
 {
 	ScMeshRenderer::setScale(scale);
-	mPrismHolderGimbal->setScale(scale);
+    mPrismHolderGimbal->setScale(scale * 1.2f);
 	setAngle(angle());
 	setPosition(position());
 	return *this;
 }
 PrPrismRenderer& PrPrismRenderer::setOffset(const QVector3D&)
 {
-	Q_ASSERT(!"Offsetting should not be manipulated directly.");
+    Q_ASSERT(!"Offsetting should not be manipulated directly.");
 	return *this;
 }
 

@@ -174,10 +174,20 @@ void SceneWindow::setSecondPrismAnomalous(bool enable)
 		ui->labelAbspSpectrumHeight, ui->labelAbspSpectrumHeightMin, ui->labelAbspSpectrumHeightMid, ui->labelAbspSpectrumHeightMax,
 		ui->sliderAbspSpectrumHeight,
 
+
+    };
+    QWidget* widgetsToDisable[] = {
+        ui->labelFirstPrism, ui->labelFirstPrismAngle, ui->labelFirstPrismRotation, ui->spinBoxFirstPrismAngle,
+        ui->spinBoxFirstPrismRotation
     };
 	for (QWidget* widget : widgetsToEnable)
 	{
 		widget->setEnabled(enable);
+    }
+
+    for(QWidget* widget: widgetsToDisable)
+    {
+        widget->setEnabled(!enable);
     }
 
 	if (enable)
@@ -190,6 +200,7 @@ void SceneWindow::setSecondPrismAnomalous(bool enable)
 		ui->imageLabelPlotAbsp->hide();
 		ui->labelPlotAbsp->hide();
     }
+
 
 }
 void SceneWindow::setSecondPrismEnabled(bool enable)
