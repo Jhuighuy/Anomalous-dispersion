@@ -102,10 +102,10 @@
         <string>°</string>
        </property>
        <property name="minimum">
-        <number>-15</number>
+        <number>-10</number>
        </property>
        <property name="maximum">
-        <number>5</number>
+        <number>8</number>
        </property>
       </widget>
      </item>
@@ -211,7 +211,7 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>залупа</string>
+        <string>580</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignHCenter|Qt::AlignTop</set>
@@ -224,7 +224,7 @@
         <bool>true</bool>
        </property>
        <property name="minimum">
-        <number>480</number>
+        <number>380</number>
        </property>
        <property name="maximum">
         <number>780</number>
@@ -354,7 +354,7 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>480</string>
+        <string>380</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

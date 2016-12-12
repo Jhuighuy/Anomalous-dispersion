@@ -442,19 +442,19 @@ void PrScene::init()
 	mRoomRenderer
 		->enable()
 		.setPosition({ 0.0f, 0.0f, -2.0f })
-        .setScale({ -1.5f, 1.0f, 2.0f });
+        .setScale({ -1.5f, 1.1f, 2.0f });
 	mScreenRenderer = PrScreenRenderer::create();
 	mScreenRenderer
 		->enable()
         .setPosition({ 0.0f, 0.0f, -4.0f })
-        .setScale({ 1.5f, 1.0f, 1.0f });
+        .setScale({ 1.5f, 1.15f, 1.0f });
 	// ----------------------
 	mPrismRenderers = { PrPrismRenderer::create(), PrPrismRenderer::create() };
 	// ----------------------
 	mBeamsRenderer = PrBeamConeRenderer::create();
     mBeamsRenderer
-        ->enable()
-        .setPosition({1.3f, 0.18f, 2.0f});
+        ->enable();
+        //.setPosition({1.3f, 0.18f, 2.0f});
 
     setOnePrismScene();
 	recalculateBeams();
@@ -492,6 +492,9 @@ void PrScene::setOnePrismScene()
         .setScale({0.5f, 0.5f, 0.5f});
 	mPrismRenderers.last()
 		->disable();
+    auto beamsY = mPrismRenderers.first()->position().y() + mPrismRenderers.first()->offset().y() / 2;
+    mBeamsRenderer->setPosition({1.3f, beamsY, 2.0f});
+
 }
 void PrScene::setTwoPrismsScene()
 {
@@ -506,9 +509,11 @@ void PrScene::setTwoPrismsScene()
 		->setAngle(60.0f)
 		.setMaterial(PrPrismMaterial::NormGlass)
 		.enable()
-        .setPosition({ 1.27f, 0.3f, -2.9f })
+        .setPosition({ 1.27f, 0.32f, -2.9f })
 		.setScale({0.5f, 0.5f, 0.5f})
 		.setRotationDegrees({ 0.0f, 0.0f, 90.0f });
+    auto beamsY = mPrismRenderers.first()->position().y() + mPrismRenderers.first()->offset().y() / 2;
+    mBeamsRenderer->setPosition({1.3f, beamsY, 2.0f});
 }
 void PrScene::recalculateBeams()
 {
