@@ -19,10 +19,11 @@ public:
     {
 		static const QString spec("\320\224\320\273\320\270\320\275\320\260 \320\262\320\276\320\273\320\275\321\213 (\320\275\320\274)");
 		static const QString refr("\320\237\320\276\320\272\320\260\320\267\320\260\321\202\320\265\320\273\321\214 \320\277\321\200\320\265\320\273\320\276\320\274\320\273\320\265\320\275\320\270\321\217");
-		static const QString absp("\320\237\320\276\320\272\320\260\320\267\320\260\321\202\320\265\320\273\321\214 \320\277\320\276\320\263\320\273\320\276\321\211\320\265\320\275\320\270\321\217");
+        //!@todo change this title to коэффициент преломления кек
+        static const QString absp("\320\237\320\276\320\272\320\260\320\267\320\260\321\202\320\265\320\273\321\214 \320\277\320\276\320\263\320\273\320\276\321\211\320\265\320\275\320\270\321\217");
 
 		QtCharts::QChart* chart = new QtCharts::QChart();
-		chart->legend()->hide();
+        chart->legend()->hide();
 
 		QtCharts::QValueAxis* axisX = new QtCharts::QValueAxis();
 		QtCharts::QValueAxis* axisY = new QtCharts::QValueAxis();
@@ -36,6 +37,8 @@ public:
 		axisX->setGridLineVisible(false);
 		axisY->setGridLineVisible(false);
 		axisY2->setGridLineVisible(false);
+
+
 
 		QPen pen;
 		pen.setColor(Qt::black);
@@ -60,7 +63,8 @@ public:
 		}
 
 		// ----------------------
-		qreal min = 1000.0, max = -1000.0;
+        qreal minReal = 1000.0, maxReal = -1000.0;
+        qreal minImaginary = 1000.0, maxImaginary = -1000.0;
 
         mIndexFunction = indexFunction;
 		QtCharts::QSplineSeries* refrIndexSeries = new QtCharts::QSplineSeries();
@@ -70,8 +74,8 @@ public:
 		for (qreal x = 0.38; x < 0.78; x += 0.01)
         {
 			qreal y = indexFunction->real(x) / c;
-			min = qMin(min, y);
-			max = qMax(max, y);
+            minReal = qMin(minReal, y);
+            maxReal = qMax(maxReal, y);
 			refrIndexSeries->append(x * 1000.0, y);
 			refrIndexSeries2->append(x * 1000.0, y);
 		}
@@ -93,8 +97,8 @@ public:
 			for (qreal x = 0.38; x < 0.78; x += 0.01)
 			{
 				qreal y = indexFunction->imaginary(x);
-				min = qMin(min, y);
-				max = qMax(max, y);
+                minImaginary = qMin(minImaginary, y);
+                maxImaginary = qMax(maxImaginary, y);
 				abspIndexSeries->append(x * 1000.0, y);
 				abspIndexSeries2->append(x * 1000.0, y);
 			}
@@ -112,11 +116,21 @@ public:
 			chart->addAxis(axisY2, Qt::AlignRight);
 		}
 
-		/*axisY->setRange(min, max + 0.02);
-		if (abspIndexSeries)
+        /*axisY->setRange(minReal, maxReal + 0.02);
+        if (abspIndexSeries)
 		{
-			axisY2->setRange(min, max + 0.02);
-		}*/
+            axisY2->setRange(minImaginary, maxImaginary + 0.02);
+        } */
+
+        if (abspIndexSeries)
+        {
+            axisY->setRange(1.0f, 1.6f);
+            axisY2->setRange(0.0f, 0.45f);
+        }
+        else
+        {
+            axisY->setRange(minReal, maxReal + 0.02f);
+        }
 
 		refrIndexSeries->attachAxis(axisX);
 		refrIndexSeries->attachAxis(axisY);
