@@ -436,7 +436,7 @@ void PrScene::init()
 	mProjCamera = ScProjectionCamera::create();
 	mProjCamera
 		->setClearColor({ 0.0f, 0.0f, 0.0f, 1.0f })
-		.setViewport({ 1.0f - 0.35f - 0.05f, 0.05f, 0.35f, 0.35f });
+        .setViewport({ 0.0f, 0.00f, 0.0f, 0.0f });
 	// ----------------------
     mRoomRenderer = PrRoomRenderer::create();
 	mRoomRenderer

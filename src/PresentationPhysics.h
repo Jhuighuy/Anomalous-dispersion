@@ -84,6 +84,7 @@ DEFINE_SHARED_PTR(PhContinuousIndexFunction)
 DEFINE_SHARED_PTR(PhParabolicIndexFunction)
 DEFINE_SHARED_PTR(PhGaussianIndexFunction)
 DEFINE_SHARED_PTR(PhUniformMeshIndexFunction)
+DEFINE_SHARED_PTR(GovnoZhopa)
 
 /*!
  * The abstract index function class.
@@ -135,6 +136,45 @@ class PhContinuousIndexFunction : public PhIndexFunction
  * The continuous parabolic index function class.
  * Formula: a*x^2+b*x+c
  */
+
+class GovnoZhopa: public PhContinuousIndexFunction
+{
+    DEFINE_CREATE_FUNC(GovnoZhopa)
+
+public:
+    qreal quadratic() const { return mQuadratic; }
+    GovnoZhopa& setQuadratic(qreal quadratic)
+    {
+        mQuadratic = quadratic;
+        return *this;
+    }
+
+    qreal linear() const { return mLinear; }
+    GovnoZhopa& setLinear(qreal linear)
+    {
+        mLinear = linear;
+        return *this;
+    }
+
+    qreal constant() const { return mConstant; }
+    GovnoZhopa& setConstant(qreal constant)
+    {
+        mConstant = constant;
+        return *this;
+    }
+
+    qreal real(qreal x) const override
+    {
+        qreal t = 15 * x - 8.7;
+        return ( std::abs(sin(t)) + 5 * exp(-pow(t, 100.0)) * cos(t)) * linear() + constant();
+    }
+
+private:
+    const qreal mMagicConstant = 0.91;
+    qreal mQuadratic = 0.27 * mMagicConstant, mLinear = 1/30.0f, mConstant = 1.1;
+    //qreal mQuadratic = 0.227273 * mMagicConstant, mLinear = -0.363636 * mMagicConstant, mConstant = 1.63536 * mMagicConstant;
+};
+
 class PhParabolicIndexFunction : public PhContinuousIndexFunction
 {
 	DEFINE_CREATE_FUNC(PhParabolicIndexFunction)
@@ -163,12 +203,13 @@ public:
 
     qreal real(qreal x) const override
     {
-        return quadratic() * x * x + linear() * x + constant();
+        qreal t = 15 * x - 8.7;
+        return -t * linear() + constant();
     }
 
 private:
     const qreal mMagicConstant = 0.91;
-    qreal mQuadratic = 0.27 * mMagicConstant, mLinear = -0.45 * mMagicConstant, mConstant = 1.61 * mMagicConstant;
+    qreal mQuadratic = 0.27 * mMagicConstant, mLinear = 1/50.0f, mConstant = 1.3;
     //qreal mQuadratic = 0.227273 * mMagicConstant, mLinear = -0.363636 * mMagicConstant, mConstant = 1.63536 * mMagicConstant;
 };
 

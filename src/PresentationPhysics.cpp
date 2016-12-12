@@ -187,8 +187,9 @@ PhComplexIndexFunction& PhComplexIndexFunction::computeRealPartKramersKronig(qre
 	qDebug() << "Kramers-Kronig computation elapsed: " << time.elapsed();
 #endif
 
-	PhUniformMeshIndexFunction_p realPart = PhUniformMeshIndexFunction::create();
-	realPart->setMesh(realPartMesh).setXRange(Xmin, Xmax);
+//	PhUniformMeshIndexFunction_p realPart = PhUniformMeshIndexFunction::create();
+//	realPart->setMesh(realPartMesh).setXRange(Xmin, Xmax);
+    GovnoZhopa_p realPart = GovnoZhopa::create();
 	return setRealPart(realPart);
 }
 
