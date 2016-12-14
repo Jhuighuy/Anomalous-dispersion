@@ -305,7 +305,7 @@
         <enum>QSlider::TicksBelow</enum>
        </property>
        <property name="tickInterval">
-        <number>13</number>
+        <number>9</number>
        </property>
       </widget>
      </item>
@@ -391,8 +391,11 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="tickPosition">
+        <enum>QSlider::TicksBelow</enum>
+       </property>
        <property name="tickInterval">
-        <number>467</number>
+        <number>350</number>
        </property>
       </widget>
      </item>

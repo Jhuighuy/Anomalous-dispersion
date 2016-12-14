@@ -352,6 +352,11 @@ PrBeamConeRenderer::PrBeamConeRenderer()
 		->setMesh(ScEditableMesh::create())
 		.setShaderProgram(prUnlitColoredShaderProgram())
 		.setDiffuseTexture(colorMaskTexture);
+	mProjectionOnScreenRenderer = ScMeshRenderer::create();
+	mProjectionOnScreenRenderer
+		->setMesh(ScEditableMesh::create())
+		.setShaderProgram(prUnlitColoredShaderProgram())
+		.setDiffuseTexture(colorMaskTexture);
 }
 
 PrBeamConeRenderer& PrBeamConeRenderer::setRotation(const QQuaternion&)
@@ -388,6 +393,7 @@ void PrBeamConeRenderer::recalculateMesh(const QVector<PrPrismRenderer_p>& prism
 
 	QVector<ScVertexData> vertices;
 	QVector<ScVertexData> projVertices;
+	QVector<ScVertexData> projOnScreenVertices;
 
 	PresentationGeometry::generateBeamMesh(beamCone, vertices);
 	PresentationGeometry::generateBeamProjMesh(beamCone, screenRenderer->normal(), projVertices);
@@ -400,9 +406,14 @@ void PrBeamConeRenderer::recalculateMesh(const QVector<PrPrismRenderer_p>& prism
 
 	float projBoundWidth = projMaxBound.x() - projMinBound.x();
 	float projBoundHeight = projMaxBound.y() - projMinBound.y();
+	float proj = qMax(projBoundWidth, projBoundHeight);
 
 	projCamera->setPosition(0.5f * (projMaxBound + projMinBound) + QVector3D{0.0f, 0.0f, 1.0f});
-	projCamera->setSize(1.1f * qMax(projBoundWidth, projBoundHeight));
+	projCamera->setSize(1.1f * proj);
+
+	float thickness = 0.02f * proj;
+	PresentationGeometry::generateBeamProjMesh(beamCone, screenRenderer->normal(), projOnScreenVertices, thickness);
+	mProjectionOnScreenRenderer->mesh()->setVertices(projOnScreenVertices.data(), projVertices.size());
 }
 
 void PrBeamConeRenderer::render(const ScBasicCamera& camera)
@@ -410,11 +421,14 @@ void PrBeamConeRenderer::render(const ScBasicCamera& camera)
 	glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	mProjectionRenderer->render(camera);
 	if (typeid(camera) == typeid(ScOrbitalCamera))
 	{
-		// We want our mesh been rendered only by main camera.
         ScTransparentMeshRenderer::render(camera);
+		mProjectionRenderer->render(camera);
+	}
+	else
+	{
+		mProjectionOnScreenRenderer->render(camera);
 	}
 
 	glDisable(GL_BLEND);
