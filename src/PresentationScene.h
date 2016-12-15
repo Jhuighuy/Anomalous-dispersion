@@ -160,8 +160,8 @@ public:
 
 private:
     static const int sRaysCount = 1000u;
-	ScMeshRenderer_p mProjectionRenderer;
-	ScMeshRenderer_p mProjectionOnScreenRenderer;
+	ScTransparentMeshRenderer_p mProjectionRenderer;
+	ScTransparentMeshRenderer_p mProjectionOnScreenRenderer;
 };
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

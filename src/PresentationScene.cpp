@@ -360,12 +360,12 @@ PrBeamConeRenderer::PrBeamConeRenderer()
 	setMesh(ScEditableMesh::create());
 	setShaderProgram(prUnlitColoredShaderProgram());
 	// ----------------------
-	mProjectionRenderer = ScMeshRenderer::create();
+	mProjectionRenderer = ScTransparentMeshRenderer_p::create();
 	mProjectionRenderer
 		->setMesh(ScEditableMesh::create())
 		.setShaderProgram(prUnlitColoredShaderProgram())
 		.setDiffuseTexture(colorMaskTexture);
-	mProjectionOnScreenRenderer = ScMeshRenderer::create();
+	mProjectionOnScreenRenderer = ScTransparentMeshRenderer_p::create();
 	mProjectionOnScreenRenderer
 		->setMesh(ScEditableMesh::create())
 		.setShaderProgram(prUnlitColoredShaderProgram())
@@ -412,7 +412,7 @@ void PrBeamConeRenderer::recalculateMesh(const QVector<PrPrismRenderer_p>& prism
 	PresentationGeometry::generateBeamProjMesh(beamCone, screenRenderer->normal(), projVertices);
 	
 	mesh()->setVertices(vertices.data(), vertices.size(), true);
-	mProjectionRenderer->mesh()->setVertices(projVertices.data(), projVertices.size(), false, true);
+	mProjectionRenderer->mesh()->setVertices(projVertices.data(), projVertices.size(), true, true);
 
 	const QVector3D& projMinBound = mProjectionRenderer->mesh()->minBound();
 	const QVector3D& projMaxBound = mProjectionRenderer->mesh()->maxBound();
@@ -426,7 +426,7 @@ void PrBeamConeRenderer::recalculateMesh(const QVector<PrPrismRenderer_p>& prism
 
 	float thickness = 0.02f * proj;
 	PresentationGeometry::generateBeamProjMesh(beamCone, screenRenderer->normal(), projOnScreenVertices, thickness);
-	mProjectionOnScreenRenderer->mesh()->setVertices(projOnScreenVertices.data(), projVertices.size());
+	mProjectionOnScreenRenderer->mesh()->setVertices(projOnScreenVertices.data(), projOnScreenVertices.size(), true);
 }
 
 void PrBeamConeRenderer::render(const ScBasicCamera& camera)
@@ -436,8 +436,8 @@ void PrBeamConeRenderer::render(const ScBasicCamera& camera)
 
 	if (typeid(camera) == typeid(ScOrbitalCamera))
 	{
-        ScTransparentMeshRenderer::render(camera);
 		mProjectionRenderer->render(camera);
+		ScTransparentMeshRenderer::render(camera);
 	}
 	else
 	{
