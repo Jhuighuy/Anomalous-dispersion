@@ -271,7 +271,7 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>0</string>
+        <string>0.1</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -315,7 +315,7 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>1</string>
+        <string>0.6</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
@@ -328,7 +328,7 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>0.5</string>
+        <string>0.35</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignHCenter|Qt::AlignTop</set>
@@ -380,13 +380,13 @@
         <bool>true</bool>
        </property>
        <property name="minimum">
-        <number>100</number>
+        <number>1456</number>
        </property>
        <property name="maximum">
-        <number>1500</number>
+        <number>5641</number>
        </property>
        <property name="value">
-        <number>450</number>
+        <number>2659</number>
        </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -395,7 +395,7 @@
         <enum>QSlider::TicksBelow</enum>
        </property>
        <property name="tickInterval">
-        <number>350</number>
+        <number>1046</number>
        </property>
       </widget>
      </item>

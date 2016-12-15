@@ -141,7 +141,11 @@ void SceneWindow::onAbsorptionSpectrumWidthChanged(int value)
 	PrScene_p scene = ui->sceneWidget->scene().dynamicCast<PrScene>();
 	if (scene != nullptr)
 	{
-		scene->secondPrism()->setAbsorptionIndexWidth(static_cast<float>(value));
+		qreal d = value / 100000.0;
+		qreal v = 1.0 / (M_PI * d * d);
+		qDebug() << v;
+
+		scene->secondPrism()->setAbsorptionIndexWidth(v);
 		scene->recalculateBeams();
 		ui->chartRefractiveIndex->bindWithComplexFunction(scene->secondPrism()->refractiveIndex());
 	}

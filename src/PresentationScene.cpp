@@ -218,7 +218,20 @@ void PrPrismRenderer::render(const ScBasicCamera& camera)
 	mPrismHolderBase->render(camera);
 	mPrismHolderLeg->render(camera);
 	mPrismHolderGimbal->render(camera);
+
+	QOpenGLShaderProgram_p shader = shaderProgram();
+
 	ScTransparentMeshRenderer::render(camera);
+
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	
+	setShaderProgram(prUnlitColoredShaderProgram());
+	ScMeshRenderer::render(camera);
+	
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	setShaderProgram(shader);
 }
 
 void PrPrismRenderer::refractBeam(PhBeam& beam, bool) const
