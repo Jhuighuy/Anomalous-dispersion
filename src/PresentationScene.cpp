@@ -164,7 +164,7 @@ PrPrismRenderer& PrPrismRenderer::setAbsorptionIndexWidth(qreal width)
 	PhGaussianIndexFunction_p abspIndex = refractiveIndex->imaginaryPart().dynamicCast<PhGaussianIndexFunction>();
 	Q_ASSERT(abspIndex != nullptr);
 
-	abspIndex->setWidth(width);
+    abspIndex->setWidth(width);
 	mIndexSynced = false;
 	return *this;
 }

@@ -106,8 +106,8 @@ void SceneWindow::onSecondPrismAnomalousToggled(bool value)
 	}
 
 	skip = true;
-	ui->sliderAbspSpectrumCenter->setValue(defaultAbsorptionSpectrumCenter);
-	ui->sliderAbspSpectrumWidth->setValue(defaultAbsorptionSpectrumWidth);
+    ui->sliderAbspSpectrumCenter->setValue(defaultAbsorptionSpectrumCenter);
+    ui->sliderAbspSpectrumWidth->setValue(defaultAbsorptionSpectrumWidth);
 	ui->sliderAbspSpectrumHeight->setValue(defaultAbsorptionSpectrumHeight);
 	skip = false;
 
@@ -141,8 +141,8 @@ void SceneWindow::onAbsorptionSpectrumWidthChanged(int value)
 	PrScene_p scene = ui->sceneWidget->scene().dynamicCast<PrScene>();
 	if (scene != nullptr)
 	{
-		qreal d = value / 100000.0;
-		qreal v = 1.0 / (M_PI * d * d);
+        qreal valueMCM = value / 1000.0;
+        qreal v = 4.0 / (valueMCM * valueMCM);
 		qDebug() << v;
 
 		scene->secondPrism()->setAbsorptionIndexWidth(v);
