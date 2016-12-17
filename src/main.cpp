@@ -13,7 +13,10 @@ int main(int argc, char** argv)
     menuWindow.setupUi(&sceneWindow, &authorsWindow);
     authorsWindow.setupUi(&menuWindow);
     sceneWindow.setupUi(&menuWindow);
-
+#ifndef __APPLE__
     menuWindow.showFullScreen();
+#else
+    menuWindow.show();
+#endif
     return application.exec();
 }

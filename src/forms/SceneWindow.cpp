@@ -141,7 +141,7 @@ void SceneWindow::onAbsorptionSpectrumWidthChanged(int value)
 	PrScene_p scene = ui->sceneWidget->scene().dynamicCast<PrScene>();
 	if (scene != nullptr)
 	{
-        qreal valueMCM = value / 1000.0;
+        qreal valueMCM = value / 100000.0;
         qreal v = 4.0 / (valueMCM * valueMCM);
 		qDebug() << v;
 
