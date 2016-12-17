@@ -330,6 +330,7 @@ void ScMeshRenderer::beginRender(const ScBasicCamera& camera) const
 	QVector3D cameraPosition(view.inverted().column(3));
 
 	shaderProgram()->bind();
+	shaderProgram()->setUniformValue("un_Color", color());
 	shaderProgram()->setUniformValue("un_DiffuseTexture", 0);
 #if USE_ADVANCED_RENDERING
 	shaderProgram()->setUniformValue("un_DisplacementTexture", 1);

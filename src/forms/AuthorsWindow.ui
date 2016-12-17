@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1024</width>
-    <height>801</height>
+    <height>891</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -92,9 +92,10 @@
            </font>
           </property>
           <property name="text">
-           <string>Московский государственный университет имени М.В. Ломоносова
+           <string>Московский государственный университет
+имени М.В. Ломоносова
 Компьютерные презентации по курсу лекций
-«Физика Волновых Процессов»</string>
+«Физика волновых процессов»</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -238,20 +239,13 @@
       </item>
       <item>
        <layout class="QGridLayout" name="layoutAuthorsPersons">
-        <item row="1" column="1">
-         <widget class="QLabel" name="labelGleba">
-          <property name="text">
-           <string>Плаксин Глеб Максимович</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QLabel" name="imageOleja">
+        <item row="0" column="1">
+         <widget class="QLabel" name="imageGleba">
           <property name="text">
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="../resources/Images.qrc">:/gfx/oleja.png</pixmap>
+           <pixmap resource="../resources/Images.qrc">:/gfx/gleba.png</pixmap>
           </property>
          </widget>
         </item>
@@ -268,6 +262,30 @@
           </property>
          </spacer>
         </item>
+        <item row="1" column="1">
+         <widget class="QLabel" name="labelGleba">
+          <property name="text">
+           <string>Глеб Максимович Плаксин</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QLabel" name="imageOleja">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap resource="../resources/Images.qrc">:/gfx/oleja.png</pixmap>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="Line" name="separatorAuthors">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="0">
          <spacer name="horizontalSpacerAuthorsLeft">
           <property name="orientation">
@@ -281,27 +299,10 @@
           </property>
          </spacer>
         </item>
-        <item row="0" column="2">
-         <widget class="Line" name="separatorAuthors">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="imageGleba">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="pixmap">
-           <pixmap resource="../resources/Images.qrc">:/gfx/gleba.png</pixmap>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="3">
          <widget class="QLabel" name="labelOleja">
           <property name="text">
-           <string>Бутаков Олег Борисович</string>
+           <string>Олег Борисович Бутаков</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -309,16 +310,6 @@
          </widget>
         </item>
        </layout>
-      </item>
-      <item>
-       <widget class="QLabel" name="labelUbludky">
-        <property name="text">
-         <string>Лекторы: В.П. Кандидов, А.Ю. Чикишев</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
       </item>
      </layout>
     </item>
@@ -341,6 +332,32 @@
        <spacer name="horizontalSpacerToMenu">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelUbludky">
+        <property name="text">
+         <string>Лекторы: В.П. Кандидов, А.Ю. Чикишев</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignHCenter|Qt::AlignTop</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>

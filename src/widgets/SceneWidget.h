@@ -453,6 +453,13 @@ public:
         return *this;
     }
 
+	const QVector4D& color() const { return mColor; }
+	ScMeshRenderer& setColor(const QVector4D& color)
+	{
+		mColor = color;
+		return *this;
+	}
+
     /*!
      * Renders this object with the specified camera.
      * @param camera The camera to be used while rendering.
@@ -468,6 +475,7 @@ private:
     ScEditableMesh_p mMesh;
     QOpenGLShaderProgram_p mShaderProgram;
     QOpenGLTexture_p mDiffuseTexture;
+	QVector4D mColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 };
 
 /*!
