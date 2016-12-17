@@ -209,8 +209,12 @@ void SceneWindow::setSecondPrismAnomalous(bool enable)
 }
 void SceneWindow::setSecondPrismEnabled(bool enable)
 {
-	ui->pushButtonSetupOnePrism->setFocus(Qt::OtherFocusReason);
-	ui->pushButtonSetupOnePrism->setFocusPolicy(Qt::StrongFocus);
+	QFont font1 = ui->pushButtonSetupOnePrism->font();
+	QFont font2 = ui->pushButtonSetupTwoPrisms->font();
+	font1.setBold(!enable);
+	font2.setBold(enable);
+	ui->pushButtonSetupOnePrism->setFont(font1);
+	ui->pushButtonSetupTwoPrisms->setFont(font2);
 
 	second = enable;
 	char static const one[] = "\320\237\320\265\321\200\320\262\320\260\321\217 \320\277\321\200\320\270\320\267\320\274\320\260";
