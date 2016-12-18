@@ -34,7 +34,7 @@ private:
 	static void bridgePointLine(const T& point, const QVector<T>& line, QVector<ScVertexData>& vertices);
 };
 
-const float PresentationGeometry::defaultThickness = 0.01f;
+const float PresentationGeometry::defaultThickness = 0.018f;
 
 /*!
  * Generates a mesh the represents the projection of the beam cone to some surface.

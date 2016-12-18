@@ -361,11 +361,11 @@ PrBeamConeRenderer::PrBeamConeRenderer()
 	setShaderProgram(prUnlitColoredShaderProgram());
 	setColor({ 1.0f, 1.0f, 1.0f, 0.4f });
 	// ----------------------
-	mProjectionRenderer = ScTransparentMeshRenderer_p::create();
+    mProjectionRenderer = ScTransparentMeshRenderer_p::create();
 	mProjectionRenderer
 		->setMesh(ScEditableMesh::create())
 		.setShaderProgram(prUnlitColoredShaderProgram())
-		.setDiffuseTexture(colorMaskTexture);
+        .setDiffuseTexture(colorMaskTexture);
 	mProjectionOnScreenRenderer = ScTransparentMeshRenderer_p::create();
 	mProjectionOnScreenRenderer
 		->setMesh(ScEditableMesh::create())
@@ -422,8 +422,8 @@ void PrBeamConeRenderer::recalculateMesh(const QVector<PrPrismRenderer_p>& prism
 	float projBoundHeight = projMaxBound.y() - projMinBound.y();
 	float proj = qMax(projBoundWidth, projBoundHeight);
 
-	projCamera->setPosition(0.5f * (projMaxBound + projMinBound) + QVector3D{0.0f, 0.0f, 1.0f});
-	projCamera->setSize(1.1f * proj);
+    projCamera->setPosition(0.5f * (projMaxBound + projMinBound) + QVector3D{0.0f, 0.0f, 1.0f});
+    projCamera->setSize(1.1f * proj);
 
 	float thickness = 0.02f * proj;
 	PresentationGeometry::generateBeamProjMesh(beamCone, screenRenderer->normal(), projOnScreenVertices, thickness);
@@ -460,10 +460,11 @@ void PrScene::init()
         .setRotationOrbit({ 0.0f, 0.0f, 1.3f })
         .rotate({ -8.0f, 31.0f })
 		.setClearColor({ 1.0f, 1.0f, 1.0f, 1.0f });
-	mProjCamera = ScProjectionCamera::create();
-	mProjCamera
-		->setClearColor({ 0.0f, 0.0f, 0.0f, 1.0f })
-		.setViewport({ 1.0f - 0.35f / 2 - 0.05f, 0.05f, 0.35f / 2, 0.35f / 2 });
+    mProjCamera = ScProjectionCamera::create();
+    mProjCamera
+        ->setClearColor({ 0.0f, 0.0f, 0.0f, 1.0f })
+        //.setViewport({ 1.0f - 0.35f / 2 - 0.05f, 0.05f, 0.35f / 2, 0.35f / 2 })
+        .setViewport({0.0f, 0.0f, 0.0f, 0.0f});
 	// ----------------------
     mRoomRenderer = PrRoomRenderer::create();
 	mRoomRenderer
@@ -501,10 +502,10 @@ void PrScene::render()
 	}
 	mMainCamera->endScene();
 	// ----------------------
-	mProjCamera->beginScene();
-	{
-		mBeamsRenderer->render(*mProjCamera);
-	}
+    mProjCamera->beginScene();
+    {
+        mBeamsRenderer->render(*mProjCamera);
+    }
 	mProjCamera->endScene();
 }
 
