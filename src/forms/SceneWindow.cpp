@@ -18,8 +18,7 @@ void SceneWindow::setupUi(QMainWindow* menuWindow)
     ui->setupUi(this);
 	ui->sceneWidget->setScene(PrScene::create());
 
-    connect(ui->pushButtonToMenu, &QPushButton::clicked, this, &QMainWindow::hide);
-    connect(ui->pushButtonToMenu, &QPushButton::clicked, menuWindow, &QMainWindow::showFullScreen);
+    connect(ui->pushButtonToMenu, &QPushButton::clicked, qApp, &QCoreApplication::quit);
     connect(ui->pushButtonSetupOnePrism, &QPushButton::clicked, this, &SceneWindow::onApplyOnePrismSetup);
     connect(ui->pushButtonSetupTwoPrisms, &QPushButton::clicked, this, &SceneWindow::onApplyTwoPrismsSetup);
 
