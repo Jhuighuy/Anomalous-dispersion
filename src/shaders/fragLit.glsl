@@ -6,7 +6,7 @@ varying vec4 vr_Color;
 
 vec4 litWithDirectionalLight(vec3 lightDirectionWS)
 {
-    float ambientComponent = 0.3;
+    float ambientComponent = 0.1;
     float diffuseComponent = max(0.0, dot(vr_NormalWS, lightDirectionWS));
 
     return vec4(ambientComponent + diffuseComponent, ambientComponent + diffuseComponent, ambientComponent + diffuseComponent, 1.0);
