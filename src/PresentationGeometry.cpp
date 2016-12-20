@@ -35,7 +35,7 @@ private:
 };
 
 const float PresentationGeometry::defaultThickness = 0.022f;
-const float PresentationGeometry::defaultProjMultiplier = 3.0f;
+const float PresentationGeometry::defaultProjMultiplier = 1.5f;
 
 /*!
  * Generates a mesh the represents the projection of the beam cone to some surface.

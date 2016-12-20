@@ -263,7 +263,7 @@
         <number>0</number>
        </property>
        <property name="maximum">
-        <number>38</number>
+        <number>35</number>
        </property>
        <property name="pageStep">
         <number>5</number>
@@ -291,10 +291,10 @@
         <bool>true</bool>
        </property>
        <property name="minimum">
-        <number>380</number>
+        <number>400</number>
        </property>
        <property name="maximum">
-        <number>780</number>
+        <number>760</number>
        </property>
        <property name="value">
         <number>580</number>
@@ -342,7 +342,7 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>380</string>
+        <string>400</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -476,7 +476,7 @@
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>780</string>
+        <string>760</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
