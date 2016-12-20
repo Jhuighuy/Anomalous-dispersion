@@ -363,9 +363,11 @@ void PhBeamCone::collide(const IPhRefractiveObject& object)
  *
  * @param[out] levelSlice Output for the collision level.
  * @param levelIndex Index of the collision.
- * @param alphaMultiplier Alpha multiplier for the generated colors.
+ * @param alphaMultiplier Alpha multiplier for generated colors.
+ * @param scaleMultiplier Scale multiplier for collision vertices. 
  */
-void PhBeamCone::getCollisionLevel(PhBeamCollisionInfo& levelSlice, int levelIndex, float alphaMultiplier) const
+void PhBeamCone::getCollisionLevel(PhBeamCollisionInfo& levelSlice, int levelIndex, 
+								   float alphaMultiplier, const QVector3D& scaleMultiplier) const
 {
 	Q_ASSERT(partitioning() != 0 && "Partitioning was not set!");
 	Q_ASSERT(first().size() > levelIndex && "Level index was out of bounds!");
@@ -395,6 +397,31 @@ void PhBeamCone::getCollisionLevel(PhBeamCollisionInfo& levelSlice, int levelInd
 		else
 		{
 			levelSlice.push_back(info);
+		}
+	}
+
+	bool hasScaleMultiplier = scaleMultiplier.x() != 1.0f || scaleMultiplier.y() != 1.0f || scaleMultiplier.z() != 0.0f;
+	if (hasScaleMultiplier && levelSlice.size() > 1)
+	{
+		//! @todo Move this code to some template function.
+		QVector3D minBound = levelSlice[0].position;
+		QVector3D maxBound = levelSlice[0].position;
+		for (int i = 1; i < levelSlice.size(); ++i)
+		{
+			for (int j = 0; j < 3; ++j)
+			{
+				minBound[j] = qMin(minBound[j], levelSlice[i].position[j]);
+				maxBound[j] = qMax(maxBound[j], levelSlice[i].position[j]);
+			}
+		}
+
+		QVector3D midPoint = 0.5f * (minBound + maxBound);
+		for (int i = 0; i < levelSlice.size(); ++i)
+		{
+			QVector3D& position = levelSlice[i].position;
+			QVector3D deltaPosition = position - midPoint;
+			QVector3D scaledDeltaPosition = scaleMultiplier * deltaPosition;
+			position = midPoint + scaledDeltaPosition;
 		}
 	}
 }

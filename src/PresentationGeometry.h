@@ -15,6 +15,7 @@ class PresentationGeometry
 {
 public:
     static const float defaultThickness;
+	static const float defaultProjMultiplier;
 
 	/*!
 	 * Generates a mesh the represents the projection of the beam cone to some surface.

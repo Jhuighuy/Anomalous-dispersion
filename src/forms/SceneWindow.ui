@@ -501,7 +501,7 @@
        <item row="0" column="1">
         <widget class="QLabel" name="labelPlotRefr">
          <property name="text">
-          <string>Показатель преломления</string>
+          <string> Показатель преломления</string>
          </property>
         </widget>
        </item>
@@ -540,7 +540,7 @@
        <item row="1" column="1">
         <widget class="QLabel" name="labelPlotAbsp">
          <property name="text">
-          <string>Коэффициент поглощения</string>
+          <string> Коэффициент поглощения</string>
          </property>
         </widget>
        </item>

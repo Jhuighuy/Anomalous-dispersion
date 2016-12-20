@@ -511,9 +511,11 @@ public:
 	 *
 	 * @param[out] levelSlice Output for the collision level.
 	 * @param levelIndex Index of the collision.
-	 * @param alphaMultiplier Alpha multiplier for the generated colors.
+	 * @param alphaMultiplier Alpha multiplier for generated colors.
+	 * @param scaleMultiplier Scale multiplier for collision vertices. 
 	 */
-	void getCollisionLevel(PhBeamCollisionInfo& levelCollision, int levelIndex, float alphaMultiplier = 1.0) const;
+	void getCollisionLevel(PhBeamCollisionInfo& levelCollision, int levelIndex, 
+						   float alphaMultiplier = 1.0f, const QVector3D& scaleMultiplier = { 1.0f, 1.0f, 1.0f }) const;
 	int collisionLevels() const
 	{
 		Q_ASSERT(partitioning() != 0 && "Partitioning was not set!");

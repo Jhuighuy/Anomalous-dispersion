@@ -347,7 +347,7 @@
          <string>Лекторы: В.П. Кандидов, А.Ю. Чикишев</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignHCenter|Qt::AlignTop</set>
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>

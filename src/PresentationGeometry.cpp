@@ -34,7 +34,8 @@ private:
 	static void bridgePointLine(const T& point, const QVector<T>& line, QVector<ScVertexData>& vertices);
 };
 
-const float PresentationGeometry::defaultThickness = 0.018f;
+const float PresentationGeometry::defaultThickness = 0.022f;
+const float PresentationGeometry::defaultProjMultiplier = 3.0f;
 
 /*!
  * Generates a mesh the represents the projection of the beam cone to some surface.
@@ -50,7 +51,8 @@ void PresentationGeometry::generateBeamProjMesh(const PhBeamCone& beamCone, cons
     Q_ASSERT(beamCone.collisionLevels() > 1);
 
 	PhBeamCollisionInfo beamFinalCollision;
-	beamCone.getCollisionLevel(beamFinalCollision, beamCone.collisionLevels() - 1);
+	beamCone.getCollisionLevel(beamFinalCollision, beamCone.collisionLevels() - 1, 
+							   1.0f, { 1.0f, defaultProjMultiplier, 1.0f});
 
 	if (beamFinalCollision.size() == 1)
     {
@@ -81,7 +83,15 @@ void PresentationGeometry::generateBeamMesh(const PhBeamCone& beamCone, QVector<
 		float alphaMultiplier = static_cast<float>(!isLastLevel);
 
 		PhBeamCollisionInfo beamCollision;
-		beamCone.getCollisionLevel(beamCollision, i, alphaMultiplier);
+		if (i == beamCone.collisionLevels() - 1)
+		{
+			beamCone.getCollisionLevel(beamCollision, i, alphaMultiplier, 
+									   { 1.0f, defaultProjMultiplier, 1.0f});
+		}
+		else
+		{
+			beamCone.getCollisionLevel(beamCollision, i, alphaMultiplier);
+		}
 
 		PresentationGeometryImpl::bridgeLines(beamCollision, beamPrevCollision, vertices);
 		beamPrevCollision = qMove(beamCollision);
