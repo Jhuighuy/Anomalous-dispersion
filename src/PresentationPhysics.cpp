@@ -236,10 +236,10 @@ void PhRefractivePlane::refractBeam(PhBeam& beam, bool enters) const
 			}
 		}
 	}
-	else
+/*	else
 	{
 		newPart.bad = true;
-	}
+    } */
 	beam.push_back(newPart);
 }
 

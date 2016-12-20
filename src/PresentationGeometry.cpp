@@ -52,7 +52,7 @@ void PresentationGeometry::generateBeamProjMesh(const PhBeamCone& beamCone, cons
 
 	PhBeamCollisionInfo beamFinalCollision;
 	beamCone.getCollisionLevel(beamFinalCollision, beamCone.collisionLevels() - 1, 
-							   1.0f, { defaultProjMultiplier, defaultProjMultiplier, 1.0f});
+                               1.0f, { 1.2f, defaultProjMultiplier, 1.0f});
 
 	if (beamFinalCollision.size() == 1)
     {
@@ -86,7 +86,7 @@ void PresentationGeometry::generateBeamMesh(const PhBeamCone& beamCone, QVector<
 		if (i == beamCone.collisionLevels() - 1)
 		{
 			beamCone.getCollisionLevel(beamCollision, i, alphaMultiplier, 
-									   { defaultProjMultiplier, defaultProjMultiplier, 1.0f});
+                                       { 1.2f, defaultProjMultiplier, 1.0f});
 		}
 		else
 		{

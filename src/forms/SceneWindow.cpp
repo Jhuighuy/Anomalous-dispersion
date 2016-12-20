@@ -97,11 +97,11 @@ void SceneWindow::onSecondPrismAnomalousToggled(bool value)
 	scene->recalculateBeams();
 	if (value)
 	{
-		ui->chartRefractiveIndex->bindWithComplexFunction(scene->secondPrism()->refractiveIndex());
+        ui->chartRefractiveIndex->bindWithComplexFunction(scene->secondPrism()->refractiveIndex(), 1.0f, 0.35f);
 	}
 	else
 	{
-		ui->chartRefractiveIndex->bindWithComplexFunction(scene->firstPrism()->refractiveIndex(), 0.9);
+        ui->chartRefractiveIndex->bindWithComplexFunction(scene->firstPrism()->refractiveIndex());
 	}
 
 	skip = true;
@@ -127,7 +127,7 @@ void SceneWindow::onAbsorptionSpectrumCenterChanged(int value)
 	{
 		scene->secondPrism()->setAbsorptionIndexCenter(valueMcm);
 		scene->recalculateBeams();
-		ui->chartRefractiveIndex->bindWithComplexFunction(scene->secondPrism()->refractiveIndex());
+        ui->chartRefractiveIndex->bindWithComplexFunction(scene->secondPrism()->refractiveIndex(), 1.0f, 0.35f);
 	}
 }
 void SceneWindow::onAbsorptionSpectrumWidthChanged(int value)
@@ -146,7 +146,7 @@ void SceneWindow::onAbsorptionSpectrumWidthChanged(int value)
 
 		scene->secondPrism()->setAbsorptionIndexWidth(v);
 		scene->recalculateBeams();
-		ui->chartRefractiveIndex->bindWithComplexFunction(scene->secondPrism()->refractiveIndex());
+        ui->chartRefractiveIndex->bindWithComplexFunction(scene->secondPrism()->refractiveIndex(),1.0f, 0.35f);
 	}
 }
 void SceneWindow::onAbsorptionSpectrumHeightChanged(int value)
@@ -161,7 +161,7 @@ void SceneWindow::onAbsorptionSpectrumHeightChanged(int value)
 	{
 		scene->secondPrism()->setAbsorptionIndexHeight(value / 100.0f);
 		scene->recalculateBeams();
-		ui->chartRefractiveIndex->bindWithComplexFunction(scene->secondPrism()->refractiveIndex());
+        ui->chartRefractiveIndex->bindWithComplexFunction(scene->secondPrism()->refractiveIndex(),1.0f, 0.35f);
 	}
 }
 

@@ -15,7 +15,7 @@ public:
     {
     }
 
-    void bindWithComplexFunction(PhComplexIndexFunction_p indexFunction, qreal c = 1)
+    void bindWithComplexFunction(PhComplexIndexFunction_p indexFunction, qreal realScale = 1.0, qreal imgScale = 1.0)
     {
 		static const QString spec("\320\224\320\273\320\270\320\275\320\260 \320\262\320\276\320\273\320\275\321\213 (\320\275\320\274)");
 		//static const QString refr("\320\237\320\276\320\272\320\260\320\267\320\260\321\202\320\265\320\273\321\214 \320\277\321\200\320\265\320\273\320\276\320\274\320\273\320\265\320\275\320\270\321\217");
@@ -74,7 +74,7 @@ public:
 		refrIndexSeries2->setPen(pen);
 		for (qreal x = 0.38; x < 0.78; x += 0.01)
         {
-			qreal y = indexFunction->real(x) / c;
+            qreal y = indexFunction->real(x) / realScale;
             minReal = qMin(minReal, y);
             maxReal = qMax(maxReal, y);
 			refrIndexSeries->append(x * 1000.0, y);
@@ -97,7 +97,7 @@ public:
 
 			for (qreal x = 0.38; x < 0.78; x += 0.01)
 			{
-				qreal y = indexFunction->imaginary(x);
+                qreal y = indexFunction->imaginary(x) / imgScale;
                 minImaginary = qMin(minImaginary, y);
                 maxImaginary = qMax(maxImaginary, y);
 				abspIndexSeries->append(x * 1000.0, y);
@@ -126,7 +126,7 @@ public:
         if (abspIndexSeries)
         {
             axisY->setRange(1.0f, 1.6f);
-            axisY2->setRange(0.0f, 0.45f);
+            axisY2->setRange(0.0f, 1.0f);
         }
         else
         {
