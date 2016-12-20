@@ -359,7 +359,7 @@ PrBeamConeRenderer::PrBeamConeRenderer()
 
 	setMesh(ScEditableMesh::create());
 	setShaderProgram(prUnlitColoredShaderProgram());
-	setColor({ 1.0f, 1.0f, 1.0f, 0.4f });
+	setColor({ 1.0f, 1.0f, 1.0f, 0.2f });
 	// ----------------------
     mProjectionRenderer = ScTransparentMeshRenderer_p::create();
 	mProjectionRenderer
